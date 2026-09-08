@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=0.4.1" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -123,14 +123,14 @@
     <div class="card">
       <h2>App Settings</h2>
       <div class="grid-3">
-        <label>Default food source<select id="defaultSource"><option value="Thai FCD">Thai FCD</option><option value="Custom">Custom</option><option value="USDA">USDA</option><option value="All">All</option></select></label>
+        <label>Default food source<select id="defaultSource"><option value="Custom">Custom</option><option value="Thai FCD">Thai FCD</option><option value="USDA">USDA</option><option value="All">All</option></select></label>
       </div>
-      <p class="muted">Regular food ใช้ Thai FCD เป็น source อันดับแรก; Custom ใช้กับสูตรนม/Modular และเป็น fallback. Thai FCD ใช้แบบ online search ไม่ฝังฐานลง repository.</p><hr><h2>Backup & Restore</h2><p class="muted">Backup รวม anonymous cases, visits, intake, modular diet, Custom DB, custom conversions และ settings. ข้อมูลทำงานใน browser ของอุปกรณ์นี้; Google Drive sync เตรียมไว้สำหรับระยะถัดไป.</p>
+      <p class="muted">Regular food ใช้ Custom Database เป็น default. สามารถเปลี่ยน source เป็น Thai FCD / USDA / All ได้เมื่อ connector พร้อมใช้งาน.</p><hr><h2>Backup & Restore</h2><p class="muted">Backup รวม anonymous cases, visits, intake, modular diet, Custom DB, custom conversions และ settings. ข้อมูลทำงานใน browser ของอุปกรณ์นี้; Google Drive sync เตรียมไว้สำหรับระยะถัดไป.</p>
       <div class="actions"><button id="exportBtn" class="primary">Export JSON backup</button><label class="file-button secondary">Import backup<input id="importBackupInput" type="file" accept="application/json" hidden /></label><button id="resetBtn" class="danger">Reset all local data...</button></div>
     </div>
   </section>
 </main>
-<footer>Prototype PWA 0.4 • multi-case • portion conversion • modular source/override • split nutrient summary</footer>
-<script src="app.js"></script>
+<footer><strong>PWA 0.4.2</strong> • multi-case • portion conversion • modular source/override • split nutrient summary <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.2"></script>
 </body>
 </html>
