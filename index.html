@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1f6f78" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Pediatric Nutrition Toolkit</title>
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <div class="eyebrow">Pediatric Nutrition Toolkit</div>
+      <h1>PNIF Review & Nutrient Calculator</h1>
+    </div>
+    <button id="installBtn" class="secondary hidden">Install App</button>
+  </header>
+
+  <main>
+    <section class="card hero-card">
+      <h2>Workflow</h2>
+      <p>ถ่ายรูป 24-h recall / FFQ ใน ChatGPT → พิมพ์ <strong>PNIF</strong> → Copy JSON → Paste ที่นี่ → ตรวจ/แก้/เพิ่ม → คำนวณ</p>
+      <div class="hero-actions">
+        <button data-tab="pnif" class="primary">Import PNIF</button>
+        <button data-tab="modular" class="secondary">Daily Modular Diet</button>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="Main sections">
+      <button class="tab active" data-tab="pnif">PNIF</button>
+      <button class="tab" data-tab="review">Review Intake</button>
+      <button class="tab" data-tab="modular">Modular Diet</button>
+      <button class="tab" data-tab="foods">Food DB</button>
+      <button class="tab" data-tab="summary">Summary</button>
+      <button class="tab" data-tab="data">Data</button>
+    </nav>
+
+    <section id="tab-pnif" class="tab-panel active">
+      <div class="card">
+        <div class="section-title-row">
+          <div>
+            <h2>Paste PNIF from ChatGPT</h2>
+            <p class="muted">วางได้ทั้ง JSON ล้วน หรือข้อความที่มี ```json ... ```</p>
+          </div>
+          <button id="loadExampleBtn" class="secondary">Load example</button>
+        </div>
+        <textarea id="pnifInput" rows="14" placeholder='วาง PNIF JSON ที่นี่'></textarea>
+        <div class="actions">
+          <button id="importPnifBtn" class="primary">Import & Review</button>
+          <button id="clearPnifBtn" class="secondary">Clear</button>
+        </div>
+        <div id="pnifStatus" class="status"></div>
+      </div>
+    </section>
+
+    <section id="tab-review" class="tab-panel">
+      <div class="card">
+        <div class="section-title-row">
+          <div>
+            <h2>Review Intake</h2>
+            <p class="muted">แก้ไขอาหาร/เวลา/ปริมาณได้ทุกช่อง และเพิ่มรายการแทรกระหว่างมื้อได้</p>
+          </div>
+          <div class="inline-actions">
+            <button id="addMealBtn" class="primary">+ Add food</button>
+            <button id="sortMealsBtn" class="secondary">Sort by time</button>
+          </div>
+        </div>
+        <div id="reviewWarnings"></div>
+        <div id="mealsContainer"></div>
+      </div>
+    </section>
+
+    <section id="tab-modular" class="tab-panel">
+      <div class="card">
+        <div class="section-title-row">
+          <div>
+            <h2>Daily Modular Recipe</h2>
+            <p class="muted">สร้างสูตรรวมทั้งวันครั้งเดียว แล้วกรอก prescribed/actual volume ราย feed</p>
+          </div>
+          <button id="saveModularBtn" class="primary">Save recipe</button>
+        </div>
+
+        <div class="grid-3">
+          <label>Recipe name<input id="modName" value="Daily modular recipe" /></label>
+          <label>Final volume (mL)<input id="modFinalVolume" type="number" min="0" step="1" value="900" /></label>
+          <label>Notes<input id="modNotes" placeholder="e.g. prepare once/day" /></label>
+        </div>
+
+        <h3>Components</h3>
+        <div id="modComponents"></div>
+        <button id="addModComponentBtn" class="secondary">+ Add component</button>
+
+        <div id="modRecipeSummary" class="summary-box"></div>
+
+        <div class="section-title-row top-gap">
+          <div>
+            <h3>Feeding schedule</h3>
+            <p class="muted">Actual intake คำนวณตาม volume ที่กินจริง</p>
+          </div>
+          <button id="addFeedBtn" class="secondary">+ Add feed</button>
+        </div>
+        <div id="feedSchedule"></div>
+        <div id="feedSummary" class="summary-box"></div>
+      </div>
+    </section>
+
+    <section id="tab-foods" class="tab-panel">
+      <div class="card">
+        <div class="section-title-row">
+          <div>
+            <h2>Local Food Database</h2>
+            <p class="muted">Custom/Product label มี priority สูงสุด; ฐานตัวอย่างนี้มีไว้ทดสอบเท่านั้น</p>
+          </div>
+          <button id="addFoodDbBtn" class="primary">+ Add food</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Basis</th><th>kcal</th><th>Protein g</th><th>Fat g</th><th>CHO g</th><th>Source</th><th></th></tr></thead>
+            <tbody id="foodDbBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-summary" class="tab-panel">
+      <div class="card">
+        <div class="section-title-row">
+          <div>
+            <h2>Nutrient Summary</h2>
+            <p class="muted">คำนวณจากรายการที่ match กับฐานข้อมูล หรือมี nutrient override</p>
+          </div>
+          <button id="calculateBtn" class="primary">Calculate</button>
+        </div>
+        <div id="nutrientSummary" class="summary-box"></div>
+        <div id="unmatchedList"></div>
+      </div>
+    </section>
+
+    <section id="tab-data" class="tab-panel">
+      <div class="card">
+        <h2>Backup / Restore</h2>
+        <p class="muted">ข้อมูลเก็บใน browser ของเครื่องนี้อัตโนมัติ รุ่นนี้ยังไม่มี cross-device sync</p>
+        <div class="actions">
+          <button id="exportBtn" class="primary">Export JSON backup</button>
+          <label class="file-button secondary">Import backup<input id="importBackupInput" type="file" accept="application/json" hidden /></label>
+          <button id="resetBtn" class="danger">Reset local data</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Prototype PWA 0.1 • calculations are deterministic from entered data and local food records
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
