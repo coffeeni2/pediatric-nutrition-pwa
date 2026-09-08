@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.5" />
+  <link rel="stylesheet" href="styles.css?v=0.4.7" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -101,13 +101,14 @@
     <div class="card">
       <div class="section-title-row">
         <div><h2>Custom Database</h2><p class="muted">เริ่มต้นจาก Excel ที่ให้ไว้ แล้วเพิ่ม/แก้เองในแอปได้</p></div>
-        <button id="addFoodDbBtn" class="primary">+ Add item</button>
+        <div class="inline-actions"><button id="addFoodDbBtn" class="secondary">+ Add item</button><button id="cancelFoodDbBtn" class="secondary">Cancel changes</button><button id="saveFoodDbBtn" class="primary">Save Custom Database</button><span id="foodDbSaveStatus" class="muted"></span></div>
       </div>
       <div class="db-toolbar">
         <label>Filter<select id="dbTypeFilter"><option value="all">All</option><option value="food">Food</option><option value="formula">Medical formula</option><option value="modular">Modular component</option></select></label>
         <label>Search<input id="dbSearch" placeholder="ชื่ออาหาร/สูตร" /></label>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name</th><th>Basis</th><th>g/scoop</th><th>kcal</th><th>Protein</th><th>Fat/LCT</th><th>MCT</th><th>CHO</th><th>Ca</th><th>P</th><th>Na</th><th>K</th><th>Fe</th><th>Zn</th><th>Source</th><th></th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
+      <datalist id="dbUnitOptions"><option value="g"><option value="mL"><option value="portion"><option value="ทัพพี"><option value="ถ้วยตวง"><option value="ช้อนโต๊ะ"><option value="ช้อนชา"><option value="ฟอง"><option value="ชิ้น"><option value="ผล"><option value="แผ่น"><option value="scoop"></datalist>
+      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>kcal</th><th>Protein</th><th>Fat/LCT</th><th>MCT</th><th>CHO</th><th>Ca</th><th>P</th><th>Na</th><th>K</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
     </div>
   </section>
 
@@ -130,7 +131,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.5</strong> • multi-case • cooked meat/egg default • Nutrition book Custom Food seed • portion conversion <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.5"></script>
+<footer><strong>PWA 0.4.7</strong> • multi-case • cooked meat/egg default • Nutrition book Custom Food seed • portion conversion <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.7"></script>
 </body>
 </html>
