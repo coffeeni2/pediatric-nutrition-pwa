@@ -32,7 +32,8 @@
     </section>
 
     <nav class="tabs" aria-label="Main sections">
-      <button class="tab active" data-tab="pnif">PNIF</button>
+      <button class="tab active" data-tab="patient">Patient</button>
+      <button class="tab" data-tab="pnif">PNIF</button>
       <button class="tab" data-tab="review">Review Intake</button>
       <button class="tab" data-tab="modular">Modular Diet</button>
       <button class="tab" data-tab="foods">Food DB</button>
@@ -40,7 +41,39 @@
       <button class="tab" data-tab="data">Data</button>
     </nav>
 
-    <section id="tab-pnif" class="tab-panel active">
+    <section id="tab-patient" class="tab-panel active">
+      <div class="card">
+        <div class="section-title-row"><div><h2>Patient & Anthropometry</h2><p class="muted">ใช้ anonymous name เท่านั้น — ไม่มี Lab และไม่มีข้อมูลระบุตัวบุคคลจริง</p></div><button id="savePatientBtn" class="primary">Save</button></div>
+        <div class="grid-3">
+          <label>Anonymous name / Case ID<input id="patientAlias" placeholder="e.g. Case A / P001" autocomplete="off" /></label>
+          <label>Age<input id="patientAge" type="number" min="0" step="0.1" placeholder="years" /></label>
+          <label>Sex<select id="patientSex"><option value="">Not specified</option><option value="male">Male</option><option value="female">Female</option></select></label>
+        </div>
+        <div class="grid-3 top-gap">
+          <label>Weight (kg)<input id="patientWeight" type="number" min="0" step="0.01" /></label>
+          <label>Length / Height (cm)<input id="patientHeight" type="number" min="0" step="0.1" /></label>
+          <label>Measurement<select id="patientMeasureType"><option value="height">Standing height</option><option value="length">Recumbent length</option></select></label>
+        </div>
+        <div class="grid-3 top-gap">
+          <label>Measurement date<input id="patientMeasureDate" type="date" /></label>
+          <label>Visit date<input id="patientVisitDate" type="date" /></label>
+          <label>Note (optional)<input id="patientNote" placeholder="nutrition-related note only" /></label>
+        </div>
+        <div id="patientSummary" class="summary-box top-gap"></div>
+      </div>
+      <div class="card">
+        <h2>Daily Requirements</h2><p class="muted">ใส่เป้าหมายที่แพทย์เลือกใช้ แอปจะคำนวณต่อ kg และ % ที่ได้รับให้ ไม่เดา requirement อัตโนมัติ</p>
+        <div class="grid-4">
+          <label>Energy target (kcal/day)<input id="reqEnergy" type="number" min="0" step="1" /></label>
+          <label>Protein target (g/day)<input id="reqProtein" type="number" min="0" step="0.1" /></label>
+          <label>Fluid target (mL/day)<input id="reqFluid" type="number" min="0" step="1" /></label>
+          <label>Fat target (% kcal)<input id="reqFatPct" type="number" min="0" max="100" step="0.1" /></label>
+        </div>
+        <div id="requirementSummary" class="summary-box top-gap"></div>
+      </div>
+    </section>
+
+    <section id="tab-pnif" class="tab-panel">
       <div class="card">
         <div class="section-title-row">
           <div>
@@ -155,7 +188,7 @@
   </main>
 
   <footer>
-    Prototype PWA 0.1 • calculations are deterministic from entered data and local food records
+    Prototype PWA 0.2 • anonymous patient profile • no lab module • deterministic nutrient calculations
   </footer>
 
   <script src="app.js"></script>

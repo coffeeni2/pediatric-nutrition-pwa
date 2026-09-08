@@ -15,6 +15,8 @@ const defaultFoodDB = [
 ];
 
 const defaultState = {
+  patient:{alias:'',age:'',sex:'',weight:'',height:'',measureType:'height',measureDate:'',visitDate:'',note:''},
+  requirements:{energy:'',protein:'',fluid:'',fatPct:''},
   pnif:{format:'PNIF',version:'0.1',type:'24hr_recall',warnings:[]},
   meals:[],
   foodDB:clone(defaultFoodDB),
@@ -26,14 +28,15 @@ let state = loadState();
 let deferredInstallPrompt = null;
 
 function loadState(){
-  try{ const saved = localStorage.getItem('pedNutritionStateV1'); return saved ? {...clone(defaultState),...JSON.parse(saved)} : clone(defaultState); }
+  try{ const saved = localStorage.getItem('pedNutritionStateV2'); return saved ? {...clone(defaultState),...JSON.parse(saved)} : clone(defaultState); }
   catch(e){ return clone(defaultState); }
 }
-function saveState(){ localStorage.setItem('pedNutritionStateV1', JSON.stringify(state)); }
+function saveState(){ localStorage.setItem('pedNutritionStateV2', JSON.stringify(state)); }
 
 function showTab(name){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id===`tab-${name}`));
+  if(name==='patient') renderPatient();
   if(name==='review') renderMeals();
   if(name==='foods') renderFoodDB();
   if(name==='modular') renderModular();
@@ -45,6 +48,25 @@ document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',
 window.addEventListener('beforeinstallprompt', e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').classList.remove('hidden');});
 $('installBtn').addEventListener('click', async()=>{ if(!deferredInstallPrompt) return; deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice; deferredInstallPrompt=null; $('installBtn').classList.add('hidden'); });
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+
+
+function renderPatient(){
+  const p=state.patient||defaultState.patient, r=state.requirements||defaultState.requirements;
+  $('patientAlias').value=p.alias||''; $('patientAge').value=p.age||''; $('patientSex').value=p.sex||'';
+  $('patientWeight').value=p.weight||''; $('patientHeight').value=p.height||''; $('patientMeasureType').value=p.measureType||'height';
+  $('patientMeasureDate').value=p.measureDate||''; $('patientVisitDate').value=p.visitDate||''; $('patientNote').value=p.note||'';
+  $('reqEnergy').value=r.energy||''; $('reqProtein').value=r.protein||''; $('reqFluid').value=r.fluid||''; $('reqFatPct').value=r.fatPct||'';
+  const w=num(p.weight), h=num(p.height), bmi=w&&h?w/((h/100)**2):0;
+  $('patientSummary').innerHTML=`<strong>${esc(p.alias||'Anonymous case')}</strong><div class="summary-grid"><div class="metric">Weight<b>${w?round(w,2)+' kg':'—'}</b></div><div class="metric">${p.measureType==='length'?'Length':'Height'}<b>${h?round(h,1)+' cm':'—'}</b></div><div class="metric">BMI<b>${bmi?round(bmi,2)+' kg/m²':'—'}</b></div><div class="metric">Age / Sex<b>${esc(p.age||'—')} ${p.age?'y':''} ${esc(p.sex||'')}</b></div></div><p class="muted">BMI แสดงเป็นค่าคำนวณดิบเท่านั้น รุ่นนี้ยังไม่แปลผล BMI-for-age/growth reference</p>`;
+  $('requirementSummary').innerHTML=`<div class="summary-grid"><div class="metric">Energy<b>${r.energy?esc(r.energy)+' kcal/day':'—'}</b><span>${w&&r.energy?round(num(r.energy)/w,1)+' kcal/kg/day':''}</span></div><div class="metric">Protein<b>${r.protein?esc(r.protein)+' g/day':'—'}</b><span>${w&&r.protein?round(num(r.protein)/w,2)+' g/kg/day':''}</span></div><div class="metric">Fluid<b>${r.fluid?esc(r.fluid)+' mL/day':'—'}</b><span>${w&&r.fluid?round(num(r.fluid)/w,1)+' mL/kg/day':''}</span></div><div class="metric">Fat target<b>${r.fatPct?esc(r.fatPct)+'% kcal':'—'}</b></div></div>`;
+}
+function savePatientForm(){
+  state.patient={alias:$('patientAlias').value.trim(),age:$('patientAge').value,sex:$('patientSex').value,weight:$('patientWeight').value,height:$('patientHeight').value,measureType:$('patientMeasureType').value,measureDate:$('patientMeasureDate').value,visitDate:$('patientVisitDate').value,note:$('patientNote').value};
+  state.requirements={energy:$('reqEnergy').value,protein:$('reqProtein').value,fluid:$('reqFluid').value,fatPct:$('reqFatPct').value};
+  saveState(); renderPatient();
+}
+$('savePatientBtn').addEventListener('click',savePatientForm);
+['patientAlias','patientAge','patientSex','patientWeight','patientHeight','patientMeasureType','patientMeasureDate','patientVisitDate','patientNote','reqEnergy','reqProtein','reqFluid','reqFatPct'].forEach(id=>$(id).addEventListener('change',savePatientForm));
 
 function normalizeAmount(v){
   if(typeof v==='number') return {value:v,original:String(v)};
@@ -217,6 +239,12 @@ function calculateIntake(){
 function renderSummary(){
   const s=state.lastSummary||calculateIntake(),t=s.total; const macroKcal=num(t.protein)*4+num(t.cho)*4+num(t.fat)*9;
   $('nutrientSummary').innerHTML=`<div class="summary-grid"><div class="metric">Energy<b>${round(t.kcal)} kcal</b></div><div class="metric">Protein<b>${round(t.protein)} g</b><span>${macroKcal?round(t.protein*4/macroKcal*100,1):0}% kcal</span></div><div class="metric">Fat<b>${round(t.fat)} g</b><span>${macroKcal?round(t.fat*9/macroKcal*100,1):0}% kcal</span></div><div class="metric">CHO<b>${round(t.cho)} g</b><span>${macroKcal?round(t.cho*4/macroKcal*100,1):0}% kcal</span></div></div><div class="summary-grid top-gap"><div class="metric">Na<b>${round(t.sodium)} mg</b></div><div class="metric">K<b>${round(t.potassium)} mg</b></div><div class="metric">Ca<b>${round(t.calcium)} mg</b></div><div class="metric">P<b>${round(t.phosphorus)} mg</b></div><div class="metric">Iron<b>${round(t.iron)} mg</b></div><div class="metric">Zinc<b>${round(t.zinc)} mg</b></div><div class="metric">Vit A<b>${round(t.vitA)} µg</b></div><div class="metric">Vit D<b>${round(t.vitD)} µg</b></div><div class="metric">Vit E<b>${round(t.vitE)} mg</b></div></div>`;
+  const w=num(state.patient?.weight), r=state.requirements||{};
+  const reqCompare=[];
+  if(r.energy) reqCompare.push(`Energy ${round(t.kcal/num(r.energy)*100,1)}% of target`);
+  if(r.protein) reqCompare.push(`Protein ${round(t.protein/num(r.protein)*100,1)}% of target`);
+  if(w) reqCompare.push(`Intake ${round(t.kcal/w,1)} kcal/kg/day, ${round(t.protein/w,2)} g protein/kg/day`);
+  if(reqCompare.length) $('nutrientSummary').insertAdjacentHTML('beforeend',`<p class="muted top-gap"><strong>Requirement comparison:</strong> ${reqCompare.join(' • ')}</p>`);
   $('unmatchedList').innerHTML=s.unmatched.length?`<div class="unmatched"><strong>Needs food matching / portion conversion (${s.unmatched.length})</strong>${s.unmatched.map(x=>`<div>${esc(x.time)} — ${esc(x.food||'(blank)')}: ${esc(x.reason)}</div>`).join('')}</div>`:'<div class="status ok">รายการทั้งหมดที่มีข้อมูลเพียงพอถูกคำนวณแล้ว</div>';
 }
 $('calculateBtn').addEventListener('click',()=>{calculateIntake();renderSummary();});
@@ -225,4 +253,4 @@ $('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify
 $('importBackupInput').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{state=JSON.parse(await file.text());saveState();renderMeals();renderFoodDB();renderModular();alert('Restore สำเร็จ');}catch(err){alert('ไฟล์ backup ไม่ถูกต้อง');}});
 $('resetBtn').addEventListener('click',()=>{if(confirm('ล้างข้อมูลใน browser เครื่องนี้ทั้งหมด?')){state=clone(defaultState);saveState();location.reload();}});
 
-renderMeals(); renderFoodDB(); renderModular();
+renderPatient(); renderMeals(); renderFoodDB(); renderModular();
