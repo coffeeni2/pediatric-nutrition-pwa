@@ -1,9 +1,5 @@
-# Pediatric Nutrition PWA 0.4.1
+# Pediatric Nutrition PWA 0.4.3
 
-Hotfix over 0.4.
+Cache-recovery hotfix for Safari. On the first load, the app unregisters prior service workers and deletes only Cache Storage, then reloads with a version query. Patient/case data in localStorage/IndexedDB are not deleted. A fresh 0.4.3 service worker is then registered.
 
-- Fixes Safari/GitHub Pages stale 0.3 cache by using a new service-worker cache key, network-first loading for app shell, cache-busted JS/CSS URLs, skipWaiting + clients.claim, and controller-change reload.
-- App footer visibly reports PWA 0.4.1 so deployed version can be verified.
-- Keeps patient/case data separate from service-worker caches.
-
-Thai FCD online connector note: the INMU site exposes interactive web search and per-food result pages, but no documented public JSON API was identified. A static GitHub Pages PWA should not scrape/circumvent the site or depend on an undocumented cross-origin endpoint. Implement the connector only through an authorised API/endpoint or a permitted server-side adapter.
+Upload the files inside this folder to the GitHub Pages repository root.

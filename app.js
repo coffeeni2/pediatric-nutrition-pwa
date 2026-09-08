@@ -30,7 +30,23 @@ let state=loadState(),deferredInstallPrompt=null;
 function loadState(){try{const x=localStorage.getItem('pedNutritionStateV4')||localStorage.getItem('pedNutritionStateV3');const st=x?merge(defaultState,JSON.parse(x)):clone(defaultState);if(!st.settings.defaultSourceV042){st.settings.defaultSource='Custom';st.settings.defaultSourceV042=true;}if(!st.cases.length){const c=blankCase();c.patient=clone(st.patient);c.requirements=clone(st.requirements);c.pnif=clone(st.pnif);c.meals=clone(st.meals);c.modular=clone(st.modular);c.lastSummary=st.lastSummary;st.cases=[c];st.activeCaseId=c.id}return st}catch{return clone(defaultState)}}function merge(a,b){const out=clone(a);Object.keys(b||{}).forEach(k=>out[k]=(typeof b[k]==='object'&&!Array.isArray(b[k])&&b[k]!==null)?{...(out[k]||{}),...b[k]}:b[k]);return out}function syncActiveCase(){let c=state.cases.find(x=>x.id===state.activeCaseId);if(!c)return;c.patient=clone(state.patient);c.requirements=clone(state.requirements);c.pnif=clone(state.pnif);c.meals=clone(state.meals);c.modular=clone(state.modular);c.lastSummary=state.lastSummary;c.updatedAt=new Date().toISOString()}function saveState(){syncActiveCase();localStorage.setItem('pedNutritionStateV4',JSON.stringify(state))}
 
 function showTab(name){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.toggle('active',x.id===`tab-${name}`));if(name==='patient')renderPatient();if(name==='review')renderMeals();if(name==='modular')renderModular();if(name==='foods')renderFoodDB();if(name==='summary')renderSummary();if(name==='data')$('defaultSource').value=state.settings.defaultSource||'Custom'}document.querySelectorAll('[data-tab]').forEach(x=>x.addEventListener('click',()=>showTab(x.dataset.tab)));
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').classList.remove('hidden')});$('installBtn').addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn').classList.add('hidden')});if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.2',{updateViaCache:'none'});await reg.update();if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller){const u=$('updateStatus');if(u)u.textContent=' • New version ready';w.postMessage({type:'SKIP_WAITING'})}})});let reloading=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()})}catch(e){console.warn('Service worker update failed',e)}});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').classList.remove('hidden')});$('installBtn').addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn').classList.add('hidden')});if('serviceWorker' in navigator) window.addEventListener('load', async()=>{
+  try {
+    // 0.4.3 cache recovery: preserve app data (localStorage/IndexedDB), remove only SW registrations and Cache Storage.
+    const marker='pedNutritionCacheRecovery043';
+    if(!sessionStorage.getItem(marker)){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+      if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
+      sessionStorage.setItem(marker,'1');
+      const u=new URL(location.href); u.searchParams.set('appv','0.4.3');
+      location.replace(u.toString());
+      return;
+    }
+    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.3',{updateViaCache:'none'});
+    await reg.update();
+  } catch(e){ console.warn('Service worker recovery/update failed',e); }
+});
 
 function loadCase(id){syncActiveCase();const c=state.cases.find(x=>x.id===id);if(!c)return;state.activeCaseId=id;state.patient=clone(c.patient);state.requirements=clone(c.requirements);state.pnif=clone(c.pnif);state.meals=clone(c.meals);state.modular=clone(c.modular);state.lastSummary=c.lastSummary;localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));renderPatient();renderMeals();renderModular()}
 function renderCaseSelector(){const el=$('caseSelector');if(!el)return;el.innerHTML=state.cases.map(c=>`<option value="${c.id}">${esc(c.patient.alias||'Untitled case')} ${c.patient.visitDate?'• '+esc(c.patient.visitDate):''}</option>`).join('');el.value=state.activeCaseId}

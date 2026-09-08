@@ -1,6 +1,19 @@
-const CACHE='ped-nutrition-pwa-0.4.2-20260909a';
-const ASSETS=['./','./index.html','./styles.css?v=0.4.2','./app.js?v=0.4.2','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener('message',e=>{if(e.data&&e.data.type==='SKIP_WAITING')self.skipWaiting()});
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.origin!==location.origin)return;const isNav=e.request.mode==='navigate';const isCore=/\/(index\.html|app\.js|styles\.css|manifest\.webmanifest|sw\.js)$/.test(u.pathname)||isNav;if(isCore){e.respondWith(fetch(e.request,{cache:'no-store'}).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html'))));return}e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(resp=>{const copy=resp.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return resp}))) });
+const CACHE='ped-nutrition-pwa-0.4.3-20260909-recovery';
+const OFFLINE='./index.html?offline=043';
+self.addEventListener('install',e=>e.waitUntil(self.skipWaiting()));
+self.addEventListener('activate',e=>e.waitUntil((async()=>{
+  const keys=await caches.keys();
+  await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
+  await self.clients.claim();
+})()));
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET') return;
+  const u=new URL(e.request.url);
+  if(u.origin!==self.location.origin) return;
+  // Always go to network for navigation and app code. This prevents Safari from reviving old UI.
+  if(e.request.mode==='navigate' || /\/(index\.html|app\.js|styles\.css|manifest\.webmanifest|sw\.js)$/.test(u.pathname)){
+    e.respondWith(fetch(e.request,{cache:'no-store'}));
+    return;
+  }
+  e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
+});
