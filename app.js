@@ -1,256 +1,66 @@
-const $ = (id) => document.getElementById(id);
-const uid = () => Math.random().toString(36).slice(2,10);
-const clone = (x) => JSON.parse(JSON.stringify(x));
-const num = (v) => Number.isFinite(Number(v)) ? Number(v) : 0;
-const round = (v,d=1) => Math.round((num(v)+Number.EPSILON)*10**d)/10**d;
+const $=id=>document.getElementById(id);const uid=()=>Math.random().toString(36).slice(2,10);const num=v=>Number.isFinite(Number(v))?Number(v):0;const round=(v,d=1)=>Math.round((num(v)+Number.EPSILON)*10**d)/10**d;const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));const clone=x=>JSON.parse(JSON.stringify(x));
 
-const defaultFoodDB = [
-  {id:uid(), name:'นมจืด', basis_value:100, basis_unit:'mL', kcal:61, protein:3.2, fat:3.3, cho:4.8, sodium:43, potassium:150, calcium:113, phosphorus:84, iron:0.03, zinc:0.4, vitA:46, vitD:1.3, vitE:0.1, source:'Demo'},
-  {id:uid(), name:'ไข่ไก่สุก', basis_value:1, basis_unit:'ฟอง', kcal:78, protein:6.3, fat:5.3, cho:0.6, sodium:62, potassium:63, calcium:28, phosphorus:99, iron:0.9, zinc:0.6, vitA:75, vitD:1.1, vitE:0.5, source:'Demo'},
-  {id:uid(), name:'ข้าวสวย', basis_value:100, basis_unit:'g', kcal:130, protein:2.4, fat:0.3, cho:28.7, sodium:1, potassium:35, calcium:10, phosphorus:43, iron:0.2, zinc:0.5, vitA:0, vitD:0, vitE:0.04, source:'Demo'},
-  {id:uid(), name:'dextrin', basis_value:1, basis_unit:'g', kcal:4, protein:0, fat:0, cho:1, sodium:0, potassium:0, calcium:0, phosphorus:0, iron:0, zinc:0, vitA:0, vitD:0, vitE:0, source:'Custom default'},
-  {id:uid(), name:'whey protein', basis_value:1, basis_unit:'g', kcal:4, protein:1, fat:0, cho:0, sodium:0, potassium:0, calcium:0, phosphorus:0, iron:0, zinc:0, vitA:0, vitD:0, vitE:0, source:'Custom default'},
-  {id:uid(), name:'LCT oil', basis_value:1, basis_unit:'g', kcal:9, protein:0, fat:1, cho:0, sodium:0, potassium:0, calcium:0, phosphorus:0, iron:0, zinc:0, vitA:0, vitD:0, vitE:0, source:'Custom default'},
-  {id:uid(), name:'MCT oil', basis_value:1, basis_unit:'g', kcal:8.3, protein:0, fat:1, cho:0, sodium:0, potassium:0, calcium:0, phosphorus:0, iron:0, zinc:0, vitA:0, vitD:0, vitE:0, source:'Custom default'}
+const FORMULAS=[
+['S26lf',505.8,10.35,58.5,25.6,0,254,153,160,430,4.36,2.6],['hiQ สูตร 3',66.67,2.22,7.2,3.33,0,88,0,36,133.33,0,0],['Infratini',501,13,50,27,0,500,280,185,499,5,4.5],['NAN LF',505.8,10.35,58.5,25.6,0,254,153,160,430,4.36,2.6],['enfalac LF',520,10.9,55,28,0,600,400,240,600,8.5,5.2],['Panenteral',511,15.3,54.5,12.85,12.85,439,220,225,564,5,3.5],['Nutramigen',500,14,55,25,0,570,390,240,610,9,3.5],['Pepti',494,12,56,26,0,345,189,150,554,3.9,3.7],['Pepti gastro',515,14,53.4,13.65,13.65,390,218,144,507,6,3.9],['Neocate',483,13,52.5,24.5,0,475,341,189,525,7.3,5.3],['Pediasure 1+ complete vanilla',467,13.87,61.3,18.2,0,463,388,176,606,6.48,3.1],['Milnutri sure',467,13.33,57.8,20,0,533.3,266.7,155.6,600,3.3,3.3],['Bendera',454,18.5,62.4,13.8,1.2,242,253,356,494,4.7,6.8],['Ensure',428,15.6,57.4,14,0,450,270,360,670,2.4,4.7],['Boost optimum',456,19,53,18,0,393,214,168,548,6,4],['นมจืดโฟโมสต์ 225 ml',62.22,3.11,4.89,3.55,0,124.44,88.89,42.22,168.89,0,0],['นมจืดโฟร์โมสต์ ไขมันต่ำ 225 ml',44.44,3.11,4.89,1.11,0,106.67,88.89,40,0,.13,0],['นมจืดโฟโมสต์ ไขมัน 0% 225 ml',35.56,3.56,4.89,0,0,124.44,88.89,42.22,0,0,0],['นมกล่องโฟโมสต์ omega 369 180 ml',55.55,2.22,5.55,2.78,0,88.89,66.67,41.67,111.11,2.92,.5],['enfagrow สูตร 3 จืด 180 ml',66.67,3.33,6.1,3.33,0,133.33,88.89,22.2,127.78,1.67,.5],['นมไทยเดนมาร์กจืด 200 ml',65,3,4.5,3.5,0,120,0,35,0,0,0],['enfalac A+ mind pro สูตร 1',510,10.5,56,28,0,360,240,136,510,4.5,3.3],['enfalac A+ mind pro สูตร 2',470,15,57,21,0,520,290,188,490,6.1,3.5],['enfalac A+ smart+ สูตร 1',520,11,53,30,0,470,240,136,630,8.9,5.2],['enfalac A+ smart+ สูตร 2',450,15.1,62,15.6,0,490,360,165,640,6.2,3.6],['Dulac สูตร 1',501,10.1,60.7,24.2,0,307,178,153,446,4.8,3],['Dupro สูตร 2',469,14.2,60.1,19.1,0,422,292,144,521,5.2,3.3],['S26 SMA 360 smart care (ชมพู) สูตร 1',506,10.69,52.8,28,0,305,191,219,497,5.4,4.58],['S26 Promil สูตร 2',461.7,15.6,56.63,19.2,0,540,343,271,546,5.6,3.35],['S26 progress สูตร 3',446.43,14.88,57.05,17.37,0,396.8,297.6,310,347.2,5.58,2.23],['HiQ prebioproteq สูตร 1',488,10.2,56.1,24.8,0,299,175,120,452,4.8,3.1],['HiQ prebioproteq สูตร 2',470,14.8,58.9,19.5,0,432,292,148,534,5.3,3.4],['Lactogen 1',514,10.8,59.2,26,0,257,133,130,420,4.1,4.1],['Lactogen 2',486,14.6,57.85,21.8,0,490,369,317,520,5.5,3.5],['นมตราหมี เบบี สูตร 1',514,10.8,59.2,26,0,257,133,130,420,4.1,4.1],['นมตราหมี เบบี สูตร 2',486,15.3,57.15,21.8,0,510,295,290,400,5.2,3.6],['นมผงตราหมี รสจืด สูตร 3',444.4,11.1,61.1,16.7,0,666.7,222.2,125,0,6.25,2.5],['คาร์เนชั่น 1+ จืด',444.4,11.1,58.3,19.4,0,666.7,222.2,125,0,5.56,2.5],['dumex dugrow 180 ml',50,2.22,6.11,2.22,0,111.11,66.67,41.67,122.22,.83,.5],['breast milk',67.7,1,7,3.8,0,22.5,13,20,47.5,0,0],['นมตราหมีสูตร 3 180 ซีซี',61.1,2.22,6.1,2.78,0,88.89,66.67,33.33,111.11,0,0],['S26 LF',505.8,10.35,58.5,25.6,0,254,153,160,430,4.36,2.6]
 ];
+const LIQUID_NAMES=new Set(FORMULAS.filter(r=>/\b(180|200|225)\s*(ml|ซีซี)/i.test(r[0])||r[0]==='breast milk'||r[0]==='hiQ สูตร 3').map(r=>r[0]));
+const seedDB=FORMULAS.map(r=>({id:uid(),type:'formula',name:r[0],basis_value:100,basis_unit:LIQUID_NAMES.has(r[0])?'mL':'g',kcal:r[1],protein:r[2],cho:r[3],fat:r[4],mct:r[5],calcium:r[6],phosphorus:r[7],sodium:r[8],potassium:r[9],iron:r[10],zinc:r[11],source:'Excel seed'}));
+seedDB.push(
+{id:uid(),type:'modular',name:'Dextrin',basis_value:1,basis_unit:'g',kcal:4,protein:0,cho:1,fat:0,mct:0,calcium:0,phosphorus:0,sodium:0,potassium:0,iron:0,zinc:0,source:'Excel seed'},
+{id:uid(),type:'modular',name:'Sucrose',basis_value:1,basis_unit:'g',kcal:4,protein:0,cho:1,fat:0,mct:0,calcium:0,phosphorus:0,sodium:0,potassium:0,iron:0,zinc:0,source:'Excel seed'},
+{id:uid(),type:'modular',name:'Whey protein',basis_value:1,basis_unit:'g',kcal:4,protein:1,cho:0,fat:0,mct:0,calcium:0,phosphorus:0,sodium:0,potassium:0,iron:0,zinc:0,source:'Excel seed'},
+{id:uid(),type:'modular',name:'LCT oil',basis_value:1,basis_unit:'g',kcal:9,protein:0,cho:0,fat:1,mct:0,calcium:0,phosphorus:0,sodium:0,potassium:0,iron:0,zinc:0,source:'Excel seed'},
+{id:uid(),type:'modular',name:'MCT oil',basis_value:1,basis_unit:'g',kcal:8.3,protein:0,cho:0,fat:1,mct:1,calcium:0,phosphorus:0,sodium:0,potassium:0,iron:0,zinc:0,source:'Excel seed'},
+{id:uid(),type:'food',name:'เนื้อสัตว์ไขมันต่ำ 1 ส่วน',basis_value:30,basis_unit:'g',kcal:35,protein:7,cho:0,fat:1,mct:0,calcium:0,phosphorus:0,sodium:0,potassium:0,iron:0,zinc:0,source:'Excel seed'},
+{id:uid(),type:'food',name:'เนื้อสัตว์ไขมันปานกลาง 1 ส่วน',basis_value:30,basis_unit:'g',kcal:55,protein:7,cho:0,fat:3,mct:0,calcium:0,phosphorus:0,sodium:0,potassium:0,iron:0,zinc:0,source:'Excel seed'},
+{id:uid(),type:'food',name:'เนื้อสัตว์ไขมันสูง 1 ส่วน',basis_value:30,basis_unit:'g',kcal:75,protein:7,cho:0,fat:5,mct:0,calcium:0,phosphorus:0,sodium:0,potassium:0,iron:0,zinc:0,source:'Excel seed'},
+{id:uid(),type:'food',name:'ข้าวสวย (exchange)',basis_value:60,basis_unit:'g',kcal:80,protein:2,cho:18,fat:0,mct:0,calcium:0,phosphorus:0,sodium:0,potassium:0,iron:0,zinc:0,source:'Excel seed'});
 
-const defaultState = {
-  patient:{alias:'',age:'',sex:'',weight:'',height:'',measureType:'height',measureDate:'',visitDate:'',note:''},
-  requirements:{energy:'',protein:'',fluid:'',fatPct:''},
-  pnif:{format:'PNIF',version:'0.1',type:'24hr_recall',warnings:[]},
-  meals:[],
-  foodDB:clone(defaultFoodDB),
-  modular:{name:'Daily modular recipe',finalVolume:900,notes:'',components:[],feeds:[]},
-  lastSummary:null
-};
+const defaultState={patient:{alias:'',age:'',sex:'',visitDate:'',weight:'',height:'',note:''},requirements:{fluid:'',energy:'',protein:'',fatPct:'',mctPct:'',calcium:''},settings:{defaultSource:'Thai FCD',needsReviewOnly:false},pnif:{},meals:[],modular:{name:'Daily modular recipe',finalVolume:'',notes:'',components:[],feeds:[],route:'',durationHr:''},foodDB:seedDB,lastSummary:null};
+let state=loadState(),deferredInstallPrompt=null;
+function loadState(){try{const x=localStorage.getItem('pedNutritionStateV3');return x?merge(defaultState,JSON.parse(x)):clone(defaultState)}catch{return clone(defaultState)}}function merge(a,b){const out=clone(a);Object.keys(b||{}).forEach(k=>out[k]=(typeof b[k]==='object'&&!Array.isArray(b[k])&&b[k]!==null)?{...(out[k]||{}),...b[k]}:b[k]);return out}function saveState(){localStorage.setItem('pedNutritionStateV3',JSON.stringify(state))}
 
-let state = loadState();
-let deferredInstallPrompt = null;
+function showTab(name){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.toggle('active',x.id===`tab-${name}`));if(name==='patient')renderPatient();if(name==='review')renderMeals();if(name==='modular')renderModular();if(name==='foods')renderFoodDB();if(name==='summary')renderSummary();if(name==='data')$('defaultSource').value=state.settings.defaultSource||'Thai FCD'}document.querySelectorAll('[data-tab]').forEach(x=>x.addEventListener('click',()=>showTab(x.dataset.tab)));
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').classList.remove('hidden')});$('installBtn').addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn').classList.add('hidden')});if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
-function loadState(){
-  try{ const saved = localStorage.getItem('pedNutritionStateV2'); return saved ? {...clone(defaultState),...JSON.parse(saved)} : clone(defaultState); }
-  catch(e){ return clone(defaultState); }
-}
-function saveState(){ localStorage.setItem('pedNutritionStateV2', JSON.stringify(state)); }
+function renderPatient(){const p=state.patient,r=state.requirements;['Alias','Age','Sex','VisitDate','Weight','Height','Note'].forEach(k=>{const el=$('patient'+k);if(el)el.value=p[k.charAt(0).toLowerCase()+k.slice(1)]||''});$('reqFluid').value=r.fluid||'';$('reqEnergy').value=r.energy||'';$('reqProtein').value=r.protein||'';$('reqFatPct').value=r.fatPct||'';$('reqMctPct').value=r.mctPct||'';$('reqCalcium').value=r.calcium||'';const w=num(p.weight),h=num(p.height),bmi=w&&h?w/(h/100)**2:0;$('patientSummary').innerHTML=`<div class="summary-grid"><div class="metric">Case<b>${esc(p.alias||'—')}</b></div><div class="metric">Age / Sex<b>${esc(p.age||'—')} ${p.age?'y':''} ${esc(p.sex||'')}</b></div><div class="metric">Weight<b>${w?round(w,2)+' kg':'—'}</b></div><div class="metric">Length / Height<b>${h?round(h,1)+' cm':'—'}</b></div><div class="metric">BMI<b>${bmi?round(bmi,2)+' kg/m²':'—'}</b></div></div>`;$('requirementSummary').innerHTML=`<div class="summary-grid"><div class="metric">Fluid<b>${r.fluid?esc(r.fluid)+' mL/day':'—'}</b>${w&&r.fluid?`<span>${round(num(r.fluid)/w,1)} mL/kg/day</span>`:''}</div><div class="metric">Energy<b>${r.energy?esc(r.energy)+' kcal/day':'—'}</b>${w&&r.energy?`<span>${round(num(r.energy)/w,1)} kcal/kg/day</span>`:''}</div><div class="metric">Protein<b>${r.protein?esc(r.protein)+' g/day':'—'}</b>${w&&r.protein?`<span>${round(num(r.protein)/w,2)} g/kg/day</span>`:''}</div><div class="metric">Total fat<b>${r.fatPct?esc(r.fatPct)+'% energy':'—'}</b></div><div class="metric">MCT<b>${r.mctPct?esc(r.mctPct)+'% energy':'—'}</b></div><div class="metric">Calcium<b>${r.calcium?esc(r.calcium)+' mg/day':'—'}</b></div></div>`}
+function savePatientForm(){state.patient={alias:$('patientAlias').value.trim(),age:$('patientAge').value,sex:$('patientSex').value,visitDate:$('patientVisitDate').value,weight:$('patientWeight').value,height:$('patientHeight').value,note:$('patientNote').value};state.requirements={fluid:$('reqFluid').value,energy:$('reqEnergy').value,protein:$('reqProtein').value,fatPct:$('reqFatPct').value,mctPct:$('reqMctPct').value,calcium:$('reqCalcium').value};saveState();renderPatient()}$('savePatientBtn').addEventListener('click',savePatientForm);['patientAlias','patientAge','patientSex','patientVisitDate','patientWeight','patientHeight','patientNote','reqFluid','reqEnergy','reqProtein','reqFatPct','reqMctPct','reqCalcium'].forEach(id=>$(id).addEventListener('change',savePatientForm));
 
-function showTab(name){
-  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id===`tab-${name}`));
-  if(name==='patient') renderPatient();
-  if(name==='review') renderMeals();
-  if(name==='foods') renderFoodDB();
-  if(name==='modular') renderModular();
-  if(name==='summary') renderSummary();
-}
+function normAmt(v){if(v===null||v===undefined||v==='')return{value:'',original:''};if(typeof v==='number')return{value:v,original:String(v)};const s=String(v).trim();const frac=s.match(/^(\d+)\s*\/\s*(\d+)$/);if(frac)return{value:Number(frac[1])/Number(frac[2]),original:s};const mixed=s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);if(mixed)return{value:Number(mixed[1])+Number(mixed[2])/Number(mixed[3]),original:s};const range=s.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);if(range)return{value:round((+range[1]+ +range[2])/2,2),original:s};const n=Number(s);return{value:Number.isFinite(n)?n:s,original:s}}
+function normIng(i={}){const a=normAmt(i.amount);return{id:i.id||uid(),food:i.food||i.name||'',amount:a.value,original_amount:a.original,unit:i.unit||'',weight_g:i.weight_g??'',volume_ml:i.volume_ml??'',raw_cooked:i.raw_cooked||'unknown',confidence:i.confidence||'medium',note:i.note||'',dbMatchId:i.dbMatchId||''}}
+function normItem(i={}){const a=normAmt(i.amount);return{id:i.id||uid(),time:i.time||'',food:i.food||i.name||'',amount:a.value,original_amount:a.original,unit:i.unit||'',weight_g:i.weight_g??'',volume_ml:i.volume_ml??'',raw_cooked:i.raw_cooked||'unknown',confidence:i.confidence||'medium',needs_review:Boolean(i.needs_review||i.confidence==='low'),note:i.note||'',ingredients:(i.ingredients||[]).map(normIng),calcMethod:i.calcMethod||'auto',dbMatchId:i.dbMatchId||'',sourcePreference:i.sourcePreference||state.settings.defaultSource||'Thai FCD',editOpen:false}}
+function extractJson(text){const f=text.match(/```(?:json)?\s*([\s\S]*?)```/i);if(f)text=f[1];const a=text.indexOf('{'),b=text.lastIndexOf('}');if(a<0||b<=a)throw new Error('ไม่พบ JSON object');return JSON.parse(text.slice(a,b+1))}
+function importPnif(){try{const o=extractJson($('pnifInput').value),type=o.type||'24hr_recall';state.pnif={format:o.format||'PNIF',version:o.version||'',type,warnings:o.warnings||[]};if(['daily_modular_recipe','modular_recipe'].includes(type)){importModular(o);$('pnifStatus').className='status ok';$('pnifStatus').textContent='Import modular diet สำเร็จ — เปิดหน้า Modular Diet เพื่อตรวจ/แก้';saveState();showTab('modular');return}if(!Array.isArray(o.items))throw new Error('PNIF ประเภท intake ต้องมี items[]');state.meals=o.items.map(normItem);sortMeals();saveState();$('pnifStatus').className='status ok';$('pnifStatus').textContent=`Import สำเร็จ ${state.meals.length} รายการ`;showTab('review')}catch(e){$('pnifStatus').className='status error';$('pnifStatus').textContent='Import ไม่สำเร็จ: '+e.message}}
+function importModular(o){const comps=(o.ingredients||[]).map(x=>{const a=normAmt(x.amount);return{id:uid(),name:x.food||x.name||'',amount:a.value,unit:x.unit||'',dbMatchId:'',kcalOverride:'',proteinOverride:'',fatOverride:'',mctOverride:'',choOverride:'',note:x.note||''}});const fp=o.feeding_plan||{},actual=o.actual_intake?.feeds||[];let feeds=[];if(actual.length)feeds=actual.map((x,i)=>({id:uid(),time:x.time||'',prescribed:x.prescribed_ml??fp.volume_per_feed_ml??'',actual:x.actual_ml??'',note:x.note||''}));else if(fp.feeds_per_day){for(let i=0;i<num(fp.feeds_per_day);i++)feeds.push({id:uid(),time:'',prescribed:fp.volume_per_feed_ml??'',actual:'',note:''})}state.modular={name:o.recipe_name||'Daily modular recipe',finalVolume:o.preparation?.final_volume_ml??o.final_volume_ml??'',notes:(o.warnings||[]).join(' | '),components:comps,feeds,route:fp.route||'',durationHr:fp.duration_hr_per_feed??''}}
+$('importPnifBtn').addEventListener('click',importPnif);$('clearPnifBtn').addEventListener('click',()=>{$('pnifInput').value='';$('pnifStatus').textContent=''});$('loadExampleBtn').addEventListener('click',()=>{$('pnifInput').value=JSON.stringify({format:'PNIF',version:'0.3',type:'24hr_recall',items:[{time:'12:00',food:'ข้าวผัด',amount:'3/4',unit:'จาน',ingredients:[],confidence:'high'},{time:'15:00',food:'ผลไม้',amount:null,unit:null,confidence:'medium',needs_review:true}]},null,2)});
 
-document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',()=>showTab(el.dataset.tab)));
+function sortMeals(){state.meals.sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));saveState()}function hasPortion(x){return x.weight_g!==''||x.volume_ml!==''||x.amount!==''}function portionText(x){if(x.weight_g!=='')return `${x.weight_g} g`;if(x.volume_ml!=='')return `${x.volume_ml} mL`;if(x.original_amount&&x.original_amount!==String(x.amount))return `${x.original_amount}${x.unit?' '+x.unit:''}`;return x.amount!==''?`${x.amount}${x.unit?' '+x.unit:''}`:''}function ingText(i){return `${i.food||'(ไม่ระบุ)'}${portionText(i)?' '+portionText(i):''}`}
+function autoCalcRule(m){const quantified=(m.ingredients||[]).filter(hasPortion),allQuant=m.ingredients.length>0&&quantified.length===m.ingredients.length,menuPortion=hasPortion(m);if(!m.ingredients.length)return menuPortion?{method:'whole',note:'Whole dish'}:{method:'none',note:'Portion missing'};if(!menuPortion){if(quantified.length)return{method:'ingredients',note:allQuant?'Ingredients':'Reported ingredients only — list may be incomplete'};return{method:'none',note:'Portion missing'};}if(allQuant)return{method:'ingredients',note:'Ingredients quantified; review if list is incomplete'};return{method:'whole',note:'Whole dish; incomplete ingredients kept as description'}}
+function renderMeals(){const c=$('mealsContainer');c.innerHTML='';const filtered=state.settings.needsReviewOnly?state.meals.filter(m=>m.needs_review||autoCalcRule(m).method==='none'):state.meals;const groups={};filtered.forEach(m=>(groups[m.time||'No time']??=[]).push(m));const nReview=state.meals.filter(m=>m.needs_review||autoCalcRule(m).method==='none').length;$('reviewSummary').textContent=`${state.meals.length} items • ${nReview} need review`;$('needsReviewBtn').textContent=`Needs review only: ${state.settings.needsReviewOnly?'On':'Off'}`;$('reviewWarnings').innerHTML=(state.pnif.warnings||[]).length?`<div class="warning-box">${state.pnif.warnings.map(esc).join(' • ')}</div>`:'';Object.entries(groups).forEach(([time,items])=>{const card=document.createElement('div');card.className='time-card';card.innerHTML=`<div class="time-head"><span>${esc(time)}</span><button class="small-btn secondary add-time">+ Add item at this time</button></div>`;card.querySelector('.add-time').onclick=()=>{state.meals.push(normItem({time:time==='No time'?'':time,food:'',needs_review:true}));saveState();renderMeals()};items.forEach(m=>card.appendChild(menuNode(m)));c.appendChild(card)});if(!filtered.length)c.innerHTML='<p class="muted">ไม่มีรายการใน filter นี้</p>'}
+function menuNode(m){const wrap=document.createElement('div');wrap.className='menu-row';const rule=m.calcMethod==='auto'?autoCalcRule(m):{method:m.calcMethod,note:'Manual selection'};const ing=(m.ingredients||[]).map(ingText);const shown=ing.slice(0,3).join(' • ')+(ing.length>3?` • +${ing.length-3} more`:'');wrap.innerHTML=`<div class="menu-main"><div><div class="menu-title">${esc(m.food||'(ยังไม่ได้ระบุเมนู)')} <span class="portion">${esc(portionText(m))}</span></div>${shown?`<div class="ingredients-line">ส่วนประกอบ: ${esc(shown)}</div>`:''}<div class="badges">${m.needs_review?'<span class="badge warn">Needs review</span>':''}<span class="badge">Calc: ${esc(rule.method)}</span>${rule.note?`<span class="badge ${rule.method==='none'?'warn':''}">${esc(rule.note)}</span>`:''}</div></div><div class="menu-actions"><button class="small-btn secondary edit">Edit</button><button class="small-btn secondary insert">Insert below</button><button class="small-btn danger del">Delete</button></div></div><div class="edit-slot"></div>`;wrap.querySelector('.edit').onclick=()=>{m.editOpen=!m.editOpen;renderMeals()};wrap.querySelector('.insert').onclick=()=>{const idx=state.meals.findIndex(x=>x.id===m.id);state.meals.splice(idx+1,0,normItem({time:m.time,food:'',needs_review:true}));saveState();renderMeals()};wrap.querySelector('.del').onclick=()=>{state.meals=state.meals.filter(x=>x.id!==m.id);saveState();renderMeals()};if(m.editOpen)wrap.querySelector('.edit-slot').appendChild(editPanel(m));return wrap}
+function editPanel(m){const d=document.createElement('div');d.className='edit-panel';d.innerHTML=`<div class="edit-grid"><label>Time<input data-k="time" value="${esc(m.time)}"></label><label>Menu<input data-k="food" value="${esc(m.food)}"></label><label>Amount<input data-k="amount" value="${esc(m.amount)}"></label><label>Unit<input data-k="unit" value="${esc(m.unit)}"></label><label>Weight g<input data-k="weight_g" type="number" step="0.1" value="${esc(m.weight_g)}"></label><label>Volume mL<input data-k="volume_ml" type="number" step="0.1" value="${esc(m.volume_ml)}"></label><label>Calculation<select data-k="calcMethod"><option value="auto">Auto</option><option value="whole">Whole dish</option><option value="ingredients">Ingredients</option><option value="hybrid">Hybrid</option></select></label><label>Preferred source<select data-k="sourcePreference"><option>Thai FCD</option><option>Custom</option><option>USDA</option><option>All</option></select></label></div><div class="calc-note">หลัก: ไม่มี portion ของเมนูแต่มีส่วนประกอบที่มีปริมาณ → คำนวณส่วนที่รายงานได้; ไม่มีทั้ง portion และปริมาณส่วนประกอบ → ไม่เดาและไม่คำนวณรายการนั้น</div><div class="section-title-row top-gap"><strong>Ingredients</strong><button class="small-btn secondary add-ing">+ Ingredient</button></div><div class="ings"></div><label class="top-gap">Note<input data-k="note" value="${esc(m.note)}"></label><label><input data-k="needs_review" type="checkbox" ${m.needs_review?'checked':''}> Needs review</label>`;d.querySelector('[data-k="calcMethod"]').value=m.calcMethod||'auto';d.querySelector('[data-k="sourcePreference"]').value=m.sourcePreference||state.settings.defaultSource||'Thai FCD';d.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('change',()=>{const k=el.dataset.k;m[k]=el.type==='checkbox'?el.checked:el.value;if(k==='amount')m.original_amount=el.value;saveState();if(['time','food','amount','unit','weight_g','volume_ml','calcMethod','needs_review'].includes(k))renderMeals()}));const box=d.querySelector('.ings');(m.ingredients||[]).forEach(i=>box.appendChild(ingEditor(m,i)));d.querySelector('.add-ing').onclick=()=>{m.ingredients.push(normIng({}));saveState();renderMeals()};return d}
+function ingEditor(m,i){const r=document.createElement('div');r.className='ingredient-editor';r.innerHTML=`<label>Ingredient<input data-k="food" value="${esc(i.food)}"></label><label>Amount<input data-k="amount" value="${esc(i.amount)}"></label><label>Unit<input data-k="unit" value="${esc(i.unit)}"></label><label>Weight g<input data-k="weight_g" type="number" step="0.1" value="${esc(i.weight_g)}"></label><button class="small-btn danger">Delete</button>`;r.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('change',()=>{i[el.dataset.k]=el.value;if(el.dataset.k==='amount')i.original_amount=el.value;saveState();renderMeals()}));r.querySelector('button').onclick=()=>{m.ingredients=m.ingredients.filter(x=>x.id!==i.id);saveState();renderMeals()};return r}
+$('addMealBtn').addEventListener('click',()=>{state.meals.push(normItem({needs_review:true}));saveState();renderMeals()});$('needsReviewBtn').addEventListener('click',()=>{state.settings.needsReviewOnly=!state.settings.needsReviewOnly;saveState();renderMeals()});
 
-window.addEventListener('beforeinstallprompt', e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').classList.remove('hidden');});
-$('installBtn').addEventListener('click', async()=>{ if(!deferredInstallPrompt) return; deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice; deferredInstallPrompt=null; $('installBtn').classList.add('hidden'); });
-if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+function exactCustom(name){const q=String(name||'').trim().toLowerCase();return state.foodDB.find(f=>f.name.trim().toLowerCase()===q)||state.foodDB.find(f=>f.name.toLowerCase().includes(q)||q.includes(f.name.toLowerCase()))}
+function factorFor(x,f){const bu=f.basis_unit.toLowerCase();if(x.weight_g!==''&&bu==='g')return num(x.weight_g)/num(f.basis_value);if(x.volume_ml!==''&&bu==='ml')return num(x.volume_ml)/num(f.basis_value);if(String(x.unit||'').toLowerCase()===bu&&x.amount!=='')return num(x.amount)/num(f.basis_value);return null}
+const NUT=['kcal','protein','fat','mct','cho','calcium','phosphorus','sodium','potassium','iron','zinc'];function emptyNut(){return Object.fromEntries(NUT.map(k=>[k,0]))}function addNut(t,f,fac){NUT.forEach(k=>t[k]+=num(f[k])*fac)}
+function calcPart(x,time,missing){const f=exactCustom(x.food);if(!f){missing.push({time,food:x.food,reason:'No Custom DB match / choose Thai FCD or USDA manually'});return null}const fac=factorFor(x,f);if(fac===null){missing.push({time,food:x.food,reason:`Need ${f.basis_unit} amount or matching unit`});return null}const t=emptyNut();addNut(t,f,fac);return t}
+function calculateIntake(){const total=emptyNut(),missing=[];let calcItems=0;state.meals.forEach(m=>{let method=m.calcMethod==='auto'?autoCalcRule(m).method:m.calcMethod;let any=false;if(method==='none'){missing.push({time:m.time,food:m.food,reason:'Portion missing'});return}if(method==='whole'){const t=calcPart(m,m.time,missing);if(t){NUT.forEach(k=>total[k]+=t[k]);any=true}}else if(method==='ingredients'){(m.ingredients||[]).filter(hasPortion).forEach(i=>{const t=calcPart(i,m.time,missing);if(t){NUT.forEach(k=>total[k]+=t[k]);any=true}});if((m.ingredients||[]).some(i=>!hasPortion(i)))missing.push({time:m.time,food:m.food,reason:'Some ingredients have no portion; calculated reported components only'})}else if(method==='hybrid'){// no silent standard-recipe filling: use quantified ingredients only and flag remainder
+(m.ingredients||[]).filter(hasPortion).forEach(i=>{const t=calcPart(i,m.time,missing);if(t){NUT.forEach(k=>total[k]+=t[k]);any=true}});missing.push({time:m.time,food:m.food,reason:'Hybrid: only reported quantified ingredients calculated; unreported remainder not estimated automatically'})}if(any)calcItems++});state.lastSummary={total,missing,calcItems,totalItems:state.meals.length,at:new Date().toISOString()};saveState();return state.lastSummary}
+function renderSummary(){const s=state.lastSummary||calculateIntake(),t=s.total,incomplete=s.missing.length>0,prefix=incomplete?'≥ ':'';const macro=t.protein*4+t.cho*4+t.fat*9;$('nutrientSummary').innerHTML=`${incomplete?`<div class="incomplete">Total intake is incomplete • ${s.calcItems}/${s.totalItems} menu items contributed to calculation</div>`:''}<div class="summary-grid top-gap"><div class="metric">Energy<b>${prefix}${round(t.kcal)} kcal/day</b></div><div class="metric">Protein<b>${prefix}${round(t.protein)} g/day</b><span>${macro?round(t.protein*4/macro*100,1):0}% energy</span></div><div class="metric">Fat<b>${prefix}${round(t.fat)} g/day</b><span>${macro?round(t.fat*9/macro*100,1):0}% energy</span></div><div class="metric">MCT<b>${prefix}${round(t.mct)} g/day</b><span>${t.kcal?round(t.mct*8.3/t.kcal*100,1):0}% energy*</span></div><div class="metric">CHO<b>${prefix}${round(t.cho)} g/day</b><span>${macro?round(t.cho*4/macro*100,1):0}% energy</span></div></div><div class="summary-grid top-gap"><div class="metric">Calcium<b>${prefix}${round(t.calcium)} mg</b></div><div class="metric">Phosphorus<b>${prefix}${round(t.phosphorus)} mg</b></div><div class="metric">Sodium<b>${prefix}${round(t.sodium)} mg</b></div><div class="metric">Potassium<b>${prefix}${round(t.potassium)} mg</b></div><div class="metric">Iron<b>${prefix}${round(t.iron)} mg</b></div><div class="metric">Zinc<b>${prefix}${round(t.zinc)} mg</b></div></div>${requirementCompare(t)}<p class="muted">*MCT % ใช้ 8.3 kcal/g เฉพาะรายการที่ฐานข้อมูลระบุ MCT โดยตรง</p>`;$('unmatchedList').innerHTML=s.missing.length?`<div class="unmatched"><strong>Not calculated / partial (${s.missing.length})</strong>${s.missing.map(x=>`<div>${esc(x.time||'—')} — ${esc(x.food||'(blank)')}: ${esc(x.reason)}</div>`).join('')}</div>`:'<div class="status ok">รายการทั้งหมดมีข้อมูลเพียงพอสำหรับฐาน Custom ที่ match ได้</div>'}
+function requirementCompare(t){const r=state.requirements,w=num(state.patient.weight),a=[];if(r.fluid)a.push(`Fluid target ${esc(r.fluid)} mL/day`);if(r.energy)a.push(`Energy ${round(t.kcal/num(r.energy)*100,1)}% target`);if(r.protein)a.push(`Protein ${round(t.protein/num(r.protein)*100,1)}% target`);if(r.calcium)a.push(`Calcium ${round(t.calcium/num(r.calcium)*100,1)}% target`);if(w)a.push(`${round(t.kcal/w,1)} kcal/kg/day • ${round(t.protein/w,2)} g protein/kg/day`);return a.length?`<p class="muted top-gap"><strong>Requirement comparison:</strong> ${a.join(' • ')}</p>`:''}$('calculateBtn').addEventListener('click',()=>{calculateIntake();renderSummary()});
 
+function renderFoodDB(){const body=$('foodDbBody');body.innerHTML='';const typ=$('dbTypeFilter').value||'all',q=($('dbSearch').value||'').toLowerCase();state.foodDB.filter(f=>(typ==='all'||f.type===typ)&&(!q||f.name.toLowerCase().includes(q))).forEach(f=>{const tr=document.createElement('tr');tr.innerHTML=`<td><select data-k="type"><option value="food">Food</option><option value="formula">Formula</option><option value="modular">Modular</option></select></td><td><input data-k="name" value="${esc(f.name)}"></td><td><input data-k="basis_value" type="number" value="${esc(f.basis_value)}" style="width:70px"><select data-k="basis_unit"><option>g</option><option>mL</option><option>portion</option></select></td>${['kcal','protein','fat','mct','cho','calcium','phosphorus','sodium','potassium','iron','zinc'].map(k=>`<td><input data-k="${k}" type="number" step="0.01" value="${esc(f[k]||0)}"></td>`).join('')}<td><input data-k="source" value="${esc(f.source||'Custom')}"></td><td><button class="small-btn danger">Delete</button></td>`;tr.querySelector('[data-k="type"]').value=f.type;tr.querySelector('[data-k="basis_unit"]').value=f.basis_unit;tr.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('change',()=>{f[el.dataset.k]=el.value;saveState()}));tr.querySelector('button').onclick=()=>{state.foodDB=state.foodDB.filter(x=>x.id!==f.id);saveState();renderFoodDB()};body.appendChild(tr)})}
+$('dbTypeFilter').addEventListener('change',renderFoodDB);$('dbSearch').addEventListener('input',renderFoodDB);$('addFoodDbBtn').addEventListener('click',()=>{state.foodDB.unshift({id:uid(),type:'food',name:'',basis_value:100,basis_unit:'g',kcal:0,protein:0,fat:0,mct:0,cho:0,calcium:0,phosphorus:0,sodium:0,potassium:0,iron:0,zinc:0,source:'Custom'});saveState();renderFoodDB()});
 
-function renderPatient(){
-  const p=state.patient||defaultState.patient, r=state.requirements||defaultState.requirements;
-  $('patientAlias').value=p.alias||''; $('patientAge').value=p.age||''; $('patientSex').value=p.sex||'';
-  $('patientWeight').value=p.weight||''; $('patientHeight').value=p.height||''; $('patientMeasureType').value=p.measureType||'height';
-  $('patientMeasureDate').value=p.measureDate||''; $('patientVisitDate').value=p.visitDate||''; $('patientNote').value=p.note||'';
-  $('reqEnergy').value=r.energy||''; $('reqProtein').value=r.protein||''; $('reqFluid').value=r.fluid||''; $('reqFatPct').value=r.fatPct||'';
-  const w=num(p.weight), h=num(p.height), bmi=w&&h?w/((h/100)**2):0;
-  $('patientSummary').innerHTML=`<strong>${esc(p.alias||'Anonymous case')}</strong><div class="summary-grid"><div class="metric">Weight<b>${w?round(w,2)+' kg':'—'}</b></div><div class="metric">${p.measureType==='length'?'Length':'Height'}<b>${h?round(h,1)+' cm':'—'}</b></div><div class="metric">BMI<b>${bmi?round(bmi,2)+' kg/m²':'—'}</b></div><div class="metric">Age / Sex<b>${esc(p.age||'—')} ${p.age?'y':''} ${esc(p.sex||'')}</b></div></div><p class="muted">BMI แสดงเป็นค่าคำนวณดิบเท่านั้น รุ่นนี้ยังไม่แปลผล BMI-for-age/growth reference</p>`;
-  $('requirementSummary').innerHTML=`<div class="summary-grid"><div class="metric">Energy<b>${r.energy?esc(r.energy)+' kcal/day':'—'}</b><span>${w&&r.energy?round(num(r.energy)/w,1)+' kcal/kg/day':''}</span></div><div class="metric">Protein<b>${r.protein?esc(r.protein)+' g/day':'—'}</b><span>${w&&r.protein?round(num(r.protein)/w,2)+' g/kg/day':''}</span></div><div class="metric">Fluid<b>${r.fluid?esc(r.fluid)+' mL/day':'—'}</b><span>${w&&r.fluid?round(num(r.fluid)/w,1)+' mL/kg/day':''}</span></div><div class="metric">Fat target<b>${r.fatPct?esc(r.fatPct)+'% kcal':'—'}</b></div></div>`;
-}
-function savePatientForm(){
-  state.patient={alias:$('patientAlias').value.trim(),age:$('patientAge').value,sex:$('patientSex').value,weight:$('patientWeight').value,height:$('patientHeight').value,measureType:$('patientMeasureType').value,measureDate:$('patientMeasureDate').value,visitDate:$('patientVisitDate').value,note:$('patientNote').value};
-  state.requirements={energy:$('reqEnergy').value,protein:$('reqProtein').value,fluid:$('reqFluid').value,fatPct:$('reqFatPct').value};
-  saveState(); renderPatient();
-}
-$('savePatientBtn').addEventListener('click',savePatientForm);
-['patientAlias','patientAge','patientSex','patientWeight','patientHeight','patientMeasureType','patientMeasureDate','patientVisitDate','patientNote','reqEnergy','reqProtein','reqFluid','reqFatPct'].forEach(id=>$(id).addEventListener('change',savePatientForm));
+function blankComp(){return{id:uid(),name:'',amount:'',unit:'g',dbMatchId:'',kcalOverride:'',proteinOverride:'',fatOverride:'',mctOverride:'',choOverride:'',note:''}}function blankFeed(){return{id:uid(),time:'',prescribed:'',actual:'',note:''}}
+function componentCalc(c){const f=exactCustom(c.name);if(f){const fac=factorFor({amount:c.amount,unit:c.unit,weight_g:c.unit==='g'?c.amount:'',volume_ml:c.unit==='mL'?c.amount:''},f);if(fac!==null){const t=emptyNut();addNut(t,f,fac);return t}}const t=emptyNut();t.kcal=num(c.kcalOverride);t.protein=num(c.proteinOverride);t.fat=num(c.fatOverride);t.mct=num(c.mctOverride);t.cho=num(c.choOverride);return t}
+function modularTotals(){const t=emptyNut();state.modular.components.forEach(c=>{const x=componentCalc(c);NUT.forEach(k=>t[k]+=x[k])});return t}
+function renderModular(){$('modName').value=state.modular.name||'';$('modFinalVolume').value=state.modular.finalVolume||'';$('modNotes').value=state.modular.notes||'';const c=$('modComponents');c.innerHTML='';state.modular.components.forEach(comp=>{const r=document.createElement('div');r.className='mod-row';r.innerHTML=`<label>Component<input data-k="name" value="${esc(comp.name)}"></label><label>Amount<input data-k="amount" type="number" step="0.1" value="${esc(comp.amount)}"></label><label>Unit<input data-k="unit" value="${esc(comp.unit)}"></label><label>kcal override<input data-k="kcalOverride" type="number" step="0.1" value="${esc(comp.kcalOverride)}"></label><label>Protein g<input data-k="proteinOverride" type="number" step="0.1" value="${esc(comp.proteinOverride)}"></label><label>Fat g<input data-k="fatOverride" type="number" step="0.1" value="${esc(comp.fatOverride)}"></label><label>CHO g<input data-k="choOverride" type="number" step="0.1" value="${esc(comp.choOverride)}"></label><button class="small-btn danger">Delete</button>`;r.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('change',()=>{comp[el.dataset.k]=el.value;saveState();renderModularSummary()}));r.querySelector('button').onclick=()=>{state.modular.components=state.modular.components.filter(x=>x.id!==comp.id);saveState();renderModular()};c.appendChild(r)});const f=$('feedSchedule');f.innerHTML='';state.modular.feeds.forEach(feed=>{const r=document.createElement('div');r.className='feed-row';r.innerHTML=`<label>Time<input data-k="time" value="${esc(feed.time)}"></label><label>Prescribed mL<input data-k="prescribed" type="number" value="${esc(feed.prescribed)}"></label><label>Actual mL<input data-k="actual" type="number" value="${esc(feed.actual)}"></label><label>% consumed<input disabled value="${feed.prescribed?round(num(feed.actual)/num(feed.prescribed)*100,1):0}%"></label><label>Note<input data-k="note" value="${esc(feed.note)}"></label><button class="small-btn danger">Delete</button>`;r.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('change',()=>{feed[el.dataset.k]=el.value;saveState();renderModular()}));r.querySelector('button').onclick=()=>{state.modular.feeds=state.modular.feeds.filter(x=>x.id!==feed.id);saveState();renderModular()};f.appendChild(r)});renderModularSummary()}
+function renderModularSummary(){const t=modularTotals(),vol=num(state.modular.finalVolume),pres=state.modular.feeds.reduce((s,x)=>s+num(x.prescribed),0),act=state.modular.feeds.reduce((s,x)=>s+num(x.actual),0),ratio=vol?act/vol:0;$('modRecipeSummary').innerHTML=`<div class="summary-grid"><div class="metric">Recipe energy<b>${round(t.kcal)} kcal</b></div><div class="metric">Protein<b>${round(t.protein)} g</b></div><div class="metric">Fat<b>${round(t.fat)} g</b></div><div class="metric">MCT<b>${round(t.mct)} g</b></div><div class="metric">CHO<b>${round(t.cho)} g</b></div><div class="metric">Concentration<b>${vol?round(t.kcal/vol,3)+' kcal/mL':'—'}</b></div></div>`;$('feedSummary').innerHTML=`<div class="summary-grid"><div class="metric">Prescribed<b>${round(pres)} mL/day</b></div><div class="metric">Actual<b>${round(act)} mL/day</b></div><div class="metric">Consumed<b>${pres?round(act/pres*100,1):0}%</b></div><div class="metric">Actual energy<b>${round(t.kcal*ratio)} kcal</b></div><div class="metric">Actual protein<b>${round(t.protein*ratio)} g</b></div><div class="metric">Actual fat<b>${round(t.fat*ratio)} g</b></div></div>`}
+['modName','modFinalVolume','modNotes'].forEach(id=>$(id).addEventListener('change',()=>{const k=id==='modName'?'name':id==='modFinalVolume'?'finalVolume':'notes';state.modular[k]=$(id).value;saveState();renderModularSummary()}));$('addModComponentBtn').onclick=()=>{state.modular.components.push(blankComp());saveState();renderModular()};$('addFeedBtn').onclick=()=>{state.modular.feeds.push(blankFeed());saveState();renderModular()};$('saveModularBtn').onclick=()=>{saveState();renderModularSummary()};
 
-function normalizeAmount(v){
-  if(typeof v==='number') return {value:v,original:String(v)};
-  if(v===null || v===undefined || v==='') return {value:'',original:''};
-  const s=String(v).trim();
-  const m=s.match(/^\s*(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)\s*$/);
-  if(m) return {value:round((Number(m[1])+Number(m[2]))/2,2),original:s};
-  const n=Number(s); return {value:Number.isFinite(n)?n:s,original:s};
-}
-function normalizeItem(item={}){
-  const a=normalizeAmount(item.amount);
-  return {
-    id:item.id||uid(), time:item.time||'', type:item.type||inferType(item), food:item.food||item.name||'', amount:a.value,
-    original_amount:a.original, unit:item.unit||'', weight_g:item.weight_g??'', volume_ml:item.volume_ml??'', raw_cooked:item.raw_cooked||'unknown',
-    brand:item.brand||item.formula||'', concentration_kcal_oz:item.kcal_oz??item.concentration_kcal_oz??'', confidence:item.confidence||'medium',
-    needs_review:Boolean(item.needs_review||item.confidence==='low'), note:item.note||'', ingredients:(item.ingredients||[]).map(normalizeIngredient)
-  };
-}
-function normalizeIngredient(i={}){
-  const a=normalizeAmount(i.amount);
-  return {id:i.id||uid(), food:i.food||i.name||'', amount:a.value, original_amount:a.original, unit:i.unit||'', weight_g:i.weight_g??'', raw_cooked:i.raw_cooked||'unknown', confidence:i.confidence||'medium', note:i.note||''};
-}
-function inferType(item){
-  const s=((item.food||'')+' '+(item.brand||item.formula||'')).toLowerCase();
-  if(s.includes('formula')||s.includes('นม')||item.kcal_oz) return 'medical_formula';
-  if(s.includes('modular')) return 'saved_modular';
-  return 'regular_food';
-}
-function extractJson(text){
-  const fenced=text.match(/```(?:json)?\s*([\s\S]*?)```/i); if(fenced) text=fenced[1];
-  const first=text.indexOf('{'), last=text.lastIndexOf('}'); if(first<0||last<=first) throw new Error('ไม่พบ JSON object');
-  return JSON.parse(text.slice(first,last+1));
-}
-function importPnif(){
-  try{
-    const obj=extractJson($('pnifInput').value);
-    if(!obj || !Array.isArray(obj.items)) throw new Error('PNIF ต้องมี items เป็น array');
-    state.pnif={format:obj.format||'PNIF',version:obj.version||'0.1',type:obj.type||'24hr_recall',warnings:obj.warnings||[]};
-    state.meals=obj.items.map(normalizeItem);
-    sortMeals(); saveState();
-    $('pnifStatus').className='status ok'; $('pnifStatus').textContent=`Import สำเร็จ ${state.meals.length} รายการ — ไปที่ Review Intake เพื่อแก้ไขก่อนคำนวณ`;
-    renderMeals(); showTab('review');
-  }catch(e){ $('pnifStatus').className='status error'; $('pnifStatus').textContent='Import ไม่สำเร็จ: '+e.message; }
-}
-$('importPnifBtn').addEventListener('click',importPnif);
-$('clearPnifBtn').addEventListener('click',()=>{$('pnifInput').value='';$('pnifStatus').textContent='';});
-$('loadExampleBtn').addEventListener('click',()=>{$('pnifInput').value=JSON.stringify({format:'PNIF',version:'0.1',type:'24hr_recall',items:[{time:'10:00',food:'นมจืด',amount:180,unit:'mL',confidence:'high'},{time:'12:00',food:'ข้าว',amount:2,unit:'ทัพพี',confidence:'medium',needs_review:true,ingredients:[]}],warnings:['ตัวอย่างสำหรับทดสอบการแก้ไขและแทรกรายการ']},null,2)});
+$('defaultSource').addEventListener('change',()=>{state.settings.defaultSource=$('defaultSource').value;saveState()});$('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`ped-nutrition-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href)});$('importBackupInput').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{state=merge(defaultState,JSON.parse(await f.text()));saveState();renderPatient();renderMeals();renderFoodDB();renderModular();alert('Restore สำเร็จ')}catch{alert('Backup ไม่ถูกต้อง')}});$('resetBtn').addEventListener('click',()=>{if(confirm('ล้างข้อมูล local ทั้งหมด?')){localStorage.removeItem('pedNutritionStateV3');location.reload()}});
 
-function sortMeals(){ state.meals.sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99')); saveState(); }
-$('sortMealsBtn').addEventListener('click',()=>{sortMeals();renderMeals();});
-$('addMealBtn').addEventListener('click',()=>{ state.meals.push(normalizeItem({time:'',food:'',confidence:'medium',needs_review:true})); saveState(); renderMeals(); });
-
-function esc(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
-function fieldLabel(label,input){return `<label>${label}${input}</label>`}
-function typeOptions(v){return [['regular_food','Regular food'],['medical_formula','Medical formula'],['saved_modular','Saved modular recipe'],['fortifier','Fortifier / modular component']].map(([x,l])=>`<option value="${x}" ${x===v?'selected':''}>${l}</option>`).join('');}
-function rcOptions(v){return ['unknown','raw','cooked','ready_to_feed'].map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('');}
-
-function renderMeals(){
-  const c=$('mealsContainer'); c.innerHTML='';
-  $('reviewWarnings').innerHTML=(state.pnif.warnings||[]).map(w=>`<div class="warning-box">⚠️ ${esc(w)}</div>`).join('');
-  if(!state.meals.length){c.innerHTML='<p class="muted">ยังไม่มีรายการอาหาร — Import PNIF หรือกด + Add food</p>';return;}
-  state.meals.forEach((m,idx)=>{
-    const card=document.createElement('div'); card.className='meal-card'+(m.needs_review?' needs-review':''); card.dataset.id=m.id;
-    card.innerHTML=`
-      <div class="meal-head">
-        ${fieldLabel('Time',`<input data-k="time" value="${esc(m.time)}" placeholder="11:00">`)}
-        ${fieldLabel('Food / dish',`<input data-k="food" value="${esc(m.food)}" placeholder="ชื่ออาหาร">`)}
-        ${fieldLabel('Amount',`<input data-k="amount" value="${esc(m.amount)}" placeholder="1">`)}
-        ${fieldLabel('Unit',`<input data-k="unit" value="${esc(m.unit)}" placeholder="g, mL, ชิ้น">`)}
-        ${fieldLabel('Type',`<select data-k="type">${typeOptions(m.type)}</select>`)}
-        <div class="meal-actions"><button class="small-btn secondary" data-action="insert">+ Insert below</button><button class="small-btn danger" data-action="delete">Delete</button></div>
-      </div>
-      <div class="grid-4" style="margin-top:8px">
-        ${fieldLabel('Weight g',`<input data-k="weight_g" type="number" step="0.1" value="${esc(m.weight_g)}">`)}
-        ${fieldLabel('Volume mL',`<input data-k="volume_ml" type="number" step="0.1" value="${esc(m.volume_ml)}">`)}
-        ${fieldLabel('Raw/Cooked',`<select data-k="raw_cooked">${rcOptions(m.raw_cooked)}</select>`)}
-        ${fieldLabel('Brand / formula',`<input data-k="brand" value="${esc(m.brand)}">`)}
-      </div>
-      <div class="grid-4" style="margin-top:8px">
-        ${fieldLabel('kcal/oz',`<input data-k="concentration_kcal_oz" type="number" step="0.1" value="${esc(m.concentration_kcal_oz)}">`)}
-        ${fieldLabel('Confidence',`<select data-k="confidence"><option ${m.confidence==='high'?'selected':''}>high</option><option ${m.confidence==='medium'?'selected':''}>medium</option><option ${m.confidence==='low'?'selected':''}>low</option></select>`)}
-        ${fieldLabel('Needs review',`<select data-k="needs_review"><option value="false" ${!m.needs_review?'selected':''}>No</option><option value="true" ${m.needs_review?'selected':''}>Yes</option></select>`)}
-        ${fieldLabel('Note',`<input data-k="note" value="${esc(m.note)}">`)}
-      </div>
-      <div class="ingredient-wrap"><div><strong>Ingredients</strong> <button class="small-btn secondary" data-action="addIngredient">+ Add ingredient</button></div><div class="ingredients"></div></div>
-    `;
-    card.querySelectorAll('[data-k]').forEach(inp=>inp.addEventListener('change',()=>{let v=inp.value;if(inp.dataset.k==='needs_review')v=v==='true';m[inp.dataset.k]=v;saveState();renderMeals();}));
-    card.querySelector('[data-action="insert"]').addEventListener('click',()=>{state.meals.splice(idx+1,0,normalizeItem({time:m.time,food:'',needs_review:true}));saveState();renderMeals();});
-    card.querySelector('[data-action="delete"]').addEventListener('click',()=>{state.meals=state.meals.filter(x=>x.id!==m.id);saveState();renderMeals();});
-    card.querySelector('[data-action="addIngredient"]').addEventListener('click',()=>{m.ingredients.push(normalizeIngredient({}));saveState();renderMeals();});
-    const iw=card.querySelector('.ingredients');
-    m.ingredients.forEach(ing=>{
-      const row=document.createElement('div'); row.className='ingredient-row';
-      row.innerHTML=`${fieldLabel('Food',`<input data-k="food" value="${esc(ing.food)}">`)}${fieldLabel('Amount',`<input data-k="amount" value="${esc(ing.amount)}">`)}${fieldLabel('Unit',`<input data-k="unit" value="${esc(ing.unit)}">`)}${fieldLabel('Weight g',`<input data-k="weight_g" type="number" step="0.1" value="${esc(ing.weight_g)}">`)}${fieldLabel('Raw/Cooked',`<select data-k="raw_cooked">${rcOptions(ing.raw_cooked)}</select>`)}<button class="small-btn danger">Delete</button>`;
-      row.querySelectorAll('[data-k]').forEach(inp=>inp.addEventListener('change',()=>{ing[inp.dataset.k]=inp.value;saveState();}));
-      row.querySelector('button').addEventListener('click',()=>{m.ingredients=m.ingredients.filter(x=>x.id!==ing.id);saveState();renderMeals();});
-      iw.appendChild(row);
-    });
-    if(m.needs_review) card.insertAdjacentHTML('afterbegin','<span class="review-badge">Needs review</span>');
-    c.appendChild(card);
-  });
-}
-
-function renderFoodDB(){
-  const body=$('foodDbBody');body.innerHTML='';
-  state.foodDB.forEach(f=>{
-    const tr=document.createElement('tr');tr.className='food-edit-row';
-    tr.innerHTML=`<td><input data-k="name" value="${esc(f.name)}"></td><td><input data-k="basis_value" type="number" step="0.1" value="${esc(f.basis_value)}" style="width:65px"> <input data-k="basis_unit" value="${esc(f.basis_unit)}" style="width:70px"></td><td><input data-k="kcal" type="number" step="0.01" value="${esc(f.kcal)}"></td><td><input data-k="protein" type="number" step="0.01" value="${esc(f.protein)}"></td><td><input data-k="fat" type="number" step="0.01" value="${esc(f.fat)}"></td><td><input data-k="cho" type="number" step="0.01" value="${esc(f.cho)}"></td><td><input data-k="source" value="${esc(f.source)}"></td><td><button class="small-btn danger">Delete</button></td>`;
-    tr.querySelectorAll('[data-k]').forEach(inp=>inp.addEventListener('change',()=>{f[inp.dataset.k]=inp.value;saveState();}));
-    tr.querySelector('button').addEventListener('click',()=>{state.foodDB=state.foodDB.filter(x=>x.id!==f.id);saveState();renderFoodDB();});
-    body.appendChild(tr);
-  });
-}
-$('addFoodDbBtn').addEventListener('click',()=>{state.foodDB.unshift({id:uid(),name:'',basis_value:100,basis_unit:'g',kcal:0,protein:0,fat:0,cho:0,sodium:0,potassium:0,calcium:0,phosphorus:0,iron:0,zinc:0,vitA:0,vitD:0,vitE:0,source:'Custom'});saveState();renderFoodDB();});
-
-function modComponentBlank(){return {id:uid(),name:'',amount:0,unit:'g',kcal:0,protein:0,fat:0,cho:0};}
-function feedBlank(){return {id:uid(),time:'',prescribed:0,actual:0,note:''};}
-function renderModular(){
-  $('modName').value=state.modular.name||'';$('modFinalVolume').value=state.modular.finalVolume||'';$('modNotes').value=state.modular.notes||'';
-  const c=$('modComponents');c.innerHTML='';
-  state.modular.components.forEach(comp=>{
-    const r=document.createElement('div');r.className='mod-row';
-    r.innerHTML=`${fieldLabel('Component',`<input data-k="name" value="${esc(comp.name)}" placeholder="formula / dextrin / MCT">`)}${fieldLabel('Amount',`<input data-k="amount" type="number" step="0.1" value="${esc(comp.amount)}">`)}${fieldLabel('Unit',`<input data-k="unit" value="${esc(comp.unit)}">`)}${fieldLabel('kcal total',`<input data-k="kcal" type="number" step="0.1" value="${esc(comp.kcal)}">`)}${fieldLabel('Protein g',`<input data-k="protein" type="number" step="0.1" value="${esc(comp.protein)}">`)}${fieldLabel('Fat g',`<input data-k="fat" type="number" step="0.1" value="${esc(comp.fat)}">`)}${fieldLabel('CHO g',`<input data-k="cho" type="number" step="0.1" value="${esc(comp.cho)}">`)}<button class="small-btn danger">Delete</button>`;
-    r.querySelectorAll('[data-k]').forEach(inp=>inp.addEventListener('change',()=>{comp[inp.dataset.k]=inp.value;saveState();renderModularSummary();}));
-    r.querySelector('button').addEventListener('click',()=>{state.modular.components=state.modular.components.filter(x=>x.id!==comp.id);saveState();renderModular();});c.appendChild(r);
-  });
-  const f=$('feedSchedule');f.innerHTML='';
-  state.modular.feeds.forEach(feed=>{
-    const r=document.createElement('div');r.className='feed-row';
-    r.innerHTML=`${fieldLabel('Time',`<input data-k="time" value="${esc(feed.time)}">`)}${fieldLabel('Prescribed mL',`<input data-k="prescribed" type="number" step="1" value="${esc(feed.prescribed)}">`)}${fieldLabel('Actual mL',`<input data-k="actual" type="number" step="1" value="${esc(feed.actual)}">`)}${fieldLabel('% consumed',`<input value="${feed.prescribed?round(num(feed.actual)/num(feed.prescribed)*100,1):0}%" disabled>`)}${fieldLabel('Note',`<input data-k="note" value="${esc(feed.note)}">`)}<button class="small-btn danger">Delete</button>`;
-    r.querySelectorAll('[data-k]').forEach(inp=>inp.addEventListener('change',()=>{feed[inp.dataset.k]=inp.value;saveState();renderModular();}));
-    r.querySelector('button').addEventListener('click',()=>{state.modular.feeds=state.modular.feeds.filter(x=>x.id!==feed.id);saveState();renderModular();});f.appendChild(r);
-  });
-  renderModularSummary();
-}
-['modName','modFinalVolume','modNotes'].forEach(id=>$(id).addEventListener('change',()=>{state.modular[id==='modName'?'name':id==='modFinalVolume'?'finalVolume':'notes']=$(id).value;saveState();renderModularSummary();}));
-$('addModComponentBtn').addEventListener('click',()=>{state.modular.components.push(modComponentBlank());saveState();renderModular();});
-$('addFeedBtn').addEventListener('click',()=>{state.modular.feeds.push(feedBlank());saveState();renderModular();});
-$('saveModularBtn').addEventListener('click',()=>{saveState();renderModularSummary();});
-
-function modularTotals(){return state.modular.components.reduce((a,c)=>{['kcal','protein','fat','cho'].forEach(k=>a[k]+=num(c[k]));return a;},{kcal:0,protein:0,fat:0,cho:0});}
-function renderModularSummary(){
-  const t=modularTotals(),vol=num(state.modular.finalVolume); const per100=vol?Object.fromEntries(Object.entries(t).map(([k,v])=>[k,v/vol*100])):{};
-  $('modRecipeSummary').innerHTML=`<strong>Recipe total</strong><div class="summary-grid"><div class="metric">Energy<b>${round(t.kcal)} kcal</b></div><div class="metric">Protein<b>${round(t.protein)} g</b></div><div class="metric">Fat<b>${round(t.fat)} g</b></div><div class="metric">CHO<b>${round(t.cho)} g</b></div></div>${vol?`<p class="muted">Concentration: ${round(t.kcal/vol,3)} kcal/mL • per 100 mL: ${round(per100.kcal)} kcal, P ${round(per100.protein)} g, F ${round(per100.fat)} g, CHO ${round(per100.cho)} g</p>`:'<p class="muted">ระบุ final volume เพื่อคำนวณ concentration</p>'}`;
-  const prescribed=state.modular.feeds.reduce((s,x)=>s+num(x.prescribed),0), actual=state.modular.feeds.reduce((s,x)=>s+num(x.actual),0),ratio=vol?actual/vol:0,pratio=vol?prescribed/vol:0;
-  $('feedSummary').innerHTML=`<strong>Daily feeding</strong><div class="summary-grid"><div class="metric">Prescribed<b>${round(prescribed)} mL</b></div><div class="metric">Actual<b>${round(actual)} mL</b></div><div class="metric">Actual / prescribed<b>${prescribed?round(actual/prescribed*100,1):0}%</b></div><div class="metric">Actual energy<b>${round(t.kcal*ratio)} kcal</b></div></div><p class="muted">Actual nutrients: P ${round(t.protein*ratio)} g • F ${round(t.fat*ratio)} g • CHO ${round(t.cho*ratio)} g. Prescribed energy ${round(t.kcal*pratio)} kcal.</p>`;
-}
-
-function matchFood(name){
-  const q=String(name||'').trim().toLowerCase(); if(!q)return null;
-  return state.foodDB.find(f=>String(f.name).trim().toLowerCase()===q) || state.foodDB.find(f=>String(f.name).toLowerCase().includes(q)||q.includes(String(f.name).toLowerCase()));
-}
-function qtyFor(item,food){
-  const basisUnit=String(food.basis_unit||'').toLowerCase();
-  if(item.weight_g && basisUnit==='g') return num(item.weight_g)/num(food.basis_value||1);
-  if(item.volume_ml && basisUnit==='ml') return num(item.volume_ml)/num(food.basis_value||1);
-  if(String(item.unit||'').toLowerCase()===basisUnit && item.amount!=='') return num(item.amount)/num(food.basis_value||1);
-  return null;
-}
-const nutrientKeys=['kcal','protein','fat','cho','sodium','potassium','calcium','phosphorus','iron','zinc','vitA','vitD','vitE'];
-function addNutrients(total,food,factor){nutrientKeys.forEach(k=>total[k]+=num(food[k])*factor);}
-function calculateIntake(){
-  const total=Object.fromEntries(nutrientKeys.map(k=>[k,0]));const unmatched=[];
-  state.meals.forEach(m=>{
-    const parts=m.ingredients?.length?m.ingredients:[m];
-    parts.forEach(p=>{const f=matchFood(p.food);if(!f){unmatched.push({time:m.time,food:p.food,reason:'No DB match'});return;} const factor=qtyFor(p,f);if(factor===null){unmatched.push({time:m.time,food:p.food,reason:`Need ${f.basis_unit} amount/weight`});return;}addNutrients(total,f,factor);});
-  });
-  state.lastSummary={total,unmatched,at:new Date().toISOString()};saveState();return state.lastSummary;
-}
-function renderSummary(){
-  const s=state.lastSummary||calculateIntake(),t=s.total; const macroKcal=num(t.protein)*4+num(t.cho)*4+num(t.fat)*9;
-  $('nutrientSummary').innerHTML=`<div class="summary-grid"><div class="metric">Energy<b>${round(t.kcal)} kcal</b></div><div class="metric">Protein<b>${round(t.protein)} g</b><span>${macroKcal?round(t.protein*4/macroKcal*100,1):0}% kcal</span></div><div class="metric">Fat<b>${round(t.fat)} g</b><span>${macroKcal?round(t.fat*9/macroKcal*100,1):0}% kcal</span></div><div class="metric">CHO<b>${round(t.cho)} g</b><span>${macroKcal?round(t.cho*4/macroKcal*100,1):0}% kcal</span></div></div><div class="summary-grid top-gap"><div class="metric">Na<b>${round(t.sodium)} mg</b></div><div class="metric">K<b>${round(t.potassium)} mg</b></div><div class="metric">Ca<b>${round(t.calcium)} mg</b></div><div class="metric">P<b>${round(t.phosphorus)} mg</b></div><div class="metric">Iron<b>${round(t.iron)} mg</b></div><div class="metric">Zinc<b>${round(t.zinc)} mg</b></div><div class="metric">Vit A<b>${round(t.vitA)} µg</b></div><div class="metric">Vit D<b>${round(t.vitD)} µg</b></div><div class="metric">Vit E<b>${round(t.vitE)} mg</b></div></div>`;
-  const w=num(state.patient?.weight), r=state.requirements||{};
-  const reqCompare=[];
-  if(r.energy) reqCompare.push(`Energy ${round(t.kcal/num(r.energy)*100,1)}% of target`);
-  if(r.protein) reqCompare.push(`Protein ${round(t.protein/num(r.protein)*100,1)}% of target`);
-  if(w) reqCompare.push(`Intake ${round(t.kcal/w,1)} kcal/kg/day, ${round(t.protein/w,2)} g protein/kg/day`);
-  if(reqCompare.length) $('nutrientSummary').insertAdjacentHTML('beforeend',`<p class="muted top-gap"><strong>Requirement comparison:</strong> ${reqCompare.join(' • ')}</p>`);
-  $('unmatchedList').innerHTML=s.unmatched.length?`<div class="unmatched"><strong>Needs food matching / portion conversion (${s.unmatched.length})</strong>${s.unmatched.map(x=>`<div>${esc(x.time)} — ${esc(x.food||'(blank)')}: ${esc(x.reason)}</div>`).join('')}</div>`:'<div class="status ok">รายการทั้งหมดที่มีข้อมูลเพียงพอถูกคำนวณแล้ว</div>';
-}
-$('calculateBtn').addEventListener('click',()=>{calculateIntake();renderSummary();});
-
-$('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`ped-nutrition-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href);});
-$('importBackupInput').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{state=JSON.parse(await file.text());saveState();renderMeals();renderFoodDB();renderModular();alert('Restore สำเร็จ');}catch(err){alert('ไฟล์ backup ไม่ถูกต้อง');}});
-$('resetBtn').addEventListener('click',()=>{if(confirm('ล้างข้อมูลใน browser เครื่องนี้ทั้งหมด?')){state=clone(defaultState);saveState();location.reload();}});
-
-renderPatient(); renderMeals(); renderFoodDB(); renderModular();
+renderPatient();renderMeals();renderFoodDB();renderModular();

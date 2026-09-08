@@ -1,38 +1,30 @@
-# Pediatric Nutrition Toolkit — PWA 0.1
+# Pediatric Nutrition PWA 0.3
 
-Static Progressive Web App (no Python, Streamlit, Ollama, or paid AI API required).
+เวอร์ชันนี้รวมการแก้ไขที่คุยกันล่าสุด:
 
-## Intended workflow
-1. Take a photo of 24-hour recall / FFQ in the normal ChatGPT app.
-2. Type `PNIF` and copy the JSON response.
-3. Open this PWA and paste into **PNIF**.
-4. Review/edit/add foods and ingredients.
-5. Match foods in the local database and calculate nutrients.
-6. For modular diets, create one daily recipe and enter prescribed vs actual mL per feed.
+- Patient: Anonymous name / Case ID, Age, Sex, Visit date, Weight, Length/Height, Note
+- ตัด Measurement type, Measurement date, Lab และ Nutrition assessment
+- Daily requirements เรียง Fluid → Energy → Protein → Total fat % → MCT % → Calcium (optional)
+- PNIF รองรับ 24-h recall / food record และ `daily_modular_recipe`
+- Modular PNIF นำ ingredients, final volume และ feeding plan เข้า Daily Modular Diet โดยตรง
+- Review Intake แบบ compact cards: เวลา → เมนู → ส่วนประกอบ
+- แก้/เพิ่ม/ลบ/Insert below และเพิ่ม ingredient ได้
+- Portion ของเมนูไม่บังคับ หากไม่มี portion แต่มีส่วนประกอบที่มีปริมาณ จะคำนวณเฉพาะส่วนที่รายงานได้
+- หากไม่มีทั้ง portion และส่วนประกอบที่คำนวณได้ จะไม่สมมติ portion และจะขึ้น Not calculated
+- Whole dish / Ingredients / Hybrid / Auto calculation method โดยป้องกัน double counting
+- หาก intake ไม่ครบ Summary จะแสดงว่า incomplete และรายงานจำนวนเมนูที่คำนวณได้
+- Custom Database seed จากไฟล์ Excel เดิม: medical formulas + modular components + meat/rice exchanges
+- Custom Database เพิ่ม/แก้/ลบรายการ manually ได้
+- Default food-source preference = Thai FCD; เปลี่ยนเป็น Custom / USDA / All ได้
 
-## Open on Mac for a quick test
-Because service workers require HTTP/HTTPS, run any static web server in this folder. For example, if Python is already installed:
+## หมายเหตุเรื่อง Food Source
 
-`python3 -m http.server 8080`
+ตัว Public PWA นี้ไม่ได้ฝัง Thai FCD ทั้งฐาน และยังไม่มี online Thai FCD connector ในตัว ดังนั้น Thai FCD/USDA ที่เลือกไว้เป็น source preference สำหรับ workflow การ match ส่วน Custom DB ใช้งาน local ได้ทันทีจาก Excel seed.
 
-Then open `http://localhost:8080`.
+## Update GitHub Pages
 
-This is only for local testing. Python is NOT required for the deployed PWA.
+แตก ZIP แล้ว upload ไฟล์ทั้งหมดในโฟลเดอร์นี้ทับไฟล์ใน repository `pediatric-nutrition-pwa` ที่ root จากนั้น Commit changes. GitHub Pages จะ deploy เวอร์ชันใหม่โดยอัตโนมัติ หาก cache ยังแสดงเวอร์ชันเก่า ให้ refresh/reopen หลัง deploy สักครู่.
 
-## Use on Mac + Android + iPad
-Upload the contents of this folder to any static HTTPS host such as GitHub Pages or Cloudflare Pages. Then open the same HTTPS URL on each device. The app can be installed to the home screen as a PWA and works offline after the first successful load.
+## Privacy
 
-## Current prototype limitations
-- Data is stored locally in each browser. Cross-device sync is not included yet.
-- Food database contains only a few demo/custom defaults. It intentionally does not bundle Thai FCD data.
-- Food matching is simple name matching. Portion conversion requires the amount to be in the database basis unit or an entered weight/volume.
-- Medical formula database and custom Excel import are planned next.
-- The app does not ask ChatGPT to calculate nutrients; nutrient math is deterministic inside the PWA.
-
-## Files
-- `index.html`
-- `styles.css`
-- `app.js`
-- `manifest.webmanifest`
-- `sw.js`
-- `icons/`
+Repository มีเฉพาะ source code และ seed food/formula database ไม่มีข้อมูลผู้ป่วย. ข้อมูล case ที่กรอกใน prototype เก็บใน browser local storage ของอุปกรณ์.
