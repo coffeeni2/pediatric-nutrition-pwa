@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.7" />
+  <link rel="stylesheet" href="styles.css?v=0.4.9" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -108,7 +108,7 @@
         <label>Search<input id="dbSearch" placeholder="ชื่ออาหาร/สูตร" /></label>
       </div>
       <datalist id="dbUnitOptions"><option value="g"><option value="mL"><option value="portion"><option value="ทัพพี"><option value="ถ้วยตวง"><option value="ช้อนโต๊ะ"><option value="ช้อนชา"><option value="ฟอง"><option value="ชิ้น"><option value="ผล"><option value="แผ่น"><option value="scoop"></datalist>
-      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>kcal</th><th>Protein</th><th>Fat/LCT</th><th>MCT</th><th>CHO</th><th>Ca</th><th>P</th><th>Na</th><th>K</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Protein source</th><th>kcal</th><th>Protein</th><th>Fat/LCT</th><th>MCT</th><th>CHO</th><th>Ca</th><th>P</th><th>Na</th><th>K</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
     </div>
   </section>
 
@@ -124,14 +124,14 @@
     <div class="card">
       <h2>App Settings</h2>
       <div class="grid-3">
-        <label>Default food source<select id="defaultSource"><option value="Custom">Custom</option><option value="Thai FCD">Thai FCD</option><option value="USDA">USDA</option><option value="All">All</option></select></label>
+        <label>Food source<select id="defaultSource" disabled><option value="Custom">Custom Database only</option></select></label>
       </div>
-      <p class="muted">Regular food ใช้ Custom Database เป็น default. สามารถเปลี่ยน source เป็น Thai FCD / USDA / All ได้เมื่อ connector พร้อมใช้งาน.</p><hr><h2>Backup & Restore</h2><p class="muted">Backup รวม anonymous cases, visits, intake, modular diet, Custom DB, custom conversions และ settings. ข้อมูลทำงานใน browser ของอุปกรณ์นี้; Google Drive sync เตรียมไว้สำหรับระยะถัดไป.</p>
+      <p class="muted">เวอร์ชันนี้คำนวณจาก Custom Database เท่านั้น เพื่อให้ผลลัพธ์ deterministic และไม่แสดง source ที่ยังไม่มี connector ใช้งานจริง.</p><hr><h2>Backup & Restore</h2><p class="muted">Backup รวม anonymous cases, visits, intake, modular diet, Custom DB, custom conversions และ settings. ข้อมูลทำงานใน browser ของอุปกรณ์นี้; Google Drive sync เตรียมไว้สำหรับระยะถัดไป.</p>
       <div class="actions"><button id="exportBtn" class="primary">Export JSON backup</button><label class="file-button secondary">Import backup<input id="importBackupInput" type="file" accept="application/json" hidden /></label><button id="resetBtn" class="danger">Reset all local data...</button></div>
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.7</strong> • multi-case • cooked meat/egg default • Nutrition book Custom Food seed • portion conversion <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.7"></script>
+<footer><strong>PWA 0.4.9</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.9"></script>
 </body>
 </html>

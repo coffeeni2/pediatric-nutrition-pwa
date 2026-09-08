@@ -25,8 +25,24 @@ Changes:
 - Add intake between recorded times.
 
 
-## 0.4.7
+## 0.4.8
 - Custom Database uses one page-level Save button; Add/Edit/Delete remain pending until Save.
 - Added Cancel changes and unsaved-change warning.
 - Added editable per-food Conversion Units (amount, unit, basis multiplier, optional gram equivalent, source).
 - Review Intake calculation uses saved Custom Database conversion units.
+
+
+## 0.4.8 changes
+- Custom Database persists across app upgrades using the same browser storage; user-modified items receive migration metadata and are not reset by this release.
+- Custom Database is the only calculation source shown in the UI. Thai FCD/USDA choices are hidden until a real connector exists; Daily Modular Recipe calculations also require a Custom DB match.
+- Review Intake menu and ingredient rows can match Food, Medical formula, or Modular component records from Custom Database, with unit choices derived from the selected record.
+- Conversion Add/Delete actions are positioned at the left side of the expanded conversion editor.
+- Summary adds protein g/kg/day from patient body weight, P:CHO:F (total-fat) ratio, sodium mEq = mg/23, and potassium mEq = mg/39.
+
+
+## 0.4.9 changes
+- Added persistent Protein source category to each Custom DB item.
+- Automatic one-time classification for existing rows: Meat/Egg and Milk/Formula count toward protein excluding CHO-source protein; rice/starch is excluded; unclear rows are Unclassified.
+- Custom Database Protein source is editable and saved with the database.
+- Summary now shows Total protein and Protein excl. CHO-source protein, both in g/day and g/kg/day.
+- P:CHO:F continues to use total protein.

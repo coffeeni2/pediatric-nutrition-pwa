@@ -10,3 +10,9 @@
 /* 0.4.7 Custom DB page-save + editable conversion units */
 .db-page-status{min-height:1.2em}.conversion-row td{background:#f8fbfb;padding:10px 12px}.conversion-panel{border:1px solid var(--line);border-radius:10px;padding:10px}.conversion-head,.conversion-item{display:grid;grid-template-columns:.7fr 1fr .8fr .8fr 1.4fr auto;gap:7px;align-items:end}.conversion-head{font-size:.76rem;color:var(--muted);font-weight:700;margin-bottom:5px}.conversion-item{margin:6px 0}.conversion-actions{display:flex;gap:6px;align-items:center;margin-top:8px}.db-row-actions .conversion-toggle{white-space:nowrap}.dirty-pill{display:inline-block;border:1px solid #f2d594;background:var(--warnbg);color:var(--warn);border-radius:999px;padding:3px 8px;font-size:.75rem}.saved-pill{display:inline-block;border:1px solid #bfe2cc;background:#eaf7ef;color:var(--ok);border-radius:999px;padding:3px 8px;font-size:.75rem}
 @media(max-width:800px){.conversion-head{display:none}.conversion-item{grid-template-columns:1fr 1fr}.conversion-item label::before{font-size:.72rem;color:var(--muted)}.conversion-item .conv-delete{grid-column:1/-1;justify-self:start}}
+
+/* 0.4.8 left-side conversion actions + broader DB matching */
+.conversion-toolbar-left{display:flex;align-items:flex-start;justify-content:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:8px}.conversion-toolbar-left .add-conv{order:-1}.conversion-head,.conversion-item{grid-template-columns:auto .7fr 1fr .8fr .8fr 1.4fr}.conversion-item .conv-delete{align-self:end;justify-self:start}.edit-grid select[data-k="dbMatchId"]{min-width:180px}.mod-row{grid-template-columns:1.4fr 1.7fr .7fr .9fr repeat(4,1fr) auto}
+@media(max-width:800px){.conversion-item{grid-template-columns:auto 1fr 1fr}.conversion-item .conv-delete{grid-column:1;grid-row:1}.mod-row{grid-template-columns:1fr 1fr}}
+.mod-row{grid-template-columns:1.4fr 1.8fr .7fr .9fr auto}
+@media(max-width:800px){.mod-row{grid-template-columns:1fr 1fr}}
