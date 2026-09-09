@@ -87,7 +87,7 @@ Changes:
 - Protein-source legacy categories in the snapshot are converted to the current schema (`meat`, `egg`, `milk`, `formula`, etc.) without changing nutrient/basis/conversion values.
 
 
-## 0.4.16
+## 0.4.17
 - Added Delete Case with confirmation. Deleting the last case creates a new blank case so the app remains usable.
 - Review Intake now uses a page-level draft. Edits, inserts, and deletes remain pending until **Save Review Intake**; **Cancel changes** restores the last saved intake.
 - Modular Diet now uses a page-level draft. Recipe components, feed schedule, final volume, and notes remain pending until **Save Modular Diet**; **Cancel changes** restores the last saved modular diet.

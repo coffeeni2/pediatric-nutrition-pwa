@@ -117,14 +117,13 @@ function loadState(){try{const x=localStorage.getItem('pedNutritionStateV4')||lo
   st.settings.bookBasisFixV045=true;
 }
 if(!st.settings.cookedDefaultV044){(st.meals||[]).forEach(m=>{m.raw_cooked=defaultFoodState(m.food,m.raw_cooked);(m.ingredients||[]).forEach(i=>i.raw_cooked=defaultFoodState(i.food,i.raw_cooked));});st.settings.cookedDefaultV044=true;}
-if(!st.settings.customDbSnapshotV0415){
-  st.foodDB=clone(CUSTOM_DB_SNAPSHOT_V0415);
-  (st.foodDB||[]).forEach(f=>{
-    f.protein_source=migrateProteinSourceCategory(f);
-    if(!f.created_by)f.created_by=(f.user_modified||f.source==='Custom')?'user':'seed';
-  });
-  st.settings.customDbSnapshotV0415=true;
-  st.settings.dbSchemaVersion=5;
+if(!st.settings.customDbSnapshotV0417){
+  // 0.4.17: replace only Custom Database with the user's 2026-09-09 backup snapshot once.
+  // Patient/cases, Review Intake and Modular Diet remain untouched.
+  st.foodDB=clone(CUSTOM_DB_SNAPSHOT_V0417);
+  ensureProteinSourceFields(st.foodDB);
+  st.settings.customDbSnapshotV0417=true;
+  st.settings.dbSchemaVersion=Math.max(num(st.settings.dbSchemaVersion),6);
 }
 st.settings.defaultSource='Custom';if(!st.settings.dbPersistenceV048){(st.foodDB||[]).forEach(f=>{if(!f.created_by)f.created_by=(f.user_modified||f.source==='Custom')?'user':'seed';if(!f.seed_version&&f.created_by==='seed')f.seed_version='<=0.4.7';if(!f.updated_at&&f.user_modified)f.updated_at=new Date().toISOString();});st.settings.dbSchemaVersion=2;st.settings.dbPersistenceV048=true;}if(!st.settings.proteinSourceV049){ensureProteinSourceFields(st.foodDB);st.settings.dbSchemaVersion=3;st.settings.proteinSourceV049=true;}else ensureProteinSourceFields(st.foodDB);if(!st.settings.proteinSourceFixV0413){(st.foodDB||[]).forEach(f=>{if(!f.protein_source_user_set){const inferred=inferProteinSource(f);if(inferred!=='unclassified'||['unclassified','other','meat_egg','milk_formula',''].includes(String(f.protein_source||'')))f.protein_source=inferred;}});st.settings.proteinSourceFixV0413=true;st.settings.dbSchemaVersion=4;}if(!st.settings.proteinSourceSchemaFixV0414){(st.foodDB||[]).forEach(f=>{if(!f.protein_source_user_set){f.protein_source=inferProteinSource(f);}else{f.protein_source=migrateProteinSourceCategory(f);}});st.settings.proteinSourceSchemaFixV0414=true;st.settings.dbSchemaVersion=5;}if(!st.settings.pnifIntakeTypeV0413){const migrateMeals=arr=>(arr||[]).forEach(m=>{if(!m.intake_type){const f=m.dbMatchId?(st.foodDB||[]).find(x=>x.id===m.dbMatchId):null;m.intake_type=f?.type==='formula'?'formula':'food';}m.ingredients=(m.ingredients||[]).map(i=>i);});migrateMeals(st.meals);(st.cases||[]).forEach(c=>migrateMeals(c.meals));st.settings.pnifIntakeTypeV0413=true;}normalizeDbConversions(st.foodDB);if(!st.cases.length){const c=blankCase();c.patient=clone(st.patient);c.requirements=clone(st.requirements);c.pnif=clone(st.pnif);c.meals=clone(st.meals);c.modular=clone(st.modular);c.lastSummary=st.lastSummary;st.cases=[c];st.activeCaseId=c.id}try{localStorage.setItem('pedNutritionStateV4',JSON.stringify(st))}catch{}return st}catch{return clone(defaultState)}}function merge(a,b){const out=clone(a);Object.keys(b||{}).forEach(k=>out[k]=(typeof b[k]==='object'&&!Array.isArray(b[k])&&b[k]!==null)?{...(out[k]||{}),...b[k]}:b[k]);return out}function syncActiveCase(){let c=state.cases.find(x=>x.id===state.activeCaseId);if(!c)return;c.patient=clone(state.patient);c.requirements=clone(state.requirements);c.pnif=clone(state.pnif);c.meals=clone(state.meals);c.modular=clone(state.modular);c.lastSummary=state.lastSummary;c.updatedAt=new Date().toISOString()}function saveState(){syncActiveCase();localStorage.setItem('pedNutritionStateV4',JSON.stringify(state))}
 let reviewDraft=null,reviewDirty=false,modularDraft=null,modularDirty=false;
@@ -138,18 +137,18 @@ function resetModularDraft(){modularDraft=clone(state.modular||{});modularDirty=
 function showTab(name){const cur=document.querySelector('.tab.active')?.dataset.tab;if(cur==='foods'&&name!=='foods'&&foodDbDirty&&!confirm('Custom Database has unsaved changes. Leave without saving?'))return;if(cur==='review'&&name!=='review'&&reviewDirty){if(!confirm('Review Intake has unsaved changes. Leave without saving?'))return;resetReviewDraft();}if(cur==='modular'&&name!=='modular'&&modularDirty){if(!confirm('Modular Diet has unsaved changes. Leave without saving?'))return;resetModularDraft();}document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.toggle('active',x.id===`tab-${name}`));if(name==='patient')renderPatient();if(name==='review')renderMeals();if(name==='modular')renderModular();if(name==='foods')renderFoodDB();if(name==='summary')renderSummary();if(name==='calc')renderCalculationDetail();if(name==='data')$('defaultSource').value='Custom'}document.querySelectorAll('[data-tab]').forEach(x=>x.addEventListener('click',()=>showTab(x.dataset.tab)));window.addEventListener('beforeunload',e=>{if(foodDbDirty||reviewDirty||modularDirty){e.preventDefault();e.returnValue='';}});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').classList.remove('hidden')});$('installBtn').addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn').classList.add('hidden')});if('serviceWorker' in navigator) window.addEventListener('load', async()=>{
   try {
-    // 0.4.16 cache recovery: preserve app data (localStorage/IndexedDB), remove only SW registrations and Cache Storage.
+    // 0.4.17 cache recovery: preserve app data (localStorage/IndexedDB), remove only SW registrations and Cache Storage.
     const marker='pedNutritionCacheRecovery0416';
     if(!sessionStorage.getItem(marker)){
       const regs=await navigator.serviceWorker.getRegistrations();
       await Promise.all(regs.map(r=>r.unregister()));
       if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
       sessionStorage.setItem(marker,'1');
-      const u=new URL(location.href); u.searchParams.set('appv','0.4.16');
+      const u=new URL(location.href); u.searchParams.set('appv','0.4.17');
       location.replace(u.toString());
       return;
     }
-    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.16',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.17',{updateViaCache:'none'});
     await reg.update();
   } catch(e){ console.warn('Service worker recovery/update failed',e); }
 });
@@ -166,7 +165,15 @@ function isMeatOrEgg(name=''){return /(ไก่|หมู|เนื้อ|ป�
 function normIng(i={}){const a=normAmt(i.amount),food=i.food||i.name||'';return{id:i.id||uid(),food,amount:a.value,original_amount:a.original,unit:i.unit||'',weight_g:i.weight_g??'',volume_ml:i.volume_ml??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',note:i.note||'',dbMatchId:i.dbMatchId||'',convertFood:i.convertFood||'',convertUnit:i.convertUnit||'',formulaKcalOz:i.formulaKcalOz??''}}
 function normalizeIntakeType(v){const x=String(v||'').trim().toLowerCase();return ['food','formula','modular_diet','unknown'].includes(x)?x:'unknown'}
 function normItem(i={}){const a=normAmt(i.amount),food=i.food||i.name||'';return{id:i.id||uid(),time:i.time||'',intake_type:normalizeIntakeType(i.intake_type||i.intakeType||(i.type==='formula'?'formula':'food')),food,amount:a.value,original_amount:a.original,unit:i.unit||'',weight_g:i.weight_g??'',volume_ml:i.volume_ml??i.volume??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',needs_review:Boolean(i.needs_review||i.confidence==='low'||normalizeIntakeType(i.intake_type||i.intakeType)==='unknown'),note:i.note||'',ingredients:(i.ingredients||[]).map(normIng),calcMethod:i.calcMethod||'auto',dbMatchId:i.dbMatchId||'',sourcePreference:'Custom',formulaKcalOz:i.formulaKcalOz??i.kcal_per_oz??'',editOpen:false}}
-function extractJson(text){const f=text.match(/```(?:json)?\s*([\s\S]*?)```/i);if(f)text=f[1];const a=text.indexOf('{'),b=text.lastIndexOf('}');if(a<0||b<=a)throw new Error('ไม่พบ JSON object');return JSON.parse(text.slice(a,b+1))}
+function extractJson(text){
+  text=String(text||'').replace(/^\uFEFF/,'').trim();
+  const f=text.match(/```(?:json)?\s*([\s\S]*?)```/i);if(f)text=f[1];
+  // Normalize typographic quotes often introduced when copying from chat/note apps.
+  text=text.replace(/[“”„‟]/g,'\"').replace(/[‘’]/g,"'").replace(/\u00a0/g,' ');
+  const a=text.indexOf('{'),b=text.lastIndexOf('}');if(a<0||b<=a)throw new Error('ไม่พบ JSON object');
+  const raw=text.slice(a,b+1);
+  try{return JSON.parse(raw)}catch(e){throw new Error(`JSON ไม่ถูกต้องหลังปรับ quote อัตโนมัติ: ${e.message}`)}
+}
 function modularItemToRecipe(items){
   const mods=(items||[]).filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet');
   if(!mods.length)return 0;
@@ -176,7 +183,23 @@ function modularItemToRecipe(items){
   state.modular={name:first.recipe_name||first.food||'Daily modular recipe',finalVolume:first.final_volume_ml??first.preparation?.final_volume_ml??'',notes:[...(first.warnings||[]),...(names.length>1?[`PNIF contained multiple modular recipe names: ${names.join(', ')}; using the first recipe components and all reported feed volumes.`]:[])].join(' | '),components,feeds,route:first.route||first.feeding_plan?.route||'',durationHr:first.duration_hr_per_feed??first.feeding_plan?.duration_hr_per_feed??''};
   return mods.length;
 }
-function importPnif(){try{const o=extractJson($('pnifInput').value),type=o.type||'24hr_recall';state.pnif={format:o.format||'PNIF',version:o.version||'',type,warnings:o.warnings||[]};if(['daily_modular_recipe','modular_recipe'].includes(type)){importModular(o);$('pnifStatus').className='status ok';$('pnifStatus').textContent='Import modular diet สำเร็จ — เปิดหน้า Modular Diet เพื่อตรวจ/แก้';saveState();resetReviewDraft();resetModularDraft();showTab('modular');return}if(!Array.isArray(o.items))throw new Error('PNIF ประเภท intake ต้องมี items[]');const modularCount=modularItemToRecipe(o.items);state.meals=o.items.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)!=='modular_diet').map(normItem);sortMeals();saveState();resetReviewDraft();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent=`Import สำเร็จ: Review Intake ${state.meals.length} รายการ${modularCount?` • Modular Diet ${modularCount} feed${modularCount>1?'s':''}`:''}`;showTab(state.meals.length?'review':'modular')}catch(e){$('pnifStatus').className='status error';$('pnifStatus').textContent='Import ไม่สำเร็จ: '+e.message}}
+function importPnif(){try{
+  const o=extractJson($('pnifInput').value),type=o.type||'24hr_recall';
+  state.pnif={format:o.format||'PNIF',version:o.version||'',type,warnings:o.warnings||[]};
+  if(['daily_modular_recipe','modular_recipe'].includes(type)){
+    importModular(o);$('pnifStatus').className='status ok';$('pnifStatus').textContent='Import modular diet สำเร็จ — เปิดหน้า Modular Diet เพื่อตรวจ/แก้';saveState();resetReviewDraft();resetModularDraft();showTab('modular');return
+  }
+  const intakeItems=Array.isArray(o.items)?o.items:(Array.isArray(o.meals)?o.meals:null);
+  if(!intakeItems)throw new Error('PNIF ประเภท intake ต้องมี meals[] หรือ items[]');
+  const inlineMods=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet');
+  const separateMods=Array.isArray(o.modular_diets)?o.modular_diets:[];
+  const allMods=[...inlineMods,...separateMods.map(x=>({...x,intake_type:'modular_diet'}))];
+  const modularCount=allMods.length?modularItemToRecipe(allMods):0;
+  state.meals=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)!=='modular_diet').map(normItem);
+  sortMeals();saveState();resetReviewDraft();resetModularDraft();$('pnifStatus').className='status ok';
+  $('pnifStatus').textContent=`Import สำเร็จ: Review Intake ${state.meals.length} รายการ${modularCount?` • Modular Diet ${modularCount} feed${modularCount>1?'s':''}`:''}`;
+  showTab(state.meals.length?'review':'modular')
+}catch(e){$('pnifStatus').className='status error';$('pnifStatus').textContent='Import ไม่สำเร็จ: '+e.message}}
 function importModular(o){const comps=(o.ingredients||[]).map(x=>{const a=normAmt(x.amount);return{id:uid(),name:x.food||x.name||'',amount:a.value,unit:x.unit||'',dbMatchId:'',source:'Custom',kcalOverride:'',proteinOverride:'',fatOverride:'',mctOverride:'',choOverride:'',calciumOverride:'',sodiumOverride:'',potassiumOverride:'',note:x.note||''}});const fp=o.feeding_plan||{},actual=o.actual_intake?.feeds||[];let feeds=[];if(actual.length)feeds=actual.map((x,i)=>({id:uid(),time:x.time||'',prescribed:x.prescribed_ml??fp.volume_per_feed_ml??'',actual:x.actual_ml??'',note:x.note||''}));else if(fp.feeds_per_day){for(let i=0;i<num(fp.feeds_per_day);i++)feeds.push({id:uid(),time:'',prescribed:fp.volume_per_feed_ml??'',actual:'',note:''})}state.modular={name:o.recipe_name||'Daily modular recipe',finalVolume:o.preparation?.final_volume_ml??o.final_volume_ml??'',notes:(o.warnings||[]).join(' | '),components:comps,feeds,route:fp.route||'',durationHr:fp.duration_hr_per_feed??''}}
 $('importPnifBtn').addEventListener('click',importPnif);$('clearPnifBtn').addEventListener('click',()=>{$('pnifInput').value='';$('pnifStatus').textContent=''});$('loadExampleBtn').addEventListener('click',()=>{$('pnifInput').value=JSON.stringify({format:'PNIF',version:'0.4',type:'24hr_recall',items:[{time:'07:00',intake_type:'food',food:'ข้าวไก่ย่าง',ingredients:[{food:'ข้าว',amount:2,unit:'ทัพพี'},{food:'ไก่ย่าง',amount:3,unit:'ชิ้น'}],confidence:'high'},{time:'10:00',intake_type:'formula',food:'Panenteral',volume_ml:180,kcal_per_oz:30,confidence:'high'},{time:'12:00',intake_type:'modular_diet',recipe_name:'Daily modular recipe',final_volume_ml:1000,actual_volume_ml:250,components:[{food:'Panenteral',amount:100,unit:'g'},{food:'น้ำมัน',amount:20,unit:'g'}],confidence:'high'}]},null,2)});
 
