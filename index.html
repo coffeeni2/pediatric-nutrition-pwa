@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.15" />
+  <link rel="stylesheet" href="styles.css?v=0.4.16" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -30,7 +30,7 @@
 
   <section id="tab-patient" class="tab-panel active">
     <div class="card">
-      <div class="section-title-row"><div><h2>Patient / Case</h2><p class="muted">ใช้ anonymous Case ID เท่านั้น • ผู้ป่วยเดิมไม่ถูกลบเมื่อเริ่มรายใหม่</p></div><div class="inline-actions"><select id="caseSelector" aria-label="Select case"></select><button id="newCaseBtn" class="secondary">+ New Case</button><button id="savePatientBtn" class="primary">Save</button></div></div>
+      <div class="section-title-row"><div><h2>Patient / Case</h2><p class="muted">ใช้ anonymous Case ID เท่านั้น • ผู้ป่วยเดิมไม่ถูกลบเมื่อเริ่มรายใหม่</p></div><div class="inline-actions"><select id="caseSelector" aria-label="Select case"></select><button id="newCaseBtn" class="secondary">+ New Case</button><button id="deleteCaseBtn" class="danger">Delete Case</button><button id="savePatientBtn" class="primary">Save</button></div></div>
       <div class="grid-3">
         <label>Anonymous name / Case ID<input id="patientAlias" autocomplete="off" placeholder="Case A / P001" /></label>
         <label>Age (years)<input id="patientAge" type="number" min="0" step="0.1" /></label>
@@ -72,7 +72,7 @@
   <section id="tab-review" class="tab-panel">
     <div class="card">
       <div class="section-title-row">
-        <div><h2>Review Intake</h2><p class="muted">การ์ดสั้น: เวลา • เมนู • ส่วนประกอบ กด Edit เมื่อต้องการแก้รายละเอียด</p></div>
+        <div><h2>Review Intake</h2><p class="muted">การ์ดสั้น: เวลา • เมนู • ส่วนประกอบ กด Edit เมื่อต้องการแก้รายละเอียด • การแก้ไขจะยังไม่บันทึกจนกด Save Review Intake</p></div><div class="inline-actions"><button id="cancelReviewBtn" class="secondary">Cancel changes</button><button id="saveReviewBtn" class="primary">Save Review Intake</button><span id="reviewSaveStatus" class="muted"></span></div>
         <div class="inline-actions"><button id="needsReviewBtn" class="secondary">Needs review only: Off</button><button id="addMealBtn" class="primary">+ Add food</button></div>
       </div>
       <div id="reviewSummary" class="review-summary"></div>
@@ -83,7 +83,7 @@
 
   <section id="tab-modular" class="tab-panel">
     <div class="card">
-      <div class="section-title-row"><div><h2>Daily Modular Recipe</h2><p class="muted">สูตรรวมทั้งวันครั้งเดียว แล้วบันทึก prescribed / actual volume ราย feed</p></div><button id="saveModularBtn" class="primary">Save</button></div>
+      <div class="section-title-row"><div><h2>Daily Modular Recipe</h2><p class="muted">สูตรรวมทั้งวันครั้งเดียว แล้วบันทึก prescribed / actual volume ราย feed • การแก้ไขจะยังไม่บันทึกจนกด Save Modular Diet</p></div><div class="inline-actions"><button id="cancelModularBtn" class="secondary">Cancel changes</button><button id="saveModularBtn" class="primary">Save Modular Diet</button><span id="modularSaveStatus" class="muted"></span></div></div>
       <div class="grid-3">
         <label>Recipe name<input id="modName" /></label>
         <label>Final volume (mL)<input id="modFinalVolume" type="number" min="0" step="1" /></label>
@@ -149,7 +149,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.15</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.15"></script>
+<footer><strong>PWA 0.4.16</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.16"></script>
 </body>
 </html>

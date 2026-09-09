@@ -85,3 +85,10 @@ Changes:
 - Patient/case, PNIF, meals, requirements, and modular-diet working data are not replaced by this migration.
 - The migration is guarded by `settings.customDbSnapshotV0415`; subsequent edits saved in Custom Database are preserved on later reloads.
 - Protein-source legacy categories in the snapshot are converted to the current schema (`meat`, `egg`, `milk`, `formula`, etc.) without changing nutrient/basis/conversion values.
+
+
+## 0.4.16
+- Added Delete Case with confirmation. Deleting the last case creates a new blank case so the app remains usable.
+- Review Intake now uses a page-level draft. Edits, inserts, and deletes remain pending until **Save Review Intake**; **Cancel changes** restores the last saved intake.
+- Modular Diet now uses a page-level draft. Recipe components, feed schedule, final volume, and notes remain pending until **Save Modular Diet**; **Cancel changes** restores the last saved modular diet.
+- Leaving Review Intake or Modular Diet with unsaved changes prompts before discarding them.
