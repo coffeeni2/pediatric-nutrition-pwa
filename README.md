@@ -66,3 +66,22 @@ Changes:
 - Each row shows the Custom Database reference, amount/factor used, energy, protein, fat, calcium, sodium and potassium.
 - Table footers show section totals; combined total is shown below.
 - Custom Database storage remains persistent across app updates.
+
+
+## 0.4.15
+- PNIF item routing now supports `intake_type`: `food`, `formula`, `modular_diet`, and `unknown`. Food/formula remain in Review Intake; modular_diet is imported into Daily Modular Diet.
+- Summary is split into Food + Formula, Modular Diet only, and Total daily intake. Review Intake modular-component matches remain in Food + Formula; they are not treated as Daily Modular Diet.
+- Protein from meat/egg/milk/formula now reclassifies existing obvious Custom DB items once (without overriding later explicit Protein source edits) and calculation reads the matched Custom DB item.
+- Protein g/kg/day stays in parentheses immediately after g/day and uses the same bold/large metric typography.
+- Calculation Detail labels match Food + Formula vs Daily Modular Diet.
+- Existing Custom Database remains in the same persistent browser storage and is not reset by this update.
+
+
+0.4.15: fixes Custom Database schema migration persistence. Existing user nutrient/basis/conversion values are preserved; new structural fields such as protein_source are migrated and saved automatically.
+
+
+## 0.4.15 Custom DB snapshot migration
+- On the first launch of 0.4.15, Custom Database is replaced once with the `foodDB` snapshot from `ped-nutrition-backup-2026-09-08-3.json` (126 items).
+- Patient/case, PNIF, meals, requirements, and modular-diet working data are not replaced by this migration.
+- The migration is guarded by `settings.customDbSnapshotV0415`; subsequent edits saved in Custom Database are preserved on later reloads.
+- Protein-source legacy categories in the snapshot are converted to the current schema (`meat`, `egg`, `milk`, `formula`, etc.) without changing nutrient/basis/conversion values.
