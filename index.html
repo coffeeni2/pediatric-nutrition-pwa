@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.9" />
+  <link rel="stylesheet" href="styles.css?v=0.4.12" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -24,6 +24,7 @@
     <button class="tab" data-tab="modular">Modular Diet</button>
     <button class="tab" data-tab="foods">Custom Database</button>
     <button class="tab" data-tab="summary">Summary</button>
+    <button class="tab" data-tab="calc">Calculation Detail</button>
     <button class="tab" data-tab="data">Settings & Backup</button>
   </nav>
 
@@ -120,6 +121,23 @@
     </div>
   </section>
 
+
+  <section id="tab-calc" class="tab-panel">
+    <div class="card">
+      <div class="section-title-row">
+        <div><h2>Calculation Detail / Manual Recheck</h2><p class="muted">แสดงรายการที่ถูกนำไปคำนวณจริง พร้อม Custom Database item ที่อ้างอิง เพื่อให้ตรวจคำนวณซ้ำด้วยมือได้</p></div>
+        <button id="refreshCalcDetailBtn" class="primary">Refresh calculation</button>
+      </div>
+      <h3 class="top-gap">1. From food / Review Intake</h3>
+      <p class="muted">ถ้าเมนูคำนวณจาก ingredients จะแสดงแต่ละ ingredient เป็นคนละแถว; formula ที่บันทึกใน Review Intake จะแสดง derived powder g เมื่อมี kcal/oz + volume.</p>
+      <div class="table-wrap calc-detail-wrap"><table class="calc-detail-table"><thead><tr><th>Time / Menu</th><th>Calculated item</th><th>Custom DB reference</th><th>Amount used</th><th>Energy (kcal)</th><th>Total protein (g)</th><th>Fat (g)</th><th>Ca (mg)</th><th>Na (mg)</th><th>K (mg)</th></tr></thead><tbody id="foodCalcDetailBody"></tbody><tfoot id="foodCalcDetailFoot"></tfoot></table></div>
+      <h3 class="top-gap">2. From Daily Modular Diet</h3>
+      <p id="modCalcBasisNote" class="muted"></p>
+      <div class="table-wrap calc-detail-wrap"><table class="calc-detail-table"><thead><tr><th>Component</th><th>Custom DB reference</th><th>Recipe amount</th><th>Amount contributing to daily intake</th><th>Energy (kcal)</th><th>Total protein (g)</th><th>Fat (g)</th><th>Ca (mg)</th><th>Na (mg)</th><th>K (mg)</th></tr></thead><tbody id="modCalcDetailBody"></tbody><tfoot id="modCalcDetailFoot"></tfoot></table></div>
+      <div id="calcDetailWarnings" class="top-gap"></div>
+    </div>
+  </section>
+
   <section id="tab-data" class="tab-panel">
     <div class="card">
       <h2>App Settings</h2>
@@ -131,7 +149,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.9</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.9"></script>
+<footer><strong>PWA 0.4.12</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.12"></script>
 </body>
 </html>

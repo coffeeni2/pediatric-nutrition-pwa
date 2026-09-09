@@ -16,3 +16,6 @@
 @media(max-width:800px){.conversion-item{grid-template-columns:auto 1fr 1fr}.conversion-item .conv-delete{grid-column:1;grid-row:1}.mod-row{grid-template-columns:1fr 1fr}}
 .mod-row{grid-template-columns:1.4fr 1.8fr .7fr .9fr auto}
 @media(max-width:800px){.mod-row{grid-template-columns:1fr 1fr}}
+
+/* 0.4.12 Calculation Detail / manual recheck */
+.calc-detail-table{min-width:1250px}.calc-detail-table th,.calc-detail-table td{vertical-align:top}.calc-detail-table td:nth-child(n+5),.calc-detail-table th:nth-child(n+5){text-align:right}.calc-detail-table td:nth-child(3){min-width:330px;line-height:1.45}.calc-detail-table td:nth-child(4){min-width:260px;line-height:1.45}.calc-total-row th{background:#e8f3f3;font-weight:800;border-top:2px solid var(--accent)}.calc-grand-total{border:1px solid var(--line);background:#f1f8f8;border-radius:10px;padding:11px;line-height:1.7}.calc-detail-wrap{margin-top:8px}
