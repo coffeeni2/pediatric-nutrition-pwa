@@ -92,3 +92,10 @@ Changes:
 - Review Intake now uses a page-level draft. Edits, inserts, and deletes remain pending until **Save Review Intake**; **Cancel changes** restores the last saved intake.
 - Modular Diet now uses a page-level draft. Recipe components, feed schedule, final volume, and notes remain pending until **Save Modular Diet**; **Cancel changes** restores the last saved modular diet.
 - Leaving Review Intake or Modular Diet with unsaved changes prompts before discarding them.
+
+
+## 0.4.18
+- Harden PNIF import for smart/fullwidth/ornamental quote characters and zero-width characters copied from formatted chat.
+- Add fallback repair for bare JSON property names and trailing commas.
+- Accept `item` as an alias of `food` in PNIF meal and ingredient objects.
+- Preserve the 0.4.17 Custom Database snapshot migration and all local case/intake data.

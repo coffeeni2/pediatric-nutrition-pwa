@@ -144,11 +144,11 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
       await Promise.all(regs.map(r=>r.unregister()));
       if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
       sessionStorage.setItem(marker,'1');
-      const u=new URL(location.href); u.searchParams.set('appv','0.4.17');
+      const u=new URL(location.href); u.searchParams.set('appv','0.4.18');
       location.replace(u.toString());
       return;
     }
-    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.17',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.18',{updateViaCache:'none'});
     await reg.update();
   } catch(e){ console.warn('Service worker recovery/update failed',e); }
 });
@@ -162,17 +162,30 @@ function savePatientForm(){state.patient={alias:$('patientAlias').value.trim(),a
 
 function normAmt(v){if(v===null||v===undefined||v==='')return{value:'',original:''};if(typeof v==='number')return{value:v,original:String(v)};const s=String(v).trim();const frac=s.match(/^(\d+)\s*\/\s*(\d+)$/);if(frac)return{value:Number(frac[1])/Number(frac[2]),original:s};const mixed=s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);if(mixed)return{value:Number(mixed[1])+Number(mixed[2])/Number(mixed[3]),original:s};const range=s.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);if(range)return{value:round((+range[1]+ +range[2])/2,2),original:s};const n=Number(s);return{value:Number.isFinite(n)?n:s,original:s}}
 function isMeatOrEgg(name=''){return /(ไก่|หมู|เนื้อ|ปลา|กุ้ง|ปู|หอย|เป็ด|ไข่|ตับ|กึ๋น|แฮม|แหนม|ไส้กรอก|ลูกชิ้น)/i.test(name)}function defaultFoodState(name,stateValue){return stateValue&&stateValue!=='unknown'?stateValue:(isMeatOrEgg(name)?'cooked':'unknown')}
-function normIng(i={}){const a=normAmt(i.amount),food=i.food||i.name||'';return{id:i.id||uid(),food,amount:a.value,original_amount:a.original,unit:i.unit||'',weight_g:i.weight_g??'',volume_ml:i.volume_ml??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',note:i.note||'',dbMatchId:i.dbMatchId||'',convertFood:i.convertFood||'',convertUnit:i.convertUnit||'',formulaKcalOz:i.formulaKcalOz??''}}
+function normIng(i={}){const a=normAmt(i.amount),food=i.food||i.item||i.name||'';return{id:i.id||uid(),food,amount:a.value,original_amount:a.original,unit:i.unit||'',weight_g:i.weight_g??'',volume_ml:i.volume_ml??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',note:i.note||'',dbMatchId:i.dbMatchId||'',convertFood:i.convertFood||'',convertUnit:i.convertUnit||'',formulaKcalOz:i.formulaKcalOz??''}}
 function normalizeIntakeType(v){const x=String(v||'').trim().toLowerCase();return ['food','formula','modular_diet','unknown'].includes(x)?x:'unknown'}
-function normItem(i={}){const a=normAmt(i.amount),food=i.food||i.name||'';return{id:i.id||uid(),time:i.time||'',intake_type:normalizeIntakeType(i.intake_type||i.intakeType||(i.type==='formula'?'formula':'food')),food,amount:a.value,original_amount:a.original,unit:i.unit||'',weight_g:i.weight_g??'',volume_ml:i.volume_ml??i.volume??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',needs_review:Boolean(i.needs_review||i.confidence==='low'||normalizeIntakeType(i.intake_type||i.intakeType)==='unknown'),note:i.note||'',ingredients:(i.ingredients||[]).map(normIng),calcMethod:i.calcMethod||'auto',dbMatchId:i.dbMatchId||'',sourcePreference:'Custom',formulaKcalOz:i.formulaKcalOz??i.kcal_per_oz??'',editOpen:false}}
+function normItem(i={}){const a=normAmt(i.amount),food=i.food||i.item||i.name||'';return{id:i.id||uid(),time:i.time||'',intake_type:normalizeIntakeType(i.intake_type||i.intakeType||(i.type==='formula'?'formula':'food')),food,amount:a.value,original_amount:a.original,unit:i.unit||'',weight_g:i.weight_g??'',volume_ml:i.volume_ml??i.volume??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',needs_review:Boolean(i.needs_review||i.confidence==='low'||normalizeIntakeType(i.intake_type||i.intakeType)==='unknown'),note:i.note||'',ingredients:(i.ingredients||[]).map(normIng),calcMethod:i.calcMethod||'auto',dbMatchId:i.dbMatchId||'',sourcePreference:'Custom',formulaKcalOz:i.formulaKcalOz??i.kcal_per_oz??'',editOpen:false}}
 function extractJson(text){
   text=String(text||'').replace(/^\uFEFF/,'').trim();
   const f=text.match(/```(?:json)?\s*([\s\S]*?)```/i);if(f)text=f[1];
-  // Normalize typographic quotes often introduced when copying from chat/note apps.
-  text=text.replace(/[“”„‟]/g,'\"').replace(/[‘’]/g,"'").replace(/\u00a0/g,' ');
+  // Normalize quote-like Unicode characters introduced by ChatGPT / iOS / Notes / rich text copy.
+  text=text
+    .replace(/[\u201C\u201D\u201E\u201F\u275D\u275E\u301D\u301E\u301F\u00AB\u00BB\uFF02]/g,'\"')
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g,"'")
+    .replace(/\u00a0/g,' ')
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g,'');
   const a=text.indexOf('{'),b=text.lastIndexOf('}');if(a<0||b<=a)throw new Error('ไม่พบ JSON object');
-  const raw=text.slice(a,b+1);
-  try{return JSON.parse(raw)}catch(e){throw new Error(`JSON ไม่ถูกต้องหลังปรับ quote อัตโนมัติ: ${e.message}`)}
+  let raw=text.slice(a,b+1).trim();
+  const attempts=[raw];
+  // Fallback for pseudo-JSON copied from formatted chat: normalize smart punctuation once more,
+  // remove trailing commas, and quote bare property names if present.
+  let repaired=raw
+    .replace(/([,{]\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*:)/g,'$1"$2"$3')
+    .replace(/,\s*([}\]])/g,'$1');
+  if(repaired!==raw)attempts.push(repaired);
+  let lastErr=null;
+  for(const candidate of attempts){try{return JSON.parse(candidate)}catch(e){lastErr=e}}
+  throw new Error(`JSON ไม่ถูกต้องหลังปรับรูปแบบอัตโนมัติ: ${lastErr?.message||'parse error'}`);
 }
 function modularItemToRecipe(items){
   const mods=(items||[]).filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet');
