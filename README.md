@@ -1,5 +1,15 @@
 
-## New in 0.4.23
+## New in 0.4.27
+- Added Generate draft prescription: creates editable Diet / Milk-Formula / Modular prescription draft from Requirements and Custom Database.
+- Diet draft pre-populates rice/starch, lean protein, egg, vegetable, fruit and oil when available.
+- Milk/formula draft chooses a generic Custom DB milk/formula candidate when none is selected, then calculates amount to source energy target.
+- Modular draft can build whey + carbohydrate + LCT/MCT components from nutrient requirements; all values remain editable and require Recheck before Save.
+
+- Diet Design can auto-calculate selected Diet / Milk-Formula / Modular amounts from the Energy requirement.
+- Editable energy allocation (%) by source; if allocations do not sum to 100%, the app can normalize them.
+- Auto-calculation scales only items already selected from Custom Database; it does not choose a clinical diet or formula automatically.
+- All generated amounts remain editable, with Protein/Ca/Na/K and other nutrients checked in Recheck.
+
 - Custom Database now supports a `Medication / mineral` type.
 - Added Magnesium (Mg) to the nutrient schema.
 - Na, K, Ca, Mg and P in Custom Database are stored as **mg per defined basis**.
@@ -13,7 +23,7 @@
 - Existing legacy decimal-year age is migrated non-destructively into years/months/days where possible.
 - Existing cases, Custom Database, Diet Design, Review Intake, and Modular Diet remain preserved.
 
-# Pediatric Nutrition PWA 0.4.23
+# Pediatric Nutrition PWA 0.4.27
 
 ## New in 0.4.20
 - Added **Diet Design / Nutrition Prescription** as a separate saved per-case module.
@@ -142,3 +152,10 @@ Changes:
 - Displays postmenstrual age (PMA) and handles visits before term as “Not yet term”.
 - GA ≥37 weeks displays corrected age as not applicable.
 - Existing cases remain compatible; new preterm fields are optional.
+
+
+## 0.4.27
+- Modular Diet Builder is organized by nutrient role: Protein, CHO, Fat—LCT, Fat—MCT, Medication/minerals, and Other.
+- Protein candidates include formula/milk/whey/casein-type Custom DB items; CHO candidates include rice/starch/dextrin/dextrose/sucrose/fruit; fat is separated into LCT and MCT; medication/minerals uses Custom DB type `medication`.
+- Added **Prepare component template** so the recipe can be composed first, before amounts are calculated.
+- Auto draft no longer deletes a user-selected modular component set. It uses selected role-specific sources when calculating draft amounts.

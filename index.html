@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.23" />
+  <link rel="stylesheet" href="styles.css?v=0.4.25" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -80,6 +80,15 @@
     <div class="card">
       <div class="section-title-row"><div><h2>Diet Design / Nutrition Prescription</h2><p class="muted">ออกแบบสิ่งที่สั่งให้รับประทาน แยกจาก actual intake • ทุกค่าปรับเองได้ • คำนวณจาก Custom Database เท่านั้น</p></div><div class="inline-actions"><button id="cancelDesignBtn" class="secondary">Cancel changes</button><button id="saveDesignBtn" class="primary">Save Diet Design</button><span id="designSaveStatus" class="muted"></span></div></div>
       <div id="designTargetSummary" class="summary-box"></div>
+      <div class="auto-design-box top-gap">
+        <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">ให้ระบบสร้างโครงร่างอาหาร/นม-formula/modular และคำนวณปริมาณจาก Requirements + Custom Database แล้วแก้ทุกค่าเองได้ก่อน Save</p></div><div class="inline-actions"><button id="autoBuildPrescriptionBtn" class="primary">Generate draft prescription</button><button id="autoCalculateDesignBtn" class="secondary">Recalculate selected items</button></div></div>
+        <div class="grid-3">
+          <label>Diet (% energy)<input id="designDietPct" type="number" min="0" max="100" step="0.1" /></label>
+          <label>Milk / Formula (% energy)<input id="designFormulaPct" type="number" min="0" max="100" step="0.1" /></label>
+          <label>Modular (% energy)<input id="designModularPct" type="number" min="0" max="100" step="0.1" /></label>
+        </div>
+        <p class="muted"><strong id="designAllocationTotal">Total 0%</strong> • Generate draft: Milk/Formula ใช้ Calcium requirement เป็นหลักเมื่อมีข้อมูล; Modular หัก nutrient ที่ formula/protein source ให้มาก่อน แล้วเติม CHO/LCT/MCT • formula concentration จะตรวจเทียบ max kcal/oz ที่บันทึกใน Custom Database</p>
+      </div>
       <div id="designRemaining" class="summary-box top-gap"></div>
     </div>
 
@@ -105,7 +114,7 @@
         <label>Feeds/day<input id="designModFeeds" type="number" min="0" step="1" /></label>
         <label>Daily prescribed volume<input id="designModDailyVolume" disabled /></label>
       </div>
-      <div class="section-title-row top-gap"><h3>Components</h3><button id="addDesignModCompBtn" class="secondary">+ Add component</button></div>
+      <div class="section-title-row top-gap"><div><h3>Components by nutrient role</h3><p class="muted">จัดส่วนประกอบเป็น Protein • CHO • Fat (LCT/MCT) • Medication/minerals ก่อน แล้วค่อยกำหนด source และปริมาณ</p></div><div class="inline-actions"><button id="prepareModularTemplateBtn" class="secondary">Prepare component template</button><button id="addDesignModCompBtn" class="secondary">+ Add other</button></div></div>
       <div id="designModComponents"></div>
       <div class="actions"><button id="sendDesignToDailyModularBtn" class="secondary">Send to Daily Modular Diet</button></div>
       <div id="modularDesignSummary" class="summary-box top-gap"></div>
@@ -164,7 +173,7 @@
   <section id="tab-foods" class="tab-panel">
     <div class="card">
       <div class="section-title-row">
-        <div><h2>Custom Database</h2><p class="muted">เพิ่ม/แก้ Food, Formula, Modular และ Medication/Mineral ได้ • Na, K, Ca, Mg, P เก็บเป็น mg ต่อ basis ที่กำหนด</p></div>
+        <div><h2>Custom Database</h2><p class="muted">เพิ่ม/แก้ Food, Formula, Modular และ Medication/Mineral ได้ • Formula เพิ่ม standard/min/max kcal/oz เพื่อใช้เป็น concentration constraint • Na, K, Ca, Mg, P เก็บเป็น mg ต่อ basis ที่กำหนด</p></div>
         <div class="inline-actions"><button id="addFoodDbBtn" class="secondary">+ Add item</button><button id="cancelFoodDbBtn" class="secondary">Cancel changes</button><button id="saveFoodDbBtn" class="primary">Save Custom Database</button><span id="foodDbSaveStatus" class="muted"></span></div>
       </div>
       <div class="db-toolbar">
@@ -172,7 +181,7 @@
         <label>Search<input id="dbSearch" placeholder="ชื่ออาหาร/สูตร" /></label>
       </div>
       <datalist id="dbUnitOptions"><option value="g"><option value="mL"><option value="portion"><option value="ทัพพี"><option value="ถ้วยตวง"><option value="ช้อนโต๊ะ"><option value="ช้อนชา"><option value="ฟอง"><option value="ชิ้น"><option value="ผล"><option value="แผ่น"><option value="scoop"><option value="เม็ด"><option value="ซอง"><option value="ขวด"><option value="ampule"><option value="mL"><option value="g"></datalist>
-      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Protein source</th><th>kcal</th><th>Protein</th><th>Fat/LCT</th><th>MCT</th><th>CHO</th><th>Ca (mg)</th><th>Mg (mg)</th><th>P (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Standard kcal/oz</th><th>Min kcal/oz</th><th>Max kcal/oz</th><th>Protein source</th><th>kcal</th><th>Protein</th><th>Fat/LCT</th><th>MCT</th><th>CHO</th><th>Ca (mg)</th><th>Mg (mg)</th><th>P (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
     </div>
   </section>
 
@@ -212,7 +221,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.23</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.23"></script>
+<footer><strong>PWA 0.4.27</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.26"></script>
 </body>
 </html>
