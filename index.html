@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.39" />
+  <link rel="stylesheet" href="styles.css?v=0.4.40" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -58,13 +58,12 @@
     </div>
 
     <div class="card">
-      <h2>Daily Requirements</h2>
-      <p class="muted">ใส่ requirement ที่ต้องการใช้เอง แอปไม่เดา requirement อัตโนมัติ</p>
+      <div class="section-title-row"><div><h2>Daily Requirements</h2><p class="muted">ใส่ requirement ที่ต้องการใช้เอง แอปไม่เดา requirement อัตโนมัติ</p></div><div class="inline-actions"><button id="saveRequirementsBtn" class="primary">Save Requirements</button><span id="requirementsSaveStatus" class="muted"></span></div></div>
       <div class="grid-3">
         <label class="check-card"><span><input id="trackFluid" type="checkbox" style="width:auto;margin-right:6px" /> Track total fluid</span><small class="muted">เหมาะกับ tube feed / formula-only / modular-only</small></label>
         <label>Fluid target (mL/day)<input id="reqFluid" type="number" min="0" step="1" /></label>
         <label>Energy (kcal/day)<input id="reqEnergy" type="number" min="0" step="1" /></label>
-        <label>Protein target type<select id="reqProteinMode"><option value="total">Total protein</option><option value="counted">Meat + egg + milk + formula protein</option></select></label><label>Protein target (g/day)<input id="reqProtein" type="number" min="0" step="0.1" /></label>
+        <label>Protein target type<select id="reqProteinMode"><option value="counted">Meat + egg + milk + formula protein</option><option value="total">Total protein</option></select></label><label>Protein target (g/day)<input id="reqProtein" type="number" min="0" step="0.1" /></label>
         <label>Total fat (% total energy)<input id="reqFatPct" type="number" min="0" max="100" step="0.1" /></label>
         <label>MCT (% total energy)<input id="reqMctPct" type="number" min="0" max="100" step="0.1" /></label>
         <label>Calcium (mg/day) <span class="muted">optional</span><input id="reqCalcium" type="number" min="0" step="1" /></label>
@@ -93,6 +92,16 @@
           <div></div>
         </div>
         <p class="muted"><strong id="designAllocationTotal">Total 0%</strong> • Allocation เป็นค่าเริ่มต้น ไม่ใช่ข้อบังคับ • Diet fat / Modular fat เป็น optional target ของ fat kcal ภายใน source นั้น โดยใช้ LCT×9 + MCT×8.3 • Auto สามารถปรับ % Diet / Milk-Formula / Modular เพื่อให้ Energy และ Protein ใกล้ target ที่สุด • Fat รวมเป้าหมาย ±5% • Minerals เป็นลำดับถัดไป • หลังแก้เองใช้ “Calculate current values — no recalc”</p>
+        <div class="summary-box top-gap">
+          <div class="section-title-row"><div><strong>Diet structure</strong><div class="muted">เมื่อ Use Diet เปิด ระบบจะพยายามคงกลุ่มอาหารพื้นฐานไว้ ไม่ให้ optimizer ลดจนเป็น 0 เพียงเพื่อให้ตัวเลขลง target</div></div><label class="switch-line"><input id="designStructureEnabled" type="checkbox" /> Use structure</label></div>
+          <div class="grid-4 top-gap">
+            <label class="check-card"><span><input id="designStructureStarch" type="checkbox" style="width:auto;margin-right:6px" /> Rice / starch</span></label>
+            <label class="check-card"><span><input id="designStructureProtein" type="checkbox" style="width:auto;margin-right:6px" /> Meat or egg</span></label>
+            <label class="check-card"><span><input id="designStructureVegetable" type="checkbox" style="width:auto;margin-right:6px" /> Vegetable</span></label>
+            <label class="check-card"><span><input id="designStructureFruit" type="checkbox" style="width:auto;margin-right:6px" /> Fruit</span></label>
+          </div>
+          <p class="muted compact-note">Structure บังคับเฉพาะการมีอย่างน้อย 1 serving-step ของกลุ่มที่เลือก; Amount ที่เป็น Manual/Locked ยังคงมีสิทธิ์เหนือ optimizer. ถ้าปิด Use structure ระบบจะ optimize ตาม nutrient targets อย่างเดียว.</p>
+        </div>
       </div>
       <div id="designRemaining" class="summary-box top-gap"></div>
     </div>
@@ -226,7 +235,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.39</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.39"></script>
+<footer><strong>PWA 0.4.40</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.40"></script>
 </body>
 </html>
