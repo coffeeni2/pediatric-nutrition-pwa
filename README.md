@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.38
+# Pediatric Nutrition PWA 0.4.39
 
 - Custom Database header now treats `fat` as **LCT** and displays **LCT / %total fat**; `mct` remains MCT grams.
 - Diet Design fat energy is calculated as **LCT × 9 + MCT × 8.3 kcal/g**.
@@ -217,3 +217,11 @@ Changes:
 
 ## 0.4.38
 - Newly added Custom Database items are pinned to the top of the displayed list while editing, so a blank/new row does not disappear into clinical sorting.
+
+
+## 0.4.39
+- Diet Design: optional **Diet fat (% of Diet energy)** target.
+- Diet Design: optional **Modular fat (% of Modular energy)** target.
+- Source-level fat targets use **LCT × 9 + MCT × 8.3** and are ignored when left blank.
+- Optimizer treats source-level fat targets as soft constraints after whole-prescription Energy/Protein/Fat and before minerals.
+- Nutrient Recheck shows actual source fat percentage versus optional target.
