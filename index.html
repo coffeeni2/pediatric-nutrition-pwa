@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.20" />
+  <link rel="stylesheet" href="styles.css?v=0.4.21" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -34,11 +34,17 @@
       <div class="section-title-row"><div><h2>Patient / Case</h2><p class="muted">ใช้ anonymous Case ID เท่านั้น • ผู้ป่วยเดิมไม่ถูกลบเมื่อเริ่มรายใหม่</p></div><div class="inline-actions"><select id="caseSelector" aria-label="Select case"></select><button id="newCaseBtn" class="secondary">+ New Case</button><button id="deleteCaseBtn" class="danger">Delete Case</button><button id="savePatientBtn" class="primary">Save</button></div></div>
       <div class="grid-3">
         <label>Anonymous name / Case ID<input id="patientAlias" autocomplete="off" placeholder="Case A / P001" /></label>
-        <label>Age (years)<input id="patientAge" type="number" min="0" step="0.1" /></label>
+        <label>Date of birth (optional)<input id="patientDob" type="date" /></label>
         <label>Sex<select id="patientSex"><option value="">Not specified</option><option value="male">Male</option><option value="female">Female</option></select></label>
       </div>
       <div class="grid-4 top-gap">
+        <label>Age — years<input id="patientAgeYears" type="number" min="0" step="1" /></label>
+        <label>Age — months<input id="patientAgeMonths" type="number" min="0" max="11" step="1" /></label>
+        <label>Age — days<input id="patientAgeDays" type="number" min="0" max="31" step="1" /></label>
         <label>Visit date<input id="patientVisitDate" type="date" /></label>
+      </div>
+      <p class="muted compact-note">ถ้ามี Date of birth และ Visit date ระบบจะคำนวณอายุ ปี / เดือน / วันอัตโนมัติ และยังแก้ตัวเลขอายุเองได้</p>
+      <div class="grid-3 top-gap">
         <label>Weight (kg)<input id="patientWeight" type="number" min="0" step="0.01" /></label>
         <label>Length / Height (cm)<input id="patientHeight" type="number" min="0" step="0.1" /></label>
         <label>Note (optional)<input id="patientNote" placeholder="optional" /></label>
@@ -201,7 +207,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.20</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.20"></script>
+<footer><strong>PWA 0.4.21</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.21"></script>
 </body>
 </html>

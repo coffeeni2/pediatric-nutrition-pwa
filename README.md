@@ -1,4 +1,12 @@
-# Pediatric Nutrition PWA 0.4.20
+
+## New in 0.4.21
+- Patient age is now stored/displayed as **years + months + days**.
+- Added optional **Date of birth (DOB)**. When DOB and Visit date are both entered, chronological age is calculated automatically.
+- Age fields remain editable after automatic calculation.
+- Existing legacy decimal-year age is migrated non-destructively into years/months/days where possible.
+- Existing cases, Custom Database, Diet Design, Review Intake, and Modular Diet remain preserved.
+
+# Pediatric Nutrition PWA 0.4.21
 
 ## New in 0.4.20
 - Added **Diet Design / Nutrition Prescription** as a separate saved per-case module.
