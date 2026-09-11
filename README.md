@@ -1,6 +1,16 @@
-# Pediatric Nutrition PWA 0.4.33
+# Pediatric Nutrition PWA 0.4.36
 
-## New in 0.4.33
+## New in 0.4.36
+- Diet Design constraint modes: Auto / Manual / Locked.
+- Editing Amount manually changes Auto to Manual; Recalculate preserves Manual and Locked rows.
+- Change Manual back to Auto from the row status, or use Set all to Auto.
+- Diet structure logic is intentionally unchanged in this version.
+
+
+- Added Clear Diet, Clear Milk/Formula, and Clear Modular buttons in Diet Design. Each clears that source from the current draft and turns the source off after confirmation.
+- Updated Custom Database once from the user's 2026-09-11-5 JSON backup (133 records), preserving patient/case, Review Intake, Diet Design, and Daily Modular Diet data.
+
+## Previous 0.4.34 changes
 - Restarted from the uploaded 0.4.31 build.
 - Diet Design optimizer priority: Energy + selected Protein target first, then Fat within ±5%, then Ca/Na/K as lower-priority targets.
 - Energy allocation percentages are starting values only; Generate/Recalculate can change Diet / Milk-Formula / Modular proportions and write back the actual energy contribution %.
