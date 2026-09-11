@@ -1,6 +1,13 @@
-# Pediatric Nutrition PWA 0.4.36
+# Pediatric Nutrition PWA 0.4.38
 
-## New in 0.4.36
+- Custom Database header now treats `fat` as **LCT** and displays **LCT / %total fat**; `mct` remains MCT grams.
+- Diet Design fat energy is calculated as **LCT × 9 + MCT × 8.3 kcal/g**.
+- Diet Design Recheck separates **LCT (g)** and **MCT (g)** and shows total fat energy (kcal and % total energy).
+- Fat-target optimization now compares fat **energy** to the prescribed % total energy, with the existing ±5% tolerance.
+- MCT requirement is interpreted as **% total energy** when generating a modular draft.
+- One-time migration corrects legacy `MCT oil` seed rows that stored the same gram in both LCT and MCT.
+
+## New in 0.4.38
 - Diet Design constraint modes: Auto / Manual / Locked.
 - Editing Amount manually changes Auto to Manual; Recalculate preserves Manual and Locked rows.
 - Change Manual back to Auto from the row status, or use Set all to Auto.
@@ -206,3 +213,7 @@ Changes:
 - Added Lock controls so Auto/Recalculate does not change locked Diet, Milk/Formula, fortifier, or Modular component amounts.
 - Auto/Recalculate now calculates continuously, applies final rounding once, then Nutrient Recheck uses the rounded actual prescription without silently rebalancing again.
 - Modular final/feed volume is rounded to 5 mL; component amounts default to step 1.
+
+
+## 0.4.38
+- Newly added Custom Database items are pinned to the top of the displayed list while editing, so a blank/new row does not disappear into clinical sorting.
