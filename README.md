@@ -1,6 +1,13 @@
-# Pediatric Nutrition PWA 0.4.34
+# Pediatric Nutrition PWA 0.4.36
 
-## New in 0.4.34
+- Hotfix: Custom Database uses a lightweight summary table and renders only one full editor at a time.
+- Default page size reduced to 10 to improve Safari/iPad responsiveness.
+- Clinical Group/Subgroup/Sort/Search retained. Manual subgroup is preserved unless Type is changed.
+- Full nutrient fields and conversions are available after pressing Edit.
+
+# Pediatric Nutrition PWA 0.4.36
+
+## New in 0.4.36
 - Custom Database now defaults to clinical ordering: Food → Milk/Formula → Modular → Medication/Mineral.
 - Subgroups: starch, meat, egg, vegetable, fruit, fat/oil; milk/formula classes; modular roles; medication/mineral classes.
 - Added Group, Subgroup and Sort filters. Sort options: Clinical order, Name, Recently modified.

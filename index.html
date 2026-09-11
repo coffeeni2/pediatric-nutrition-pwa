@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.34" />
+  <link rel="stylesheet" href="styles.css?v=0.4.36" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -181,11 +181,11 @@
         <label>Subgroup<select id="dbCategoryFilter"><option value="all">All subgroups</option></select></label>
         <label>Sort<select id="dbSort"><option value="clinical" selected>Clinical order</option><option value="name">Name ก–ฮ / A–Z</option><option value="recent">Recently modified</option></select></label>
         <label>Search<input id="dbSearch" placeholder="ชื่ออาหาร/สูตร" /></label>
-        <label>Rows/page<select id="dbPageSize"><option value="10">10</option><option value="25" selected>25</option><option value="50">50</option></select></label>
+        <label>Rows/page<select id="dbPageSize"><option value="10" selected>10</option><option value="25">25</option><option value="50">50</option></select></label>
         <div class="inline-actions"><button id="dbPrevPage" class="secondary small-btn">← Previous</button><span id="dbPageInfo" class="muted"></span><button id="dbNextPage" class="secondary small-btn">Next →</button></div>
       </div>
       <datalist id="dbUnitOptions"><option value="g"><option value="mL"><option value="portion"><option value="ทัพพี"><option value="ถ้วยตวง"><option value="ช้อนโต๊ะ"><option value="ช้อนชา"><option value="ฟอง"><option value="ชิ้น"><option value="ผล"><option value="แผ่น"><option value="scoop"><option value="เม็ด"><option value="ซอง"><option value="ขวด"><option value="ampule"><option value="mL"><option value="g"></datalist>
-      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Subgroup</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Standard kcal/oz</th><th>Min kcal/oz</th><th>Max kcal/oz</th><th>Protein source</th><th>kcal</th><th>Protein</th><th>Fat/LCT</th><th>MCT</th><th>CHO</th><th>Ca (mg)</th><th>Mg (mg)</th><th>P (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
+      <p class="muted">Lightweight view: แสดงเฉพาะข้อมูลสำคัญก่อน กด Edit เพื่อเปิดรายละเอียดทีละรายการ ลดการใช้หน่วยความจำและป้องกันหน้า Custom Database ค้าง</p><div class="table-wrap"><table><thead><tr><th>Type</th><th>Subgroup</th><th>Name</th><th>Basis</th><th>kcal</th><th>Protein</th><th>Fat</th><th>CHO</th><th>Actions</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
     </div>
   </section>
 
@@ -225,7 +225,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.34</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.34"></script>
+<footer><strong>PWA 0.4.36</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.36"></script>
 </body>
 </html>
