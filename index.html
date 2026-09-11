@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.25" />
+  <link rel="stylesheet" href="styles.css?v=0.4.32" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -64,7 +64,7 @@
         <label class="check-card"><span><input id="trackFluid" type="checkbox" style="width:auto;margin-right:6px" /> Track total fluid</span><small class="muted">เหมาะกับ tube feed / formula-only / modular-only</small></label>
         <label>Fluid target (mL/day)<input id="reqFluid" type="number" min="0" step="1" /></label>
         <label>Energy (kcal/day)<input id="reqEnergy" type="number" min="0" step="1" /></label>
-        <label>Protein (g/day)<input id="reqProtein" type="number" min="0" step="0.1" /></label>
+        <label>Protein target type<select id="reqProteinMode"><option value="total">Total protein</option><option value="counted">Meat + egg + milk + formula protein</option></select></label><label>Protein target (g/day)<input id="reqProtein" type="number" min="0" step="0.1" /></label>
         <label>Total fat (% total energy)<input id="reqFatPct" type="number" min="0" max="100" step="0.1" /></label>
         <label>MCT (% total energy)<input id="reqMctPct" type="number" min="0" max="100" step="0.1" /></label>
         <label>Calcium (mg/day) <span class="muted">optional</span><input id="reqCalcium" type="number" min="0" step="1" /></label>
@@ -81,19 +81,19 @@
       <div class="section-title-row"><div><h2>Diet Design / Nutrition Prescription</h2><p class="muted">ออกแบบสิ่งที่สั่งให้รับประทาน แยกจาก actual intake • ทุกค่าปรับเองได้ • คำนวณจาก Custom Database เท่านั้น</p></div><div class="inline-actions"><button id="cancelDesignBtn" class="secondary">Cancel changes</button><button id="saveDesignBtn" class="primary">Save Diet Design</button><span id="designSaveStatus" class="muted"></span></div></div>
       <div id="designTargetSummary" class="summary-box"></div>
       <div class="auto-design-box top-gap">
-        <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">ให้ระบบสร้างโครงร่างอาหาร/นม-formula/modular และคำนวณปริมาณจาก Requirements + Custom Database แล้วแก้ทุกค่าเองได้ก่อน Save</p></div><div class="inline-actions"><button id="autoBuildPrescriptionBtn" class="primary">Generate draft prescription</button><button id="autoCalculateDesignBtn" class="secondary">Recalculate selected items</button></div></div>
+        <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">% energy เป็น soft target • Auto ใช้ Amount + Maximum + Lock และ Rounding ของแต่ละรายการ • หลังปัดแล้ว Recheck ใช้ค่าจริงที่ได้</p></div><div class="inline-actions"><button id="autoBuildPrescriptionBtn" class="primary">Generate capacity-based draft</button><button id="autoCalculateDesignBtn" class="secondary">Recalculate with capacity</button><button id="calculateCurrentDesignBtn" class="secondary">Calculate current values — no recalc</button></div></div>
         <div class="grid-3">
           <label>Diet (% energy)<input id="designDietPct" type="number" min="0" max="100" step="0.1" /></label>
           <label>Milk / Formula (% energy)<input id="designFormulaPct" type="number" min="0" max="100" step="0.1" /></label>
           <label>Modular (% energy)<input id="designModularPct" type="number" min="0" max="100" step="0.1" /></label>
         </div>
-        <p class="muted"><strong id="designAllocationTotal">Total 0%</strong> • Generate draft: Milk/Formula ใช้ Calcium requirement เป็นหลักเมื่อมีข้อมูล; Modular หัก nutrient ที่ formula/protein source ให้มาก่อน แล้วเติม CHO/LCT/MCT • formula concentration จะตรวจเทียบ max kcal/oz ที่บันทึกใน Custom Database</p>
+        <p class="muted"><strong id="designAllocationTotal">Total 0%</strong> • Allocation เป็นเป้าหมายเริ่มต้น ไม่ใช่ข้อบังคับ • Diet จะไม่เพิ่มเกิน practical capacity • Milk/Formula ใช้ Calcium เป็นหลักเมื่อมีข้อมูล • Modular เติม remaining requirement • หลังแก้ปริมาณเองให้ใช้ “Calculate current values — no recalc” เพื่อคำนวณ Recheck โดยไม่เปลี่ยนค่า</p>
       </div>
       <div id="designRemaining" class="summary-box top-gap"></div>
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>1. Diet</h2><p class="muted">ข้าว/แป้ง เนื้อสัตว์ ไข่ ผัก ผลไม้ และอาหารอื่น ๆ • ใช้ช้อนโต๊ะ/ทัพพี/กรัมได้เมื่อมี conversion ใน Custom DB</p></div><div class="inline-actions"><label class="switch-line"><input id="designDietEnabled" type="checkbox" /> Use Diet</label><button id="addDesignDietBtn" class="secondary">+ Add food</button></div></div>
+      <div class="section-title-row"><div><h2>1. Diet</h2><p class="muted">Amount คือปริมาณจริง • Rounding เลือกทีละ 1 / ทีละ 5 / ทศนิยม 1 ตำแหน่ง • Lock = ห้าม Auto เปลี่ยน • Maximum เป็นเพดาน optional</p></div><div class="inline-actions"><label class="switch-line"><input id="designDietEnabled" type="checkbox" /> Use Diet</label><button id="addDesignDietBtn" class="secondary">+ Add food</button></div></div>
       <div id="designDietRows"></div>
       <div id="dietDesignSummary" class="summary-box top-gap"></div>
     </div>
@@ -127,7 +127,7 @@
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>Nutrient Recheck</h2><p class="muted">แยก Diet • Milk/Formula + Fortifiers • Modular Diet • Total Daily Prescription และเทียบ Patient Requirements</p></div><button id="refreshDesignRecheckBtn" class="primary">Recheck</button></div>
+      <div class="section-title-row"><div><h2>Nutrient Recheck</h2><p class="muted">คำนวณจากค่าปัจจุบันเท่านั้น ปุ่มนี้ไม่ rebalance และไม่เปลี่ยนปริมาณ • แยก Diet • Milk/Formula + Fortifiers • Modular Diet • Total Daily Prescription</p></div><button id="refreshDesignRecheckBtn" class="primary">Recheck current values</button></div>
       <div id="designRecheck"></div>
     </div>
   </section>
@@ -221,7 +221,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.27</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.26"></script>
+<footer><strong>PWA 0.4.32</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.32"></script>
 </body>
 </html>

@@ -1,3 +1,22 @@
+# Pediatric Nutrition PWA 0.4.32
+
+## New in 0.4.32
+
+- Custom Database snapshot updated from `ped-nutrition-backup-2026-09-11-3.json` (133 records).
+- Migration replaces only `foodDB` once (`customDbSnapshotV0432`); patient/cases, PNIF/Review Intake, Diet Design, and Daily Modular Diet are preserved.
+- Keeps 0.4.31 rounding and Diet Design behavior unchanged.
+
+
+## New in 0.4.31
+- Custom Database replaced once from the latest user backup `ped-nutrition-backup-2026-09-11-2.json` while preserving cases/intakes/designs.
+- Diet Design Formula, fortifier, and Modular generated/manual numeric amounts are normalized to 1 decimal place; diet household amounts remain whole numbers.
+- Protein requirement can target either **Total protein** or **Meat + egg + milk + formula protein**.
+- Diet Design balancing now rechecks Energy, selected Protein target, Fat target derived from % energy, Calcium, Na and K after combining Diet + Milk/Formula + Fortifiers + Modular Diet. It attempts to rebalance selected sources and reports when exact matching is prevented by selected items or whole-unit rounding.
+- Generated Diet household amounts are rounded to whole units. Default household units prefer: rice/starch = ทัพพี, meat = ช้อนโต๊ะ, egg = ฟอง, vegetable = ทัพพี, fruit = ผล/ลูก (when supported by Custom DB), oil = mL when supported.
+- Nutrient Recheck now shows Total protein and counted meat/egg/milk/formula protein separately, both with g/kg/day when weight is available.
+- Nutrient Recheck displays P:CHO:Fat as % of total calculated energy (4/4/9 kcal/g).
+- Existing 0.4.27 calcium-first Milk/Formula and modular formula concentration constraints remain.
+
 
 ## New in 0.4.27
 - Added Generate draft prescription: creates editable Diet / Milk-Formula / Modular prescription draft from Requirements and Custom Database.
@@ -159,3 +178,18 @@ Changes:
 - Protein candidates include formula/milk/whey/casein-type Custom DB items; CHO candidates include rice/starch/dextrin/dextrose/sucrose/fruit; fat is separated into LCT and MCT; medication/minerals uses Custom DB type `medication`.
 - Added **Prepare component template** so the recipe can be composed first, before amounts are calculated.
 - Auto draft no longer deletes a user-selected modular component set. It uses selected role-specific sources when calculating draft amounts.
+
+
+## 0.4.31
+- Diet Design uses capacity-based drafting: energy allocation is a soft target. Diet rows now have Preferred and Maximum household portions.
+- Auto recalculation does not increase Diet beyond Preferred/current unless Maximum is explicitly higher; unmet Diet energy cascades to Milk/Formula then Modular when enabled.
+- Added “Calculate current values — no recalc” so clinician-edited amounts can be kept exactly and only Summary/Recheck recalculated.
+- Recheck current values never mutates prescription amounts.
+
+### 0.4.31
+- Diet Design rounding is configurable per row: step 1, step 5, or 1 decimal.
+- Defaults: household food units step 1; food g/mL step 5; ready milk/formula volume step 5; powder formula step 1; fortifier step 1; modular components step 1.
+- Removed Preferred from Diet rows. Current Amount is the starting value; Maximum is optional.
+- Added Lock controls so Auto/Recalculate does not change locked Diet, Milk/Formula, fortifier, or Modular component amounts.
+- Auto/Recalculate now calculates continuously, applies final rounding once, then Nutrient Recheck uses the rounded actual prescription without silently rebalancing again.
+- Modular final/feed volume is rounded to 5 mL; component amounts default to step 1.
