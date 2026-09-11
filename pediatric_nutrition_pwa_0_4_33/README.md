@@ -1,13 +1,10 @@
 # Pediatric Nutrition PWA 0.4.33
 
 ## New in 0.4.33
-- Restarted from the uploaded 0.4.31 build.
-- Diet Design optimizer priority: Energy + selected Protein target first, then Fat within ±5%, then Ca/Na/K as lower-priority targets.
-- Energy allocation percentages are starting values only; Generate/Recalculate can change Diet / Milk-Formula / Modular proportions and write back the actual energy contribution %.
-- Rounding and Lock/Maximum constraints remain active during optimization.
-- Oil defaults to rounding by 1, including existing oil diet rows through a one-time migration.
-- Custom Database is replaced once with the 133-row `ped-nutrition-backup-2026-09-11-4.json` snapshot; patient/case/intake/design data are preserved.
-- This is a deterministic mathematical drafting aid and is not a clinically validated prescribing optimizer.
+
+- Custom Database snapshot updated from `ped-nutrition-backup-2026-09-11-3.json` (133 records).
+- Migration replaces only `foodDB` once (`customDbSnapshotV0432`); patient/cases, PNIF/Review Intake, Diet Design, and Daily Modular Diet are preserved.
+- Keeps 0.4.31 rounding and Diet Design behavior unchanged.
 
 
 ## New in 0.4.31
@@ -196,3 +193,9 @@ Changes:
 - Added Lock controls so Auto/Recalculate does not change locked Diet, Milk/Formula, fortifier, or Modular component amounts.
 - Auto/Recalculate now calculates continuously, applies final rounding once, then Nutrient Recheck uses the rounded actual prescription without silently rebalancing again.
 - Modular final/feed volume is rounded to 5 mL; component amounts default to step 1.
+
+
+## 0.4.33 hotfix
+- Paginated Custom Database rendering (25 rows/page default) to prevent UI freezing.
+- Defensive rendering keeps navigation usable if an individual database row is malformed.
+- Preserves custom/unknown basis units in the editor.

@@ -81,13 +81,13 @@
       <div class="section-title-row"><div><h2>Diet Design / Nutrition Prescription</h2><p class="muted">ออกแบบสิ่งที่สั่งให้รับประทาน แยกจาก actual intake • ทุกค่าปรับเองได้ • คำนวณจาก Custom Database เท่านั้น</p></div><div class="inline-actions"><button id="cancelDesignBtn" class="secondary">Cancel changes</button><button id="saveDesignBtn" class="primary">Save Diet Design</button><span id="designSaveStatus" class="muted"></span></div></div>
       <div id="designTargetSummary" class="summary-box"></div>
       <div class="auto-design-box top-gap">
-        <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">ลำดับการ optimize: Energy + Protein → Fat ±5% → Minerals • % energy เป็นค่าเริ่มต้นและระบบปรับสัดส่วน source ได้ • Lock / Maximum / Rounding ยังมีผล</p></div><div class="inline-actions"><button id="autoBuildPrescriptionBtn" class="primary">Generate optimized draft</button><button id="autoCalculateDesignBtn" class="secondary">Recalculate to targets</button><button id="calculateCurrentDesignBtn" class="secondary">Calculate current values — no recalc</button></div></div>
+        <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">% energy เป็น soft target • Auto ใช้ Amount + Maximum + Lock และ Rounding ของแต่ละรายการ • หลังปัดแล้ว Recheck ใช้ค่าจริงที่ได้</p></div><div class="inline-actions"><button id="autoBuildPrescriptionBtn" class="primary">Generate capacity-based draft</button><button id="autoCalculateDesignBtn" class="secondary">Recalculate with capacity</button><button id="calculateCurrentDesignBtn" class="secondary">Calculate current values — no recalc</button></div></div>
         <div class="grid-3">
           <label>Diet (% energy)<input id="designDietPct" type="number" min="0" max="100" step="0.1" /></label>
           <label>Milk / Formula (% energy)<input id="designFormulaPct" type="number" min="0" max="100" step="0.1" /></label>
           <label>Modular (% energy)<input id="designModularPct" type="number" min="0" max="100" step="0.1" /></label>
         </div>
-        <p class="muted"><strong id="designAllocationTotal">Total 0%</strong> • Allocation เป็นค่าเริ่มต้น ไม่ใช่ข้อบังคับ • Auto สามารถปรับ % Diet / Milk-Formula / Modular เพื่อให้ Energy และ Protein ใกล้ target ที่สุด • Fat เป้าหมาย ±5% • Minerals เป็นลำดับถัดไป • หลังแก้เองใช้ “Calculate current values — no recalc”</p>
+        <p class="muted"><strong id="designAllocationTotal">Total 0%</strong> • Allocation เป็นเป้าหมายเริ่มต้น ไม่ใช่ข้อบังคับ • Diet จะไม่เพิ่มเกิน practical capacity • Milk/Formula ใช้ Calcium เป็นหลักเมื่อมีข้อมูล • Modular เติม remaining requirement • หลังแก้ปริมาณเองให้ใช้ “Calculate current values — no recalc” เพื่อคำนวณ Recheck โดยไม่เปลี่ยนค่า</p>
       </div>
       <div id="designRemaining" class="summary-box top-gap"></div>
     </div>
@@ -179,6 +179,8 @@
       <div class="db-toolbar">
         <label>Filter<select id="dbTypeFilter"><option value="all">All</option><option value="food">Food</option><option value="formula">Medical formula</option><option value="modular">Modular component</option><option value="medication">Medication / mineral</option></select></label>
         <label>Search<input id="dbSearch" placeholder="ชื่ออาหาร/สูตร" /></label>
+        <label>Rows/page<select id="dbPageSize"><option value="10">10</option><option value="25" selected>25</option><option value="50">50</option></select></label>
+        <div class="inline-actions"><button id="dbPrevPage" class="secondary small-btn">← Previous</button><span id="dbPageInfo" class="muted"></span><button id="dbNextPage" class="secondary small-btn">Next →</button></div>
       </div>
       <datalist id="dbUnitOptions"><option value="g"><option value="mL"><option value="portion"><option value="ทัพพี"><option value="ถ้วยตวง"><option value="ช้อนโต๊ะ"><option value="ช้อนชา"><option value="ฟอง"><option value="ชิ้น"><option value="ผล"><option value="แผ่น"><option value="scoop"><option value="เม็ด"><option value="ซอง"><option value="ขวด"><option value="ampule"><option value="mL"><option value="g"></datalist>
       <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Standard kcal/oz</th><th>Min kcal/oz</th><th>Max kcal/oz</th><th>Protein source</th><th>kcal</th><th>Protein</th><th>Fat/LCT</th><th>MCT</th><th>CHO</th><th>Ca (mg)</th><th>Mg (mg)</th><th>P (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
