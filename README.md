@@ -1,4 +1,19 @@
-# Pediatric Nutrition PWA 0.4.6
+# Pediatric Nutrition PWA 0.4.20
+
+## New in 0.4.20
+- Added **Diet Design / Nutrition Prescription** as a separate saved per-case module.
+- Added optional **Na and K requirements** in Patient Profile, with mg/day and mEq display.
+- Added optional **Track total fluid** toggle; fluid comparison is shown only when enabled.
+- Diet Design supports Diet, Milk/Formula, fortified Milk/Formula, and Modular Diet independently or in combination.
+- Diet items use Custom Database units/conversions, including tablespoon/ladle when available.
+- Milk/Formula supports mL and 180/200/225 mL carton units.
+- Fortifiers can be added per day or per feed from Custom Database.
+- Modular Diet Builder supports component-by-component amounts, final volume, mL/feed × feeds/day, and copy to Daily Modular Diet.
+- Added Nutrient Recheck separated into Diet, Milk/Formula + fortifiers, Modular Diet, and Total Daily Prescription.
+- Recheck displays Energy, Protein, CHO, Fat, MCT, Ca, Na, K and Na/K mEq where relevant.
+- Added source contribution and remaining-target display.
+- Existing patient cases, Custom Database, PNIF 0.3, Review Intake and Daily Modular Diet remain preserved.
+
 
 Changes:
 - Meat and egg default to cooked when PNIF does not specify raw/cooked.
@@ -99,3 +114,8 @@ Changes:
 - Add fallback repair for bare JSON property names and trailing commas.
 - Accept `item` as an alias of `food` in PNIF meal and ingredient objects.
 - Preserve the 0.4.17 Custom Database snapshot migration and all local case/intake data.
+
+## 0.4.20
+- Custom Database snapshot replaced once from the user-provided 2026-09-11 JSON backup (126 rows).
+- Migration changes only `foodDB`; patient/case, PNIF/Review Intake, Diet Design, and Daily Modular Diet data are preserved.
+- Fixed the stale snapshot constant reference in the 0.4.19 source.

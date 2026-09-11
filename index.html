@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.18" />
+  <link rel="stylesheet" href="styles.css?v=0.4.20" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -19,6 +19,7 @@
 <main>
   <nav class="tabs">
     <button class="tab active" data-tab="patient">Patient</button>
+    <button class="tab" data-tab="design">Diet Design</button>
     <button class="tab" data-tab="pnif">PNIF</button>
     <button class="tab" data-tab="review">Review Intake</button>
     <button class="tab" data-tab="modular">Modular Diet</button>
@@ -49,14 +50,65 @@
       <h2>Daily Requirements</h2>
       <p class="muted">ใส่ requirement ที่ต้องการใช้เอง แอปไม่เดา requirement อัตโนมัติ</p>
       <div class="grid-3">
-        <label>Fluid (mL/day)<input id="reqFluid" type="number" min="0" step="1" /></label>
+        <label class="check-card"><span><input id="trackFluid" type="checkbox" style="width:auto;margin-right:6px" /> Track total fluid</span><small class="muted">เหมาะกับ tube feed / formula-only / modular-only</small></label>
+        <label>Fluid target (mL/day)<input id="reqFluid" type="number" min="0" step="1" /></label>
         <label>Energy (kcal/day)<input id="reqEnergy" type="number" min="0" step="1" /></label>
         <label>Protein (g/day)<input id="reqProtein" type="number" min="0" step="0.1" /></label>
         <label>Total fat (% total energy)<input id="reqFatPct" type="number" min="0" max="100" step="0.1" /></label>
         <label>MCT (% total energy)<input id="reqMctPct" type="number" min="0" max="100" step="0.1" /></label>
         <label>Calcium (mg/day) <span class="muted">optional</span><input id="reqCalcium" type="number" min="0" step="1" /></label>
+        <label>Sodium (Na, mg/day) <span class="muted">optional</span><input id="reqSodium" type="number" min="0" step="1" /></label>
+        <label>Potassium (K, mg/day) <span class="muted">optional</span><input id="reqPotassium" type="number" min="0" step="1" /></label>
       </div>
       <div id="requirementSummary" class="summary-box top-gap"></div>
+    </div>
+  </section>
+
+
+  <section id="tab-design" class="tab-panel">
+    <div class="card">
+      <div class="section-title-row"><div><h2>Diet Design / Nutrition Prescription</h2><p class="muted">ออกแบบสิ่งที่สั่งให้รับประทาน แยกจาก actual intake • ทุกค่าปรับเองได้ • คำนวณจาก Custom Database เท่านั้น</p></div><div class="inline-actions"><button id="cancelDesignBtn" class="secondary">Cancel changes</button><button id="saveDesignBtn" class="primary">Save Diet Design</button><span id="designSaveStatus" class="muted"></span></div></div>
+      <div id="designTargetSummary" class="summary-box"></div>
+      <div id="designRemaining" class="summary-box top-gap"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title-row"><div><h2>1. Diet</h2><p class="muted">ข้าว/แป้ง เนื้อสัตว์ ไข่ ผัก ผลไม้ และอาหารอื่น ๆ • ใช้ช้อนโต๊ะ/ทัพพี/กรัมได้เมื่อมี conversion ใน Custom DB</p></div><div class="inline-actions"><label class="switch-line"><input id="designDietEnabled" type="checkbox" /> Use Diet</label><button id="addDesignDietBtn" class="secondary">+ Add food</button></div></div>
+      <div id="designDietRows"></div>
+      <div id="dietDesignSummary" class="summary-box top-gap"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title-row"><div><h2>2. Milk / Formula</h2><p class="muted">ใช้ mL หรือกล่อง 180/200/225 mL • รองรับ fortified milk/formula ด้วย maltodextrin, oil, whey, casein หรือรายการอื่นจาก Custom DB</p></div><div class="inline-actions"><label class="switch-line"><input id="designFormulaEnabled" type="checkbox" /> Use Milk/Formula</label><button id="addFormulaPlanBtn" class="secondary">+ Add milk/formula</button></div></div>
+      <div id="formulaPlanRows"></div>
+      <div id="formulaDesignSummary" class="summary-box top-gap"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title-row"><div><h2>3. Modular Diet Builder</h2><p class="muted">เลือกส่วนประกอบและจำนวนจริง • เติมน้ำจนครบ final volume • กำหนด mL/feed × feeds/day</p></div><label class="switch-line"><input id="designModularEnabled" type="checkbox" /> Use Modular Diet</label></div>
+      <div class="grid-3">
+        <label>Recipe name<input id="designModName" /></label>
+        <label>เติมน้ำจนครบ / Final volume (mL)<input id="designModFinalVolume" type="number" min="0" step="1" /></label>
+        <label>Note<input id="designModNote" /></label>
+        <label>Volume per feed (mL)<input id="designModFeedVolume" type="number" min="0" step="1" /></label>
+        <label>Feeds/day<input id="designModFeeds" type="number" min="0" step="1" /></label>
+        <label>Daily prescribed volume<input id="designModDailyVolume" disabled /></label>
+      </div>
+      <div class="section-title-row top-gap"><h3>Components</h3><button id="addDesignModCompBtn" class="secondary">+ Add component</button></div>
+      <div id="designModComponents"></div>
+      <div class="actions"><button id="sendDesignToDailyModularBtn" class="secondary">Send to Daily Modular Diet</button></div>
+      <div id="modularDesignSummary" class="summary-box top-gap"></div>
+    </div>
+
+    <div class="card">
+      <h2>4. Fluid (optional)</h2>
+      <p class="muted">ใช้เมื่อ Track total fluid เปิดใน Patient Profile; Diet และน้ำดื่มอิสระจะไม่ถูกสมมติอัตโนมัติ</p>
+      <div class="grid-3"><label>Free water / flush (mL/day)<input id="designFreeWater" type="number" min="0" step="1" /></label><label>Other recorded fluid (mL/day)<input id="designOtherFluid" type="number" min="0" step="1" /></label><label>Note<input id="designFluidNote" /></label></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title-row"><div><h2>Nutrient Recheck</h2><p class="muted">แยก Diet • Milk/Formula + Fortifiers • Modular Diet • Total Daily Prescription และเทียบ Patient Requirements</p></div><button id="refreshDesignRecheckBtn" class="primary">Recheck</button></div>
+      <div id="designRecheck"></div>
     </div>
   </section>
 
@@ -149,7 +201,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.18</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.18"></script>
+<footer><strong>PWA 0.4.20</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.20"></script>
 </body>
 </html>
