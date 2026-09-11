@@ -1,6 +1,13 @@
-# Pediatric Nutrition PWA 0.4.32
+# Pediatric Nutrition PWA 0.4.34
 
-## New in 0.4.32
+## New in 0.4.34
+- Custom Database now defaults to clinical ordering: Food → Milk/Formula → Modular → Medication/Mineral.
+- Subgroups: starch, meat, egg, vegetable, fruit, fat/oil; milk/formula classes; modular roles; medication/mineral classes.
+- Added Group, Subgroup and Sort filters. Sort options: Clinical order, Name, Recently modified.
+- Subgroup/category is editable per database row. Existing categories are preserved and uncategorized legacy rows are classified non-destructively.
+- Pagination from 0.4.33 is retained.
+
+## Previous 0.4.33
 
 - Custom Database snapshot updated from `ped-nutrition-backup-2026-09-11-3.json` (133 records).
 - Migration replaces only `foodDB` once (`customDbSnapshotV0432`); patient/cases, PNIF/Review Intake, Diet Design, and Daily Modular Diet are preserved.
@@ -193,3 +200,9 @@ Changes:
 - Added Lock controls so Auto/Recalculate does not change locked Diet, Milk/Formula, fortifier, or Modular component amounts.
 - Auto/Recalculate now calculates continuously, applies final rounding once, then Nutrient Recheck uses the rounded actual prescription without silently rebalancing again.
 - Modular final/feed volume is rounded to 5 mL; component amounts default to step 1.
+
+
+## 0.4.33 hotfix
+- Paginated Custom Database rendering (25 rows/page default) to prevent UI freezing.
+- Defensive rendering keeps navigation usable if an individual database row is malformed.
+- Preserves custom/unknown basis units in the editor.
