@@ -1,12 +1,19 @@
 
-## New in 0.4.21
+## New in 0.4.23
+- Custom Database now supports a `Medication / mineral` type.
+- Added Magnesium (Mg) to the nutrient schema.
+- Na, K, Ca, Mg and P in Custom Database are stored as **mg per defined basis**.
+- Added editable starter templates: NaCl tab, CaCO3 tab, Trace element, Na-K-Cl solution and Ca-Mg-P powder. Product-specific strengths are intentionally left blank.
+- Medication/mineral templates with no entered mineral values are flagged and not silently calculated.
+
+## New in 0.4.22
 - Patient age is now stored/displayed as **years + months + days**.
 - Added optional **Date of birth (DOB)**. When DOB and Visit date are both entered, chronological age is calculated automatically.
 - Age fields remain editable after automatic calculation.
 - Existing legacy decimal-year age is migrated non-destructively into years/months/days where possible.
 - Existing cases, Custom Database, Diet Design, Review Intake, and Modular Diet remain preserved.
 
-# Pediatric Nutrition PWA 0.4.21
+# Pediatric Nutrition PWA 0.4.23
 
 ## New in 0.4.20
 - Added **Diet Design / Nutrition Prescription** as a separate saved per-case module.
@@ -127,3 +134,11 @@ Changes:
 - Custom Database snapshot replaced once from the user-provided 2026-09-11 JSON backup (126 rows).
 - Migration changes only `foodDB`; patient/case, PNIF/Review Intake, Diet Design, and Daily Modular Diet data are preserved.
 - Fixed the stale snapshot constant reference in the 0.4.19 source.
+
+
+## 0.4.22
+- Added gestational age at birth (weeks + days) to Patient Profile.
+- For GA <37 weeks, calculates corrected age using a 40-week reference.
+- Displays postmenstrual age (PMA) and handles visits before term as “Not yet term”.
+- GA ≥37 weeks displays corrected age as not applicable.
+- Existing cases remain compatible; new preterm fields are optional.
