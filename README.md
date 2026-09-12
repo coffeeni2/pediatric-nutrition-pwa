@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.40
+# Pediatric Nutrition PWA 0.4.41
 
 - Custom Database header now treats `fat` as **LCT** and displays **LCT / %total fat**; `mct` remains MCT grams.
 - Diet Design fat energy is calculated as **LCT × 9 + MCT × 8.3 kcal/g**.
@@ -219,7 +219,7 @@ Changes:
 - Newly added Custom Database items are pinned to the top of the displayed list while editing, so a blank/new row does not disappear into clinical sorting.
 
 
-## 0.4.40
+## 0.4.41
 - Diet Design: optional **Diet fat (% of Diet energy)** target.
 - Diet Design: optional **Modular fat (% of Modular energy)** target.
 - Source-level fat targets use **LCT × 9 + MCT × 8.3** and are ignored when left blank.
@@ -227,9 +227,16 @@ Changes:
 - Nutrient Recheck shows actual source fat percentage versus optional target.
 
 
-## 0.4.40
+## 0.4.41
 - Protein requirement default for new cases is **Meat + egg + milk + formula protein**. Existing explicitly saved protein modes remain unchanged.
 - Added **Save Requirements** with Saved/Unsaved status; requirement changes are committed only when this button is pressed.
 - Nutrient Recheck now reports MCT as **% total energy** and **% of total fat kcal**.
 - Added optional **Diet structure** constraints (default ON): Rice/starch, Meat or egg, Vegetable, Fruit. Missing selected groups receive a large optimizer penalty so formula/modular cannot crowd them out simply to improve numeric targets. Manual/Locked rows remain respected.
 - App convention: MCT oil **1 mL = 1 g = 8.3 kcal**; a 1 mL conversion is added to MCT oil records when needed.
+
+
+## 0.4.41 — Explicit Diet group + latest Custom DB snapshot
+- Custom Database updated once from the user-provided 2026-09-12 backup; only `foodDB` is embedded/replaced. Case, PNIF, Review Intake, Diet Design and Daily Modular data are not embedded or overwritten.
+- Added editable `Diet group` for Food: Rice/starch, Meat, Egg, Vegetable, Fruit, Oil/fat, Milk, Other.
+- Diet Design Generate uses `diet_group` directly for starch/meat/egg/vegetable/fruit/oil instead of guessing vegetable/fruit from names.
+- Selecting a Food in Diet Design adopts that item's Diet group automatically. Newly added Custom DB foods default to Other until the user selects a group.

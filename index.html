@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.40" />
+  <link rel="stylesheet" href="styles.css?v=0.4.41" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -187,7 +187,7 @@
   <section id="tab-foods" class="tab-panel">
     <div class="card">
       <div class="section-title-row">
-        <div><h2>Custom Database</h2><p class="muted">กด + Add item ที่มุมขวาบนเพื่อเพิ่มรายการใหม่ • เพิ่ม/แก้ Food, Formula, Modular และ Medication/Mineral ได้ • Formula เพิ่ม standard/min/max kcal/oz เพื่อใช้เป็น concentration constraint • Na, K, Ca, Mg, P เก็บเป็น mg ต่อ basis ที่กำหนด</p></div>
+        <div><h2>Custom Database</h2><p class="muted">กด + Add item ที่มุมขวาบนเพื่อเพิ่มรายการใหม่ • เพิ่ม/แก้ Food, Formula, Modular และ Medication/Mineral ได้ • Formula เพิ่ม standard/min/max kcal/oz เพื่อใช้เป็น concentration constraint • Na, K, Ca, Mg, P เก็บเป็น mg ต่อ basis ที่กำหนด • Food มี Diet group สำหรับ Generate / Diet structure โดยตรง</p></div>
         <div class="inline-actions"><button id="addFoodDbBtn" class="primary">+ Add item</button><button id="cancelFoodDbBtn" class="secondary">Cancel changes</button><button id="saveFoodDbBtn" class="primary">Save Custom Database</button><span id="foodDbSaveStatus" class="muted"></span></div>
       </div>
       <div class="db-toolbar">
@@ -195,7 +195,7 @@
         <label>Search<input id="dbSearch" placeholder="ชื่ออาหาร/สูตร" /></label>
       </div>
       <datalist id="dbUnitOptions"><option value="g"><option value="mL"><option value="portion"><option value="ทัพพี"><option value="ถ้วยตวง"><option value="ช้อนโต๊ะ"><option value="ช้อนชา"><option value="ฟอง"><option value="ชิ้น"><option value="ผล"><option value="แผ่น"><option value="scoop"><option value="เม็ด"><option value="ซอง"><option value="ขวด"><option value="ampule"><option value="mL"><option value="g"></datalist>
-      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Standard kcal/oz</th><th>Min kcal/oz</th><th>Max kcal/oz</th><th>Protein source</th><th>kcal</th><th>Protein</th><th>LCT / %total fat</th><th>MCT</th><th>CHO</th><th>Ca (mg)</th><th>Mg (mg)</th><th>P (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Standard kcal/oz</th><th>Min kcal/oz</th><th>Max kcal/oz</th><th>Protein source</th><th>Diet group</th><th>kcal</th><th>Protein</th><th>LCT / %total fat</th><th>MCT</th><th>CHO</th><th>Ca (mg)</th><th>Mg (mg)</th><th>P (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
     </div>
   </section>
 
@@ -235,7 +235,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.40</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.40"></script>
+<footer><strong>PWA 0.4.41</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.41"></script>
 </body>
 </html>
