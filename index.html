@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.42" />
+  <link rel="stylesheet" href="styles.css?v=0.4.43" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -20,6 +20,7 @@
   <nav class="tabs">
     <button class="tab active" data-tab="patient">Patient</button>
     <button class="tab" data-tab="design">Diet Design</button>
+    <button class="tab" data-tab="pn">Parenteral Nutrition</button>
     <button class="tab" data-tab="pnif">PNIF</button>
     <button class="tab" data-tab="review">Review Intake</button>
     <button class="tab" data-tab="modular">Modular Diet</button>
@@ -146,6 +147,61 @@
     </div>
   </section>
 
+
+  <section id="tab-pn" class="tab-panel">
+    <div class="card">
+      <div class="section-title-row"><div><h2>Parenteral Nutrition</h2><p class="muted">Guideline-assisted calculator • PN requirements are separate from Daily Requirements • no automatic prescribing</p></div><div class="inline-actions"><button id="pnSaveBtn" class="primary">Save PN</button><span id="pnSaveStatus" class="muted"></span></div></div>
+      <div id="pnPatientSummary" class="summary-box"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title-row"><div><h2>1. PN Requirements</h2><p class="muted">ESPGHAN/ESPEN/ESPR/(CSPEN) 2018 recommendations are shown as reference. Press Use guideline only when you want to copy a suggested value; all prescription fields remain editable.</p></div></div>
+      <div class="grid-3">
+        <label>Clinical phase<select id="pnPhase"><option value="acute">Acute</option><option value="stable" selected>Stable</option><option value="recovery">Recovery / growing</option></select></label>
+        <label>PN age group<select id="pnAgeGroup"><option value="auto">Auto from patient</option><option value="preterm">Preterm neonate</option><option value="term_neonate">Term neonate &lt;28 d</option><option value="infant">Infant 28 d–&lt;1 y</option><option value="child_1_7">1–&lt;7 y</option><option value="child_7_12">7–&lt;12 y</option><option value="adolescent">12–18 y</option></select></label>
+        <label>Total fluid (% maintenance)<input id="pnFluidPct" type="number" min="0" step="1" placeholder="e.g. 80, 100, 120" /></label>
+      </div>
+      <div id="pnGuidelineBox" class="summary-box top-gap"></div>
+      <div class="grid-3 top-gap">
+        <label>Energy (kcal/kg/day)<input id="pnReqEnergy" type="number" min="0" step="0.1" /></label>
+        <label>Amino acid / protein (g/kg/day)<input id="pnReqProtein" type="number" min="0" step="0.1" /></label>
+        <label>Glucose infusion rate, GIR (mg/kg/min)<input id="pnReqGir" type="number" min="0" step="0.1" /></label>
+        <label>Lipid (g/kg/day)<input id="pnReqFat" type="number" min="0" step="0.1" /></label>
+        <label>Na (mEq/kg/day)<input id="pnReqNa" type="number" min="0" step="0.1" /></label>
+        <label>K (mEq/kg/day)<input id="pnReqK" type="number" min="0" step="0.1" /></label>
+        <label>Ca (mmol/kg/day)<input id="pnReqCa" type="number" min="0" step="0.01" /></label>
+        <label>P (mmol/kg/day)<input id="pnReqP" type="number" min="0" step="0.01" /></label>
+        <label>Mg (mmol/kg/day)<input id="pnReqMg" type="number" min="0" step="0.01" /></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title-row"><div><h2>2. TPN Volume & Factor</h2><p class="muted">TPN rate excludes lipid, Vitalipid and Soluvit. Factor = mixed TPN volume ÷ actually infused TPN volume.</p></div><div class="inline-actions"><button id="pnCalculateBtn" class="primary">Calculate product volumes</button></div></div>
+      <div class="grid-4">
+        <label>TPN rate (mL/hr)<input id="pnRate" type="number" min="0" step="0.1" /></label>
+        <label>Line allowance (mL)<input id="pnAllowance" type="number" min="0" step="1" placeholder="20–30" /></label>
+        <div class="metric">Actually infused TPN<b id="pnActualVolume">—</b></div>
+        <div class="metric">Mixed TPN volume / Factor<b id="pnFactorDisplay">—</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title-row"><div><h2>3. PN Products</h2><p class="muted">Product names are fixed for this calculator. Volumes are editable. Na acetate concentration is intentionally editable because product strength may differ.</p></div></div>
+      <div class="grid-3">
+        <label>Amino acid product<select id="pnAaProduct"><option value="aminovent">10% Aminovent infant — 0.10 g/mL</option><option value="aminoplasmal">15% Aminoplasmal — 0.15 g/mL</option></select></label>
+        <label>Na acetate strength (mEq/mL)<input id="pnNaAcetateStrength" type="number" min="0" step="0.01" placeholder="enter product strength" /></label>
+        <label>Na acetate volume (mL/bag)<input id="pnNaAcetateVol" type="number" min="0" step="0.1" /></label>
+      </div>
+      <div class="table-wrap top-gap"><table class="design-recheck-table"><thead><tr><th>Product</th><th>Concentration used</th><th>Volume in mixed bag / separate infusion</th><th>Factor applied</th></tr></thead><tbody id="pnProductRows"></tbody></table></div>
+      <p class="muted top-gap">Default initial calculation uses Glycophos for phosphorus, 3% NaCl for remaining sodium, KCl for potassium, 10% calcium gluconate for calcium and 50% MgSO₄ for magnesium. Edit product volumes after calculation when another salt distribution is intended.</p>
+    </div>
+
+    <div class="card">
+      <div class="section-title-row"><div><h2>4. PN Recheck</h2><p class="muted">Recheck is based on actually delivered nutrients after reversing the TPN factor. Lipid, Vitalipid and Soluvit are calculated separately and do not use the TPN factor.</p></div><div class="inline-actions"><button id="pnRefreshBtn" class="secondary">Refresh recheck</button></div></div>
+      <div id="pnRecheck"></div>
+    </div>
+  </section>
+
   <section id="tab-pnif" class="tab-panel">
     <div class="card">
       <div class="section-title-row"><div><h2>Paste PNIF from ChatGPT</h2><p class="muted">รองรับ PNIF intake_type: food / formula / modular_diet / unknown • modular_diet จะส่งเข้า Daily Modular Diet อัตโนมัติ</p></div><button id="loadExampleBtn" class="secondary">Load example</button></div>
@@ -235,7 +291,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.42</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.42"></script>
+<footer><strong>PWA 0.4.43</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.43"></script>
 </body>
 </html>
