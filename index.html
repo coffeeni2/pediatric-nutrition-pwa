@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.47" />
+  <link rel="stylesheet" href="styles.css?v=0.4.54" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -149,13 +149,22 @@
 
 
   <section id="tab-pn" class="tab-panel">
-    <div class="card"><div class="section-title-row"><div><h2>Parenteral Nutrition</h2><p class="muted">Guideline-assisted calculator • clinician-entered targets • pharmacy/order recheck • no automatic prescribing</p></div><div class="inline-actions"><button id="pnSaveBtn" class="primary">Save PN</button><span id="pnSaveStatus" class="muted"></span></div></div><div id="pnPatientSummary" class="summary-box"></div></div>
+    <div class="card"><div class="section-title-row"><div><h2>Parenteral Nutrition</h2><p class="muted">PN patient data are independent from the Patient tab • guideline-assisted calculator • clinician-entered targets • pharmacy/order recheck</p></div><div class="inline-actions"><button id="pnSaveBtn" class="primary">Save PN</button><span id="pnSaveStatus" class="muted"></span></div></div>
+      <div class="grid-5 top-gap">
+        <label>Term / Preterm<select id="pnBirthStatus"><option value="term">Term</option><option value="preterm">Preterm</option></select></label>
+        <label>Age — years<input id="pnAgeYears" type="number" min="0" step="1" inputmode="numeric" /></label>
+        <label>Age — months<input id="pnAgeMonths" type="number" min="0" max="11" step="1" inputmode="numeric" /></label>
+        <label>Age — days<input id="pnAgeDays" type="number" min="0" max="30" step="1" inputmode="numeric" /></label>
+        <label>Weight (kg)<input id="pnWeight" type="number" min="0" step="0.01" inputmode="decimal" /></label>
+      </div>
+      <p class="muted top-gap">These fields are stored inside the PN tab and are not linked to age, gestational age, or weight in the Patient tab.</p>
+      <div id="pnPatientSummary" class="summary-box top-gap"></div></div>
 
     <div class="card">
       <div class="section-title-row"><div><h2>1. PN Requirements</h2><p class="muted">Guideline values are references/limits. Prescription targets remain clinician-entered.</p></div></div>
       <div class="grid-3">
         <label>Clinical phase<select id="pnPhase"><option value="acute">Acute</option><option value="stable">Stable</option><option value="recovery">Recovery</option></select></label>
-        <label>PN age group<select id="pnAgeGroup"><option value="auto">Auto from patient</option><option value="preterm">Preterm neonate</option><option value="term_neonate">Term neonate &lt;28 d</option><option value="infant">Infant 28 d–&lt;1 y</option><option value="child_1_7">1–&lt;7 y</option><option value="child_7_12">7–&lt;12 y</option><option value="adolescent">12–18 y</option></select></label>
+        <label>Guideline age group<select id="pnAgeGroup"><option value="auto">Auto from PN age / Term–Preterm</option><option value="preterm">Preterm neonate</option><option value="term_neonate">Term neonate &lt;28 d</option><option value="infant">Infant 28 d–&lt;1 y</option><option value="child_1_7">1–&lt;7 y</option><option value="child_7_12">7–&lt;12 y</option><option value="adolescent">12–18 y</option></select></label>
         <label>Neonatal fluid phase<select id="pnNeonatalPhase"><option value="auto">Auto</option><option value="phase1">Phase 1</option><option value="phase2">Phase 2</option><option value="phase3">Phase 3</option></select></label>
         <label>Total fluid target (mL/day)<input id="pnFluidMl" type="number" min="0" step="1" /></label>
         <label>Venous access<select id="pnVenousAccess"><option value="central">Central line</option><option value="peripheral">Peripheral line</option></select></label>
@@ -173,8 +182,7 @@
         <label>Na requirement<input id="pnReqNa" type="number" min="0" step="0.01" /></label>
         <label>K input unit<select id="pnKUnit"><option value="mmolkg">mmol/kg/day</option><option value="meq100">mEq/100 kcal/day (Holliday–Segar)</option></select></label>
         <label>K requirement<input id="pnReqK" type="number" min="0" step="0.01" /></label>
-        <label>Cl (mmol/kg/day)<input id="pnReqCl" type="number" min="0" step="0.1" /></label>
-        <label>Ca (mmol/kg/day)<input id="pnReqCa" type="number" min="0" step="0.01" /></label>
+                <label>Ca (mmol/kg/day)<input id="pnReqCa" type="number" min="0" step="0.01" /></label>
         <label>P (mmol/kg/day)<input id="pnReqP" type="number" min="0" step="0.01" /></label>
         <label>Mg (mmol/kg/day)<input id="pnReqMg" type="number" min="0" step="0.01" /></label>
         <label>Zinc (mcg/kg/day)<input id="pnReqZinc" type="number" min="0" step="1" /></label>
@@ -187,16 +195,14 @@
       <div class="grid-3">
         <label>ILE product<select id="pnIleProduct"><option value="intralipid">Intralipid 20%</option><option value="lipofundin">Lipofundin MCT/LCT 20%</option><option value="clinoleic">ClinOleic 20%</option><option value="smoflipid">SMOFlipid 20%</option><option value="lipidem">Lipidem 20%</option></select></label>
         <label>Vitamin selection<select id="pnVitaminMode"><option value="none">None</option><option value="infant_soluvit">Vitalipid N Infant + Soluvit N</option><option value="adult_soluvit">Vitalipid N Adult + Soluvit N</option><option value="cernevit">Cernevit alone</option><option value="vitalipid_infant">Vitalipid N Infant only</option><option value="vitalipid_adult">Vitalipid N Adult only</option><option value="soluvit">Soluvit N only</option></select></label>
-        <div class="metric">Planned ILE + vitamins<b id="pnIleVitPlanned">—</b></div>
-        <div class="metric">Suggested integer rate<b id="pnIleVitSuggestedRate">—</b></div>
-        <label>Prescribed ILE + vitamin rate (mL/hr)<input id="pnIleVitRate" type="number" min="0" step="1" /></label>
-        <div class="metric">Actual infused over 24 h<b id="pnIleVitActual">—</b></div>
+        <div class="metric">ILE + vitamins volume<b id="pnIleVitPlanned">—</b></div>
+        <div class="metric">24-hour infusion rate (rounded)<b id="pnIleVitSuggestedRate">—</b></div>
       </div>
       <div id="pnVitaminWarning" class="top-gap"></div>
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>3. Main TPN Volume & Factor</h2><p class="muted">Available main TPN fluid = total fluid target − actual ILE+vitamin volume. Suggested main rate is calculated; prescribed rate remains editable.</p></div><div class="inline-actions"><button id="pnCalculateBtn" class="primary">Calculate pharmacy order</button></div></div>
+      <div class="section-title-row"><div><h2>3. Main TPN Volume & Factor</h2><p class="muted">Available main TPN fluid = total fluid target − prescribed ILE+vitamin volume. Suggested main rate is calculated; prescribed main TPN rate remains editable.</p></div><div class="inline-actions"><button id="pnCalculateBtn" class="primary">Recalculate pharmacy order</button></div></div>
       <div class="grid-4">
         <div class="metric">Fluid available for main TPN<b id="pnMainAvailable">—</b></div>
         <div class="metric">Calculated TPN rate<b id="pnCalculatedRate">—</b></div>
@@ -208,7 +214,7 @@
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>4. Parenteral Components / PN Products</h2><p class="muted">Phosphate contribution is calculated first; residual Na/K is then allocated between chloride and acetate products. All pharmacy volumes are mL.</p></div></div>
+      <div class="section-title-row"><div><h2>4. Parenteral Components / PN Products</h2><p class="muted">Amount to mix is calculated automatically from PN requirements, selected products, prescribed main TPN rate, line allowance, and factor. Phosphate is calculated first, then residual Na/K is allocated. All pharmacy volumes are mL.</p></div></div>
       <div class="grid-3">
         <label>Amino acid product<select id="pnAaProduct"><option value="aminoven">10% Aminoven Infant — 0.10 g/mL</option><option value="amiparen">10% Amiparen — 0.10 g/mL</option><option value="aminoplasmal15">15% Aminoplasmal — 0.15 g/mL</option></select></label>
         <label>Phosphate source<select id="pnPhosProduct"><option value="glycophos">Sodium glycerophosphate — P 1 mmol/mL + Na 2 mEq/mL</option><option value="k2hpo4">8.7% K2HPO4 — P 0.5 mmol/mL + K 1 mEq/mL</option></select></label>
@@ -222,7 +228,8 @@
         <label>Heparin (unit/mL main TPN bag)<input id="pnHeparinUnitMl" type="number" min="0" step="0.1" placeholder="0.5–1" /></label>
       </div>
       <div id="pnAllocationWarning" class="top-gap"></div>
-      <div class="table-wrap top-gap"><table class="design-recheck-table"><thead><tr><th>Component</th><th>Product / concentration</th><th>Amount to mix</th><th>Factor</th></tr></thead><tbody id="pnProductRows"></tbody></table></div>
+      <div class="table-wrap top-gap"><table class="design-recheck-table"><thead><tr><th>Component</th><th>Product / concentration</th><th>Actual delivered</th><th>Amount to mix</th><th>Rounding</th><th>Factor</th></tr></thead><tbody id="pnProductRows"></tbody></table></div>
+      <p id="pnProductRoundingNote" class="muted top-gap"></p>
     </div>
 
     <div class="card">
@@ -323,7 +330,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.47</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.47"></script>
+<footer><strong>PWA 0.4.54</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.54"></script>
 </body>
 </html>

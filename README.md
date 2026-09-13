@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.47
+# Pediatric Nutrition PWA 0.4.55
 
 ## PN guideline revision
 
@@ -51,3 +51,38 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - PN Recheck order: 24-hour summary → Pharmacy Order / Mixed TPN Bag → Separate ILE + Vitamins → Actual Delivered to Patient.
 - Actual-delivered table includes main/ILE-vitamin fluid, total-fluid % target, AA, dextrose, GIR, glucose %, ILE, Na/K, Ca/P/Mg, zinc, energy distribution, NPC:P and entered TPN osmolarity.
 - Osmolarity remains clinician/pharmacy-entered; this version does not claim automatic osmolarity or calcium-phosphate compatibility validation.
+
+
+## 0.4.48 PN patient header
+- Added chronological Age card immediately to the left of Weight in the Parenteral Nutrition patient summary.
+
+
+## 0.4.51 Independent PN patient data
+- Parenteral Nutrition now has its own Term/Preterm, age (years/months/days), and weight inputs.
+- PN guideline selection and all PN calculations use only the PN-tab demographics, not the Patient tab.
+- Auto guideline age group is derived from PN age plus Term/Preterm status.
+- Existing Patient-tab demographic data are not copied or synchronized into PN.
+
+
+## 0.4.51 fix
+- Fixed PN state-reference bug that caused Parenteral Components / PN Products “Amount to mix” to remain 0 mL after requirements and TPN rate were entered.
+- Product volumes now recalculate from the active PN state and TPN factor.
+
+
+## 0.4.53 PN actual vs mixed display
+- Parenteral Components now shows both the component volume actually delivered to the patient and the factor-adjusted volume to mix in the pharmacy bag.
+- Pharmacy Order recheck now shows Actual delivered and Amount to mix side-by-side for every main-bag component.
+- Actual component volume is calculated as mixed volume / TPN factor; mixed volume remains the pharmacy compounding amount.
+
+
+## 0.4.53 PN recheck layout
+- Removed line allowance from PN Recheck display.
+- Heparin is shown immediately after sterile water in the pharmacy order.
+- ILE + vitamins recheck is condensed to product volumes + 24-hour rate.
+
+
+## 0.4.55 PN pharmacy volume rounding
+- Parenteral Components / PN Products pharmacy **Amount to mix** is rounded to the nearest **0.5 mL** (therefore results are whole or x.5 mL).
+- **50% MgSO4** and **Sterile water** are rounded to the nearest **0.1 mL**.
+- Actual delivered values are recalculated from the rounded mixed volume divided by the TPN factor, so the recheck reflects what the patient would actually receive from the rounded pharmacy order.
+- Recheck keeps Pharmacy Order first, omits the line-allowance row, places Heparin after sterile water, and shows ILE + vitamins as a compact 24-hour infusion sentence.
