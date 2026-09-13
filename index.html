@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.73" />
+  <link rel="stylesheet" href="styles.css?v=0.4.76" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -36,7 +36,7 @@
 
   <section id="tab-patient" class="tab-panel active">
     <div class="card">
-      <div class="section-title-row"><div><h2>Patient / Case</h2><p class="muted">ใช้ anonymous Case ID เท่านั้น • ผู้ป่วยเดิมไม่ถูกลบเมื่อเริ่มรายใหม่</p></div><div class="inline-actions"><select id="caseSelector" aria-label="Select case"></select><button id="newCaseBtn" class="secondary">+ New Case</button><button id="deleteCaseBtn" class="danger">Delete Case</button><button id="savePatientBtn" class="primary">Save</button></div></div>
+      <div class="section-title-row"><div><h2>Patient / Case</h2><p class="muted">ใช้ anonymous Case ID เท่านั้น • ผู้ป่วยเดิมไม่ถูกลบเมื่อเริ่มรายใหม่</p></div><div class="inline-actions"><select id="caseSelector" aria-label="Select case"></select><button id="newCaseBtn" class="secondary">+ New Case</button><button id="deleteCaseBtn" class="danger">Delete Case</button><button id="clearPatientBtn" class="secondary">Clear Patient</button><button id="savePatientBtn" class="primary">Save</button></div></div>
       <div class="grid-3">
         <label>Anonymous name / Case ID<input id="patientAlias" autocomplete="off" placeholder="Case A / P001" /></label>
         <label>Date of birth (optional)<input id="patientDob" type="date" /></label>
@@ -63,7 +63,7 @@
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>Daily Requirements</h2><p class="muted">ใส่ requirement ที่ต้องการใช้เอง แอปไม่เดา requirement อัตโนมัติ</p></div><div class="inline-actions"><button id="saveRequirementsBtn" class="primary">Save Requirements</button><span id="requirementsSaveStatus" class="muted"></span></div></div>
+      <div class="section-title-row"><div><h2>Daily Requirements</h2><p class="muted">ใส่ requirement ที่ต้องการใช้เอง แอปไม่เดา requirement อัตโนมัติ</p></div><div class="inline-actions"><button id="clearRequirementsBtn" class="secondary">Clear Daily Requirements</button><button id="saveRequirementsBtn" class="primary">Save Requirements</button><span id="requirementsSaveStatus" class="muted"></span></div></div>
       <div class="grid-3">
         <label class="check-card"><span><input id="trackFluid" type="checkbox" style="width:auto;margin-right:6px" /> Track total fluid</span><small class="muted">เหมาะกับ tube feed / formula-only / modular-only</small></label>
         <label>Fluid target (mL/day)<input id="reqFluid" type="number" min="0" step="1" /></label>
@@ -82,7 +82,7 @@
 
   <section id="tab-design" class="tab-panel">
     <div class="card">
-      <div class="section-title-row"><div><h2>Diet Design / Nutrition Prescription</h2><p class="muted">ออกแบบสิ่งที่สั่งให้รับประทาน แยกจาก actual intake • ทุกค่าปรับเองได้ • คำนวณจาก Custom Database เท่านั้น</p></div><div class="inline-actions"><button id="cancelDesignBtn" class="secondary">Cancel changes</button><button id="saveDesignBtn" class="primary">Save Diet Design</button><span id="designSaveStatus" class="muted"></span></div></div>
+      <div class="section-title-row"><div><h2>Diet Design / Nutrition Prescription</h2><p class="muted">ออกแบบสิ่งที่สั่งให้รับประทาน แยกจาก actual intake • ทุกค่าปรับเองได้ • คำนวณจาก Custom Database เท่านั้น</p></div><div class="inline-actions"><button id="cancelDesignBtn" class="secondary">Cancel changes</button><button id="clearDesignBtn" class="secondary">Clear Diet Design</button><button id="saveDesignBtn" class="primary">Save Diet Design</button><span id="designSaveStatus" class="muted"></span></div></div>
       <div id="designTargetSummary" class="summary-box"></div>
       <div class="auto-design-box top-gap">
         <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">ลำดับการ optimize: Energy + Protein → Fat ±5% → Minerals • % energy เป็นค่าเริ่มต้นและระบบปรับสัดส่วน source ได้ • Auto = ระบบปรับได้ • แก้ Amount เอง → Manual • Manual/Locked จะไม่ถูก Recalculate • Maximum / Rounding ยังมีผล</p></div><div class="inline-actions"><button id="autoBuildPrescriptionBtn" class="primary">Generate optimized draft</button><button id="autoCalculateDesignBtn" class="secondary">Recalculate to targets</button><button id="calculateCurrentDesignBtn" class="secondary">Calculate current values — no recalc</button><button id="setAllDesignAutoBtn" class="secondary">Set all to Auto</button></div></div>
@@ -337,7 +337,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.73</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.73"></script>
+<footer><strong>PWA 0.4.76</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.76"></script>
 </body>
 </html>

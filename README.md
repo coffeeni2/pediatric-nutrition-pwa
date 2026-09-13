@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.73
+# Pediatric Nutrition PWA 0.4.76
 
 ## PN guideline revision
 
@@ -171,7 +171,21 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Copied mixed order uses final post-rounding pharmacy volumes, includes sterile water, infusion rate, ILE/vitamins, osmolarity, and negative-water warning.
 - Copy Requirements includes current clinician-entered PN targets and calculated dextrose equivalents.
 
-## 0.4.73
+## 0.4.74
 - Added compact responsive layout for Android/mobile screens (<=600 px).
 - Reduced PN text, table, control, button, and spacing sizes on phones while preserving desktop/Mac sizing.
 - Kept PN requirement fields in a compact two-column layout on phones and reduced wide-table minimum widths for easier horizontal viewing.
+
+
+## 0.4.74
+- PN Recheck zinc now recalculates from selected Peditrace/Addamel mixed volume divided by TPN factor, multiplied by product zinc concentration, then divided by body weight.
+- Copy Full PN Order now copies Mixed TPN Order + actual main TPN volume + TPN factor + PN Recheck, rather than requirements.
+
+
+## 0.4.75
+- Added Clear Patient button: clears current Patient / Case fields only; keeps Daily Requirements and all other tabs.
+- Added Clear Diet Design button: resets the entire Diet Design draft for the current case while keeping Patient, Requirements, PN, intake, and other tabs. The cleared Diet Design is saved only when Save Diet Design is pressed.
+
+
+## 0.4.76
+- Added Clear Daily Requirements button in Patient tab. It resets all Daily Requirements for the current case while keeping Patient, Diet Design, PN, intake, and other tabs.
