@@ -1,60 +1,36 @@
-# Pediatric Nutrition PWA 0.4.44
+# Pediatric Nutrition PWA 0.4.45
 
-## New: Parenteral Nutrition tab
+## PN guideline revision
 
-This version adds a **Parenteral Nutrition** calculator as a separate per-case module. It does not reuse the oral/enteral Daily Requirements object.
+This build revises the Parenteral Nutrition module using the user-supplied ESPGHAN/ESPEN/ESPR/CSPEN 2018 summary tables. Guideline values are references only; the clinician must accept/edit targets.
 
-### PN requirements
-- Total fluid is prescribed primarily as **% maintenance**.
-- Maintenance fluid is calculated with the Holliday–Segar 100/50/20 mL/kg/day method.
-- Separate PN targets: Energy, amino acid/protein, GIR, lipid, Na, K, Ca, P and Mg.
-- ESPGHAN/ESPEN/ESPR/(CSPEN) 2018 ranges are displayed as references according to age/weight and clinical phase where a simple range is available.
-- The calculator does **not** automatically prescribe guideline targets. The user must press a guideline-use button or enter/edit a target.
+### PN Requirements
+- Total fluid target is clinician-entered **mL/day**.
+- For age >1 month, Holliday-Segar 100/50/20 is shown only as a maintenance reference.
+- Neonatal fluid/electrolyte reference uses day of life, birth-weight group and neonatal phase.
+- Energy: acute / stable / recovery age-specific table.
+- Amino acids: preterm DOL 1 vs DOL >=2, term infant, 1 month-3 y, 3-18 y.
+- Glucose/GIR: neonatal DOL-specific target and absolute limits; older children by weight and clinical phase.
+- ILE: clinician-entered dose with age-specific maximum dose and maximum infusion rate.
+- Product-specific minimum ILE for EFAD prevention for Intralipid, Lipofundin MCT/LCT, ClinOleic, SMOFlipid and Lipidem.
+- Na/K/Cl and Ca/P/Mg references revised to the supplied tables.
+- Vitamin and trace-element reference tables revised and displayed in English.
+
+### Venous access / osmolarity
+- Select **Central line** or **Peripheral line**.
+- Estimated osmolarity is clinician/pharmacy-entered in this build.
+- Peripheral PN <=900 mOsm/L: within app threshold.
+- Peripheral PN >900 mOsm/L: soft warning; saving as reviewed requires explicit acknowledgement.
+- The app does not claim to calculate formulation osmolarity or validate compatibility.
 
 ### TPN factor
-- `Actually infused TPN = TPN rate × 24 h`.
-- `Mixed TPN volume = actually infused TPN + line allowance`.
-- `Factor = mixed TPN volume / actually infused TPN volume`.
-- Non-lipid TPN-bag nutrient amounts are compounded with the factor; delivered nutrient amounts are calculated by dividing bag volumes by the factor.
-- **20% lipid, Vitalipid N-infant and Soluvit are excluded from this factor.**
+- Actually infused TPN = TPN rate x 24 h.
+- Mixed TPN volume = actually infused TPN + line allowance.
+- Factor = mixed TPN volume / actually infused TPN volume.
+- TPN-bag nutrient amounts use the factor; delivered amounts reverse it.
+- ILE, Vitalipid N-infant and Soluvit do not use the TPN factor.
 
-### Fixed product names in PN calculator
-- 10% Aminovent infant
-- 15% Aminoplasmal
-- 50% dextrose
-- 3% NaCl
-- Na acetate (strength editable because product concentration may vary)
-- KCl
-- K acetate
-- K2PO4
-- 10% Ca gluconate
-- Glycophos
-- 50% MgSO4
-- Peditrace
-- Zinc
-- Sterile water
-- 20% lipid
-- Vitalipid N-infant
-- Soluvit
+### Recheck
+Shows total fluid, energy, amino acids, GIR, ILE, Na, K, Cl, Ca, P, Mg, Ca:P molar ratio, Protein:CHO:Fat, NPC:P, TPN factor, venous access and osmolarity review status.
 
-Product concentrations used for the initial calculator reproduce the logic in the supplied `calculate TPN.xlsx` where that workbook defines a concentration. Na acetate was requested as an additional product and its concentration is intentionally not invented.
-
-### PN recheck
-Shows:
-- TF (mL/day and % maintenance)
-- TE (kcal/day and kcal/kg/day)
-- Protein / amino acid
-- Lipid
-- Na, K, Ca, P, Mg
-- GIR
-- Protein : CHO : Fat (% energy)
-- NPC:P (non-protein kcal / g amino acid)
-
-### Important scope
-This is a guideline-assisted calculation draft, not a validated prescribing system. It does not validate calcium-phosphate compatibility/precipitation, osmolarity, venous access, infusion safety, or product-specific pharmacy limits.
-
-
-## 0.4.44 PN guideline/table revision
-- PN Total fluid target is physician-entered mL/day; Holliday–Segar is reference only for >1 month.
-- Guideline tables revised from user-supplied ESPGHAN/ESPEN/ESPR 2018 summary images.
-- Added chloride target/recheck and English vitamin/trace-element reference tables.
+This remains a guideline-assisted calculation draft, not a validated prescribing system. Calcium-phosphate compatibility, precipitation, product-specific stability, and infusion safety require clinical/pharmacy review.

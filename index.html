@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.44" />
+  <link rel="stylesheet" href="styles.css?v=0.4.45" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -157,10 +157,14 @@
     <div class="card">
       <div class="section-title-row"><div><h2>1. PN Requirements</h2><p class="muted">ESPGHAN/ESPEN/ESPR/(CSPEN) 2018 recommendations are shown as reference. Press Use guideline only when you want to copy a suggested value; all prescription fields remain editable.</p></div></div>
       <div class="grid-3">
-        <label>Clinical phase<select id="pnPhase"><option value="acute">Acute</option><option value="stable" selected>Stable</option><option value="recovery">Recovery / growing</option></select></label>
+        <label>Clinical phase (energy / glucose)<select id="pnPhase"><option value="acute">Acute</option><option value="stable" selected>Stable</option><option value="recovery">Recovery</option></select></label>
         <label>PN age group<select id="pnAgeGroup"><option value="auto">Auto from patient</option><option value="preterm">Preterm neonate</option><option value="term_neonate">Term neonate &lt;28 d</option><option value="infant">Infant 28 d–&lt;1 y</option><option value="child_1_7">1–&lt;7 y</option><option value="child_7_12">7–&lt;12 y</option><option value="adolescent">12–18 y</option></select></label>
+        <label>Neonatal fluid phase<select id="pnNeonatalPhase"><option value="auto">Auto (DOL 1–5 = Phase 1; otherwise Phase 2)</option><option value="phase1">Phase 1 — first days after birth</option><option value="phase2">Phase 2 — intermediate phase</option><option value="phase3">Phase 3 — stable growth</option></select></label>
         <label>Total fluid target (mL/day)<input id="pnFluidMl" type="number" min="0" step="1" placeholder="Physician-entered target" /></label>
+        <label>Venous access<select id="pnVenousAccess"><option value="central">Central line</option><option value="peripheral">Peripheral line</option></select></label>
+        <label>Estimated osmolarity (mOsm/L)<input id="pnOsmolarity" type="number" min="0" step="1" placeholder="Enter pharmacy/calculated value" /></label>
       </div>
+      <label id="pnPeripheralOverrideWrap" class="check-card top-gap"><span><input id="pnPeripheralOverride" type="checkbox" style="width:auto;margin-right:6px" /> Reviewed and accepted for peripheral administration above 900 mOsm/L</span><small class="muted">900 mOsm/L is a soft review threshold in this app. Values above 900 are allowed only after explicit clinician acknowledgement.</small></label>
       <div id="pnGuidelineBox" class="summary-box top-gap"></div>
       <div class="grid-3 top-gap">
         <label>Energy (kcal/kg/day)<input id="pnReqEnergy" type="number" min="0" step="0.1" /></label>
@@ -190,6 +194,7 @@
       <div class="section-title-row"><div><h2>3. PN Products</h2><p class="muted">Product names are fixed for this calculator. Volumes are editable. Na acetate concentration is intentionally editable because product strength may differ.</p></div></div>
       <div class="grid-3">
         <label>Amino acid product<select id="pnAaProduct"><option value="aminovent">10% Aminovent infant — 0.10 g/mL</option><option value="aminoplasmal">15% Aminoplasmal — 0.15 g/mL</option></select></label>
+        <label>ILE product<select id="pnIleProduct"><option value="intralipid">Intralipid 20%</option><option value="lipofundin">Lipofundin MCT/LCT 20%</option><option value="clinoleic">ClinOleic 20%</option><option value="smoflipid">SMOFlipid 20%</option><option value="lipidem">Lipidem 20%</option></select></label>
         <label>Na acetate strength (mEq/mL)<input id="pnNaAcetateStrength" type="number" min="0" step="0.01" placeholder="enter product strength" /></label>
         <label>Na acetate volume (mL/bag)<input id="pnNaAcetateVol" type="number" min="0" step="0.1" /></label>
       </div>
@@ -292,7 +297,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.44</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.44"></script>
+<footer><strong>PWA 0.4.45</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.45"></script>
 </body>
 </html>
