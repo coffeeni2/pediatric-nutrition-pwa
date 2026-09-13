@@ -890,7 +890,7 @@ $('refreshDesignRecheckBtn').onclick=()=>{renderDesignRemaining();renderDesignRe
 $('sendDesignToDailyModularBtn').onclick=()=>{const d=ensureDesignDraft(),m=d.modular;if(!d.modularEnabled&&!confirm('Modular Diet is currently disabled in Diet Design. Copy recipe anyway?'))return;const feedVol=num(m.feedVolume),feeds=Math.max(0,Math.floor(num(m.feeds)));state.modular={name:m.name||'Designed modular recipe',finalVolume:m.finalVolume||'',notes:m.note||'',components:(m.components||[]).map(x=>({id:uid(),name:x.name||state.foodDB.find(f=>f.id===x.dbMatchId)?.name||'',amount:x.amount,unit:x.unit,dbMatchId:x.dbMatchId,source:'Custom',note:''})),feeds:Array.from({length:feeds},(_,i)=>({id:uid(),time:'',prescribed:feedVol||'',actual:'',note:`Feed ${i+1}`})),route:'',durationHr:''};saveState();resetModularDraft();renderModular();alert('Copied to Daily Modular Diet. Review and Save/adjust actual intake in the Modular Diet tab.')};
 
 
-// ===== Parenteral Nutrition 0.4.62 =====
+// ===== Parenteral Nutrition 0.4.65 =====
 let pnDirty=false;
 function ensurePn(){
  const d={patient:{birthStatus:'term',ageYears:'',ageMonths:'',ageDays:'',weight:''},phase:'stable',ageGroup:'auto',neonatalPhase:'auto',venousAccess:'central',osmolarity:'',peripheralOverride:false,ileProduct:'smoflipid',vitaminMode:'none',ileVitRate:'',dexMode:'gir',naUnit:'mmolkg',kUnit:'mmolkg',phosProduct:'glycophos',traceProduct:'none',naClAlloc:'',naAcAlloc:'',kClAlloc:'',kAcAlloc:'',heparinUnitMl:'',productRounding:{aa:0.5,dextrose:0.5,glycophos:0.1,k2po4:0.5,nacl:0.5,naacetate:0.5,kcl:0.5,kacetate:0.5,cagluconate:0.5,mgso4:0.1,peditrace:0.5,addamel:0.1,zinc:0.1,sterilewater:0.1},requirements:{fluidMl:'',energy:'',protein:'',gir:'',dexGkg:'',dexPct:'',fat:'',sodium:'',potassium:'',calcium:'',phosphorus:'',magnesium:'',zinc:''},rate:'',mixedVolume:'',aaProduct:'aminoven',products:{aa:0,dextrose:0,nacl:0,naacetate:0,kcl:0,kacetate:0,k2po4:0,cagluconate:0,glycophos:0,mgso4:0,peditrace:0,addamel:0,zinc:0,sterilewater:0,lipid:0,vitalipidInfant:0,vitalipidAdult:0,soluvit:0,cernevit:0},updatedAt:''};
@@ -923,7 +923,14 @@ function pnRangeText(x,unit=''){if(!x)return '—';if(x.min!=null&&x.max!=null&&
 function pnGuidelineTargets(){
  const p=ensurePn(),phase=p.phase||'stable',g=pnAgeGroup(),w=num(ensurePn().patient.weight),days=patientAgeDaysForPn(),years=days/365.25,dol=pnDayOfLife(),np=pnNeonatalPhase();let energy=null,protein=null,gir=null,girAbsolute=null,ileMax=null,ileRateMax=null,na=null,k=null,cl=null,ca=null,phos=null,mg=null,zinc=null,fluidMlKg=null,notes=[];
  const E={preterm:{acute:[45,55],stable:null,recovery:[90,120]},term_neonate:{acute:[45,50],stable:[60,65],recovery:[75,85]},infant:{acute:[45,50],stable:[60,65],recovery:[75,85]},child_1_7:{acute:[40,45],stable:[55,60],recovery:[65,75]},child_7_12:{acute:[30,40],stable:[40,55],recovery:[55,65]},adolescent:{acute:[20,30],stable:[25,40],recovery:[30,55]}};const er=E[g]?.[phase];if(er)energy={min:er[0],max:er[1]};if(g==='preterm'&&phase==='acute')notes.push('Preterm 45–55 kcal/kg/day refers to the first day of life in the supplied table.');
- if(g==='preterm')protein=dol===1?{min:1.5,max:2.5}:{min:2.5,max:3.5};else if(g==='term_neonate')protein={min:1.5,max:3};else if(days<3*365.25)protein={min:1,max:2.5};else protein={min:1,max:2};
+ // Amino-acid guideline by gestational/birth status and postnatal age.
+ // Preterm: DOL 1 = 1.5–2.5; DOL >=2 = 2.5–3.5 g/kg/day.
+ // Term: 0–<2 months = 1.5–3; 2 months–<3 years = 1–2.5; 3–18 years = 1–2 g/kg/day.
+ const birthStatus=p.patient?.birthStatus||'term';
+ if(birthStatus==='preterm'&&days<28)protein=dol===1?{min:1.5,max:2.5}:{min:2.5,max:3.5};
+ else if(days<2*30.4375)protein={min:1.5,max:3};
+ else if(days<3*365.25)protein={min:1,max:2.5};
+ else protein={min:1,max:2};
  if(g==='preterm'){gir=dol===1?{min:4,max:8}:{min:8,max:10};girAbsolute={min:4,max:12}}else if(g==='term_neonate'){gir=dol===1?{min:2.5,max:5}:{min:5,max:10};girAbsolute={min:2.5,max:12}}else{const z=w<=10?{acute:[2,4],stable:[4,6],recovery:[6,10]}:w<=30?{acute:[1.5,2.5],stable:[2,4],recovery:[3,6]}:w<=45?{acute:[1,1.5],stable:[1.5,3],recovery:[3,4]}:{acute:[.5,1],stable:[1,2],recovery:[2,3]};const q=z[phase];gir={min:q[0],max:q[1]}}
  if(g==='preterm'||g==='term_neonate'||g==='infant'){ileMax={min:3,max:4};ileRateMax=.17}else{ileMax={min:2,max:3};ileRateMax=.13}
  if((g==='preterm'||g==='term_neonate')&&np==='phase1'){const d=Math.min(5,dol);if(g==='term_neonate'){fluidMlKg={min:[40,50,60,60,100][d-1],max:[60,70,80,100,140][d-1]};na={min:[0,0,0,1,1][d-1],max:[2,2,2,3,3][d-1]};k={min:0,max:3}}else{if(w>1.5)fluidMlKg={min:[60,80,100,120,140][d-1],max:[80,100,120,140,160][d-1]};else if(w>=1)fluidMlKg={min:[70,90,110,130,160][d-1],max:[90,110,130,150,180][d-1]};else fluidMlKg={min:[80,100,120,140,160][d-1],max:[100,120,140,160,180][d-1]};if(w>1.5)na={min:[0,0,0,2,2][d-1],max:[2,2,3,5,5][d-1]};else{na={min:[0,0,0,2,2][d-1],max:[2,2,5,5,5][d-1]};if(d>=3)notes.push('For preterm <1,500 g, the supplied table notes sodium up to 7 mmol/kg/day in selected circumstances.')}k={min:0,max:3}}}
@@ -963,29 +970,27 @@ function pnMainFluid(){const p=ensurePn(),iv=pnIleVitaminPlan(),available=Math.m
 function pnAaConc(){return ensurePn().aaProduct==='aminoplasmal15'?.15:.10}
 function pnSyncDextrose(source){
  const p=ensurePn(),r=p.requirements,w=num(p.patient.weight),vf=pnFactor(),rate=num(vf.effectiveRate),actual=num(vf.actual);
- if(!(w>0&&rate>0&&actual>0))return;
+ if(!(w>0&&rate>0&&actual>0))return false;
  let gir=num(r.gir),gkg=num(r.dexGkg),pct=num(r.dexPct);
  if(source==='gir'){
-   // % glucose = (GIR x 6 x BW) / TPN rate
+   // % w/v = GIR (mg/kg/min) × 6 × BW (kg) ÷ main TPN rate (mL/hr)
    pct=(gir*6*w)/rate;
-   // g/kg/day = [(%/100) x actually infused main TPN] / BW
    gkg=((pct/100)*actual)/w;
  }else if(source==='gkg'){
-   // % glucose = [(g/kg/day x BW) / actually infused main TPN] x 100
    pct=((gkg*w)/actual)*100;
-   // GIR = (% x rate) / (6 x BW)
    gir=(pct*rate)/(6*w);
- }else{
-   // GIR = (% x rate) / (6 x BW)
+ }else if(source==='percent'){
    gir=(pct*rate)/(6*w);
-   // g/kg/day = [(%/100) x actually infused main TPN] / BW
    gkg=((pct/100)*actual)/w;
- }
- r.gir=round(gir,4);r.dexGkg=round(gkg,4);r.dexPct=round(pct,4);
+ }else return false;
+ r.gir=round(gir,4);
+ r.dexGkg=round(gkg,4);
+ r.dexPct=round(pct,4);
+ return true;
 }
 
 
-function pnSyncFormToState(){const p=ensurePn();const pv={pnBirthStatus:'birthStatus',pnAgeYears:'ageYears',pnAgeMonths:'ageMonths',pnAgeDays:'ageDays',pnWeight:'weight'};Object.entries(pv).forEach(([id,k])=>{const el=$(id);if(el)p.patient[k]=el.value});const top={pnPhase:'phase',pnNeonatalPhase:'neonatalPhase',pnVenousAccess:'venousAccess',pnDexMode:'dexMode',pnNaUnit:'naUnit',pnKUnit:'kUnit',pnIleProduct:'ileProduct',pnVitaminMode:'vitaminMode',pnPhosProduct:'phosProduct',pnTraceProduct:'traceProduct',pnAaProduct:'aaProduct',pnRate:'rate',pnMixedVolume:'mixedVolume',pnOsmolarity:'osmolarity',pnNaClAlloc:'naClAlloc',pnNaAcAlloc:'naAcAlloc',pnKClAlloc:'kClAlloc',pnKAcAlloc:'kAcAlloc',pnHeparinUnitMl:'heparinUnitMl'};Object.entries(top).forEach(([id,k])=>{const el=$(id);if(el)p[k]=el.value});const req={pnFluidMl:'fluidMl',pnReqEnergy:'energy',pnReqProtein:'protein',pnReqGir:'gir',pnReqDexGkg:'dexGkg',pnReqDexPct:'dexPct',pnReqFat:'fat',pnReqNa:'sodium',pnReqK:'potassium',pnReqCa:'calcium',pnReqP:'phosphorus',pnReqMg:'magnesium',pnReqZinc:'zinc'};Object.entries(req).forEach(([id,k])=>{const el=$(id);if(el)p.requirements[k]=el.value});return p}
+function pnSyncFormToState(){const p=ensurePn();const pv={pnBirthStatus:'birthStatus',pnAgeYears:'ageYears',pnAgeMonths:'ageMonths',pnAgeDays:'ageDays',pnWeight:'weight'};Object.entries(pv).forEach(([id,k])=>{const el=$(id);if(el)p.patient[k]=el.value});const top={pnPhase:'phase',pnNeonatalPhase:'neonatalPhase',pnVenousAccess:'venousAccess',pnDexMode:'dexMode',pnNaUnit:'naUnit',pnKUnit:'kUnit',pnIleProduct:'ileProduct',pnVitaminMode:'vitaminMode',pnPhosProduct:'phosProduct',pnTraceProduct:'traceProduct',pnAaProduct:'aaProduct',pnRate:'rate',pnMixedVolume:'mixedVolume',pnOsmolarity:'osmolarity',pnNaClAlloc:'naClAlloc',pnNaAcAlloc:'naAcAlloc',pnKClAlloc:'kClAlloc',pnKAcAlloc:'kAcAlloc',pnHeparinUnitMl:'heparinUnitMl'};Object.entries(top).forEach(([id,k])=>{const el=$(id);if(el)p[k]=el.value});const req={pnFluidMl:'fluidMl',pnReqEnergy:'energy',pnReqProtein:'protein',pnReqFat:'fat',pnReqNa:'sodium',pnReqK:'potassium',pnReqCa:'calcium',pnReqP:'phosphorus',pnReqMg:'magnesium',pnReqZinc:'zinc'};Object.entries(req).forEach(([id,k])=>{const el=$(id);if(el)p.requirements[k]=el.value});const dexId=p.dexMode==='gkg'?'pnReqDexGkg':p.dexMode==='percent'?'pnReqDexPct':'pnReqGir',dexKey=p.dexMode==='gkg'?'dexGkg':p.dexMode==='percent'?'dexPct':'gir',dexEl=$(dexId);if(dexEl)p.requirements[dexKey]=dexEl.value;pnSyncDextrose(p.dexMode||'gir');return p}
 function pnCalculateProducts(){const p=pnSyncFormToState(),w=num(p.patient.weight),vf=pnFactor();if(!(w>0)){alert('Enter PN weight first.');return}if(!(vf.actual>0)){alert('Enter Total fluid target or Prescribed main TPN rate first.');return}pnSyncDextrose(p.dexMode||'gir');const out=pnAutoCalculateProducts();markPnDirty();renderPn();if(out&&out.exceedsMixed)alert(`Main-bag components exceed mixed TPN volume (${round(vf.mixed,1)} mL).`)}
 function pnDelivered(){
  const p=ensurePn(),w=num(p.patient?.weight),vf=pnFactor(),factor=num(vf.factor),pr=p.products||{},iv=pnIleVitaminPlan(),maint=hollidaySegarDaily(w);
@@ -1046,7 +1051,10 @@ function pnAutoCalculateProducts(){
 }
 
 function renderPnProducts(){
- pnSyncFormToState();pnAutoCalculateProducts();const p=ensurePn(),x=pnMainFluid(),iv=pnIleVitaminPlan(),res=pnResiduals();
+ // Rendering must be state -> DOM only. Do not read the form here: doing so can
+ // overwrite state with transient blank/stale inputs during a re-render (notably
+ // Mixed TPN volume and calculated dextrose fields).
+ pnAutoCalculateProducts();const p=ensurePn(),x=pnMainFluid(),iv=pnIleVitaminPlan(),res=pnResiduals();
  $('pnIleVitPlanned').textContent=`${round(iv.planned,1)} mL/day`;$('pnIleVitSuggestedRate').textContent=iv.suggested?`${iv.suggested} mL/hr`:'—';
  $('pnMainAvailable').textContent=`${round(x.available,1)} mL/day`;$('pnCalculatedRate').textContent=`${round(x.calculatedRate,2)} mL/hr`;
  $('pnActualVolume').textContent=x.actual?`${round(x.actual,1)} mL/day${x.usingCalculatedRate?' (using calculated rate)':''}`:'—';$('pnFactorDisplay').textContent=x.factor>0?round(x.factor,4):'—';
