@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.43
+# Pediatric Nutrition PWA 0.4.44
 
 ## New: Parenteral Nutrition tab
 
@@ -52,3 +52,9 @@ Shows:
 
 ### Important scope
 This is a guideline-assisted calculation draft, not a validated prescribing system. It does not validate calcium-phosphate compatibility/precipitation, osmolarity, venous access, infusion safety, or product-specific pharmacy limits.
+
+
+## 0.4.44 PN guideline/table revision
+- PN Total fluid target is physician-entered mL/day; Holliday–Segar is reference only for >1 month.
+- Guideline tables revised from user-supplied ESPGHAN/ESPEN/ESPR 2018 summary images.
+- Added chloride target/recheck and English vitamin/trace-element reference tables.

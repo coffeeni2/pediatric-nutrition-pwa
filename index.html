@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.43" />
+  <link rel="stylesheet" href="styles.css?v=0.4.44" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -159,7 +159,7 @@
       <div class="grid-3">
         <label>Clinical phase<select id="pnPhase"><option value="acute">Acute</option><option value="stable" selected>Stable</option><option value="recovery">Recovery / growing</option></select></label>
         <label>PN age group<select id="pnAgeGroup"><option value="auto">Auto from patient</option><option value="preterm">Preterm neonate</option><option value="term_neonate">Term neonate &lt;28 d</option><option value="infant">Infant 28 d–&lt;1 y</option><option value="child_1_7">1–&lt;7 y</option><option value="child_7_12">7–&lt;12 y</option><option value="adolescent">12–18 y</option></select></label>
-        <label>Total fluid (% maintenance)<input id="pnFluidPct" type="number" min="0" step="1" placeholder="e.g. 80, 100, 120" /></label>
+        <label>Total fluid target (mL/day)<input id="pnFluidMl" type="number" min="0" step="1" placeholder="Physician-entered target" /></label>
       </div>
       <div id="pnGuidelineBox" class="summary-box top-gap"></div>
       <div class="grid-3 top-gap">
@@ -167,8 +167,9 @@
         <label>Amino acid / protein (g/kg/day)<input id="pnReqProtein" type="number" min="0" step="0.1" /></label>
         <label>Glucose infusion rate, GIR (mg/kg/min)<input id="pnReqGir" type="number" min="0" step="0.1" /></label>
         <label>Lipid (g/kg/day)<input id="pnReqFat" type="number" min="0" step="0.1" /></label>
-        <label>Na (mEq/kg/day)<input id="pnReqNa" type="number" min="0" step="0.1" /></label>
-        <label>K (mEq/kg/day)<input id="pnReqK" type="number" min="0" step="0.1" /></label>
+        <label>Na (mmol/kg/day)<input id="pnReqNa" type="number" min="0" step="0.1" /></label>
+        <label>K (mmol/kg/day)<input id="pnReqK" type="number" min="0" step="0.1" /></label>
+        <label>Cl (mmol/kg/day)<input id="pnReqCl" type="number" min="0" step="0.1" /></label>
         <label>Ca (mmol/kg/day)<input id="pnReqCa" type="number" min="0" step="0.01" /></label>
         <label>P (mmol/kg/day)<input id="pnReqP" type="number" min="0" step="0.01" /></label>
         <label>Mg (mmol/kg/day)<input id="pnReqMg" type="number" min="0" step="0.01" /></label>
@@ -291,7 +292,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.43</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.43"></script>
+<footer><strong>PWA 0.4.44</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.44"></script>
 </body>
 </html>
