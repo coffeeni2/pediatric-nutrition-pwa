@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.66" />
+  <link rel="stylesheet" href="styles.css?v=0.4.70" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -150,6 +150,11 @@
 
   <section id="tab-pn" class="tab-panel">
     <div class="card"><div class="section-title-row"><div><h2>Parenteral Nutrition</h2><p class="muted">PN patient data are independent from the Patient tab • guideline-assisted calculator • clinician-entered targets • pharmacy/order recheck</p></div><div class="inline-actions"><button id="pnSaveBtn" class="primary">Save PN</button><span id="pnSaveStatus" class="muted"></span></div></div>
+      <div class="grid-4 top-gap">
+        <label>PN case<select id="pnCaseSelector"></select></label>
+        <label>Anonymous name / ID<input id="pnCaseId" autocomplete="off" placeholder="e.g. NICU-012" /></label>
+        <div class="inline-actions pn-case-actions"><button id="pnNewCaseBtn" class="secondary" type="button">New case</button><button id="pnDeleteCaseBtn" class="danger" type="button">Delete case</button><button id="pnClearBtn" class="secondary" type="button">Clear boxes</button></div>
+      </div>
       <div class="grid-5 top-gap">
         <label>Term / Preterm<select id="pnBirthStatus"><option value="term">Term</option><option value="preterm">Preterm</option></select></label>
         <label>Age — years<input id="pnAgeYears" type="number" min="0" step="1" inputmode="numeric" /></label>
@@ -232,7 +237,7 @@
 
     <div class="card">
       <div class="section-title-row"><div><h2>5. PN Recheck</h2><p class="muted">Recalculate actual nutrients delivered to the patient from the final mixed TPN order and TPN factor.</p></div><div class="inline-actions"><button id="pnRefreshBtn" class="secondary">Refresh recheck</button></div></div>
-      <div class="grid-3"><label>TPN osmolarity (mOsm/L)<input id="pnOsmolarity" type="number" min="0" step="1" placeholder="Enter calculated/pharmacy value" /></label></div>
+      <div class="grid-3"><label>TPN osmolarity (mOsm/L)<input id="pnOsmolarity" type="number" min="0" step="1" placeholder="Calculated automatically" /></label></div>
       <label id="pnPeripheralOverrideWrap" class="check-card top-gap"><span><input id="pnPeripheralOverride" type="checkbox" style="width:auto;margin-right:6px" /> Reviewed and accepted for peripheral administration above 900 mOsm/L</span><small class="muted">900 mOsm/L is a soft review threshold, not a hard stop.</small></label>
       <div id="pnRecheck" class="top-gap"></div>
     </div>
@@ -328,7 +333,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.66</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.66"></script>
+<footer><strong>PWA 0.4.70</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.70"></script>
 </body>
 </html>

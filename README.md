@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.66
+# Pediatric Nutrition PWA 0.4.70
 
 ## PN guideline revision
 
@@ -144,8 +144,17 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Dextrose conversions use actual infused main TPN volume and prescribed/effective main TPN rate: GIR→%/gkg, gkg→%/GIR, and %→GIR/gkg.
 
 
-## 0.4.66 PN AA guideline + dextrose/mixed-volume state fix
+## 0.4.67 PN AA guideline + dextrose/mixed-volume state fix
 - Amino-acid guideline: preterm DOL 1 1.5–2.5 g/kg/day; preterm DOL >=2 2.5–3.5 g/kg/day; term 0–<2 months 1.5–3; 2 months–<3 years 1–2.5; 3–18 years 1–2 g/kg/day.
 - Fixed GIR mode so dextrose g/kg/day and final main-TPN glucose % are derived reliably from GIR, PN weight, and effective main TPN rate/volume.
 - Calculated dextrose fields are no longer read back from transient DOM values during rendering.
 - Fixed intermittent loss of clinician-entered Mixed TPN volume by making PN product rendering state-to-DOM only.
+- Changed the default rounding for sodium glycerophosphate (P source) from 0.1 mL to 0.5 mL; legacy 0.1 mL defaults migrate once to 0.5 mL while other clinician-selected values are preserved.
+- Regression-tested the screenshot-equivalent PN case (10 kg, GIR 4, protein 3 g/kg/day, ILE 2 g/kg/day, 1000 mL/day fluid, main TPN rate 37 mL/hr, mixed 900 mL): factor 1.0135, AA 300→304 mL, dextrose 115.2→117 mL, P 2→2 mL, dex 5.76 g/kg/day and 6.4865%.
+
+
+## 0.4.70 PN case controls + recheck formatting
+- Added PN-specific anonymous name / ID and PN case selector.
+- Added New case, Delete case, and Clear boxes controls inside the Parenteral Nutrition tab.
+- Clear boxes resets PN calculation fields while keeping the anonymous name / ID.
+- PN Recheck numeric display is limited to at most 1 decimal place.
