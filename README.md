@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.55
+# Pediatric Nutrition PWA 0.4.57
 
 ## PN guideline revision
 
@@ -81,8 +81,14 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - ILE + vitamins recheck is condensed to product volumes + 24-hour rate.
 
 
-## 0.4.55 PN pharmacy volume rounding
+## 0.4.57 PN pharmacy volume rounding
 - Parenteral Components / PN Products pharmacy **Amount to mix** is rounded to the nearest **0.5 mL** (therefore results are whole or x.5 mL).
 - **50% MgSO4** and **Sterile water** are rounded to the nearest **0.1 mL**.
 - Actual delivered values are recalculated from the rounded mixed volume divided by the TPN factor, so the recheck reflects what the patient would actually receive from the rounded pharmacy order.
 - Recheck keeps Pharmacy Order first, omits the line-allowance row, places Heparin after sterile water, and shows ILE + vitamins as a compact 24-hour infusion sentence.
+
+
+## 0.4.57
+- Restored clearly labeled Export full backup (.json) and Import full backup (.json) controls in Settings & Backup.
+- Export syncs the active case before generating the JSON file.
+- Import validates the JSON root and expected backup content before replacing local state, then refreshes all views.

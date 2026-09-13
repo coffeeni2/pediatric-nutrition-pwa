@@ -326,7 +326,7 @@
         <label>Food source<select id="defaultSource" disabled><option value="Custom">Custom Database only</option></select></label>
       </div>
       <p class="muted">เวอร์ชันนี้คำนวณจาก Custom Database เท่านั้น เพื่อให้ผลลัพธ์ deterministic และไม่แสดง source ที่ยังไม่มี connector ใช้งานจริง.</p><hr><h2>Backup & Restore</h2><p class="muted">Backup รวม anonymous cases, visits, intake, modular diet, Custom DB, custom conversions และ settings. ข้อมูลทำงานใน browser ของอุปกรณ์นี้; Google Drive sync เตรียมไว้สำหรับระยะถัดไป.</p>
-      <div class="actions"><button id="exportBtn" class="primary">Export JSON backup</button><label class="file-button secondary">Import backup<input id="importBackupInput" type="file" accept="application/json" hidden /></label><button id="resetBtn" class="danger">Reset all local data...</button></div>
+      <div class="actions"><button id="exportBtn" class="primary">Export full backup (.json)</button><label class="file-button secondary">Import full backup (.json)<input id="importBackupInput" type="file" accept="application/json" hidden /></label><button id="resetBtn" class="danger">Reset all local data...</button></div>
     </div>
   </section>
 </main>
