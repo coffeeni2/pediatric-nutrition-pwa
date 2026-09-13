@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.59" />
+  <link rel="stylesheet" href="styles.css?v=0.4.62" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -166,26 +166,26 @@
         <label>Clinical phase<select id="pnPhase"><option value="acute">Acute</option><option value="stable">Stable</option><option value="recovery">Recovery</option></select></label>
         <label>Guideline age group<select id="pnAgeGroup"><option value="auto">Auto from PN age / Term–Preterm</option><option value="preterm">Preterm neonate</option><option value="term_neonate">Term neonate &lt;28 d</option><option value="infant">Infant 28 d–&lt;1 y</option><option value="child_1_7">1–&lt;7 y</option><option value="child_7_12">7–&lt;12 y</option><option value="adolescent">12–18 y</option></select></label>
         <label>Neonatal fluid phase<select id="pnNeonatalPhase"><option value="auto">Auto</option><option value="phase1">Phase 1</option><option value="phase2">Phase 2</option><option value="phase3">Phase 3</option></select></label>
-        <label>Total fluid target (mL/day)<input id="pnFluidMl" type="number" min="0" step="1" /></label>
+        <label>Total fluid target (mL/day)<small id="pnRefFluid" class="muted"></small><input id="pnFluidMl" type="number" min="0" step="1" /></label>
         <label>Venous access<select id="pnVenousAccess"><option value="central">Central line</option><option value="peripheral">Peripheral line</option></select></label>
       </div>
-      <div id="pnGuidelineBox" class="summary-box top-gap"></div>
+      <div id="pnGuidelineBox" class="top-gap"></div>
       <div class="grid-3 top-gap">
-        <label>Energy (kcal/kg/day)<input id="pnReqEnergy" type="number" min="0" step="0.1" /></label>
-        <label>Amino acid (g/kg/day)<input id="pnReqProtein" type="number" min="0" step="0.1" /></label>
-        <label>Prescribed ILE dose (g/kg/day)<input id="pnReqFat" type="number" min="0" step="0.1" /></label>
+        <label>Energy (kcal/kg/day)<small id="pnRefEnergy" class="muted"></small><input id="pnReqEnergy" type="number" min="0" step="0.1" /></label>
+        <label>Amino acid (g/kg/day)<small id="pnRefProtein" class="muted"></small><input id="pnReqProtein" type="number" min="0" step="0.1" /></label>
+        <label>Prescribed ILE dose (g/kg/day)<small id="pnRefFat" class="muted"></small><input id="pnReqFat" type="number" min="0" step="0.1" /></label>
         <label>Dextrose input mode<select id="pnDexMode"><option value="gir">GIR (mg/kg/min)</option><option value="gkg">Dextrose (g/kg/day)</option><option value="percent">Final main TPN glucose (%)</option></select></label>
-        <label>GIR (mg/kg/min)<input id="pnReqGir" type="number" min="0" step="0.01" /></label>
-        <label>Dextrose (g/kg/day)<input id="pnReqDexGkg" type="number" min="0" step="0.01" /></label>
-        <label>Final main TPN glucose (%)<input id="pnReqDexPct" type="number" min="0" step="0.01" /></label>
+        <label>GIR (mg/kg/min)<small id="pnRefGir" class="muted"></small><input id="pnReqGir" type="number" min="0" step="0.01" /></label>
+        <label>Dextrose (g/kg/day)<small class="muted">Auto-calculated unless selected as input</small><input id="pnReqDexGkg" type="number" min="0" step="0.01" /></label>
+        <label>Final main TPN glucose (%)<small class="muted">Auto-calculated unless selected as input</small><input id="pnReqDexPct" type="number" min="0" step="0.01" /></label>
         <label>Na input unit<select id="pnNaUnit"><option value="mmolkg">mmol/kg/day</option><option value="meq100">mEq/100 kcal/day (Holliday–Segar)</option></select></label>
-        <label>Na requirement<input id="pnReqNa" type="number" min="0" step="0.01" /></label>
+        <label>Na requirement<small id="pnRefNa" class="muted"></small><input id="pnReqNa" type="number" min="0" step="0.01" /></label>
         <label>K input unit<select id="pnKUnit"><option value="mmolkg">mmol/kg/day</option><option value="meq100">mEq/100 kcal/day (Holliday–Segar)</option></select></label>
-        <label>K requirement<input id="pnReqK" type="number" min="0" step="0.01" /></label>
-                <label>Ca (mmol/kg/day)<input id="pnReqCa" type="number" min="0" step="0.01" /></label>
-        <label>P (mmol/kg/day)<input id="pnReqP" type="number" min="0" step="0.01" /></label>
-        <label>Mg (mmol/kg/day)<input id="pnReqMg" type="number" min="0" step="0.01" /></label>
-        <label>Zinc (mcg/kg/day)<input id="pnReqZinc" type="number" min="0" step="1" /></label>
+        <label>K requirement<small id="pnRefK" class="muted"></small><input id="pnReqK" type="number" min="0" step="0.01" /></label>
+                <label>Ca (mmol/kg/day)<small id="pnRefCa" class="muted"></small><input id="pnReqCa" type="number" min="0" step="0.01" /></label>
+        <label>P (mmol/kg/day)<small id="pnRefP" class="muted"></small><input id="pnReqP" type="number" min="0" step="0.01" /></label>
+        <label>Mg (mmol/kg/day)<small id="pnRefMg" class="muted"></small><input id="pnReqMg" type="number" min="0" step="0.01" /></label>
+        <label>Zinc (mcg/kg/day)<small id="pnRefZinc" class="muted"></small><input id="pnReqZinc" type="number" min="0" step="1" /></label>
       </div>
       <div id="pnElectrolyteEquivalent" class="muted top-gap"></div>
     </div>
@@ -202,19 +202,19 @@
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>3. Main TPN Volume & Factor</h2><p class="muted">Available main TPN fluid = total fluid target − prescribed ILE+vitamin volume. Suggested main rate is calculated; prescribed main TPN rate remains editable.</p></div><div class="inline-actions"><button id="pnCalculateBtn" class="primary">Recalculate pharmacy order</button></div></div>
+      <div class="section-title-row"><div><h2>3. Main TPN Volume & Factor</h2><p class="muted">Available main TPN fluid = total fluid target − ILE+vitamin volume. Enter prescribed main TPN rate and the total volume pharmacy will mix; the app calculates the TPN factor.</p></div><div class="inline-actions"><button id="pnCalculateBtn" class="primary">Recalculate pharmacy order</button></div></div>
       <div class="grid-4">
         <div class="metric">Fluid available for main TPN<b id="pnMainAvailable">—</b></div>
         <div class="metric">Calculated TPN rate<b id="pnCalculatedRate">—</b></div>
         <label>Prescribed TPN rate (mL/hr)<input id="pnRate" type="number" min="0" step="0.1" /></label>
-        <label>Line allowance (mL)<input id="pnAllowance" type="number" min="0" step="1" /></label>
+        <label>Mixed TPN volume (mL)<input id="pnMixedVolume" type="number" min="0" step="0.1" /></label>
         <div class="metric">Actually infused main TPN<b id="pnActualVolume">—</b></div>
-        <div class="metric">Mixed TPN volume / Factor<b id="pnFactorDisplay">—</b></div>
+        <div class="metric">TPN Factor = mixed ÷ actual<b id="pnFactorDisplay">—</b></div>
       </div>
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>4. Parenteral Components / PN Products</h2><p class="muted">Amount to mix is calculated automatically from PN requirements, selected products, prescribed main TPN rate, line allowance, and factor. Phosphate is calculated first, then residual Na/K is allocated. All pharmacy volumes are mL.</p></div></div>
+      <div class="section-title-row"><div><h2>4. Parenteral Components / PN Products</h2><p class="muted">Actual delivered volume is calculated directly from requirement × PN weight ÷ product concentration. Amount to mix = actual delivered × TPN factor. Sterile water is q.s. separately to actual or mixed main TPN volume.</p></div></div>
       <div class="grid-3">
         <label>Amino acid product<select id="pnAaProduct"><option value="aminoven">10% Aminoven Infant — 0.10 g/mL</option><option value="amiparen">10% Amiparen — 0.10 g/mL</option><option value="aminoplasmal15">15% Aminoplasmal — 0.15 g/mL</option></select></label>
         <label>Phosphate source<select id="pnPhosProduct"><option value="glycophos">Sodium glycerophosphate — P 1 mmol/mL + Na 2 mEq/mL</option><option value="k2hpo4">8.7% K2HPO4 — P 0.5 mmol/mL + K 1 mEq/mL</option></select></label>
@@ -233,7 +233,7 @@
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>5. PN Recheck</h2><p class="muted">Pharmacy Order first, followed by Actual Delivered to Patient.</p></div><div class="inline-actions"><button id="pnRefreshBtn" class="secondary">Refresh recheck</button></div></div>
+      <div class="section-title-row"><div><h2>5. PN Recheck</h2><p class="muted">Recalculate actual nutrients delivered to the patient from the final mixed TPN order and TPN factor.</p></div><div class="inline-actions"><button id="pnRefreshBtn" class="secondary">Refresh recheck</button></div></div>
       <div class="grid-3"><label>TPN osmolarity (mOsm/L)<input id="pnOsmolarity" type="number" min="0" step="1" placeholder="Enter calculated/pharmacy value" /></label></div>
       <label id="pnPeripheralOverrideWrap" class="check-card top-gap"><span><input id="pnPeripheralOverride" type="checkbox" style="width:auto;margin-right:6px" /> Reviewed and accepted for peripheral administration above 900 mOsm/L</span><small class="muted">900 mOsm/L is a soft review threshold, not a hard stop.</small></label>
       <div id="pnRecheck" class="top-gap"></div>
@@ -330,7 +330,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.59</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.59"></script>
+<footer><strong>PWA 0.4.62</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.62"></script>
 </body>
 </html>

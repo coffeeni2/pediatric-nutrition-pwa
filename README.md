@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.59
+# Pediatric Nutrition PWA 0.4.62
 
 ## PN guideline revision
 
@@ -94,8 +94,35 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Import validates the JSON root and expected backup content before replacing local state, then refreshes all views.
 
 
-## 0.4.59 PN component calculation fix
+## 0.4.60 PN component calculation fix
 - Component volumes now calculate even before a prescribed main-TPN rate is entered: the calculated main-TPN rate is used temporarily as the effective rate.
 - Entering a prescribed rate immediately replaces the temporary calculated rate and recalculates Factor, mixed volume, Amount to mix, and Actual delivered.
 - PN weight/rate/allocation numeric inputs now sync on mobile input events, reducing stale-value calculations.
-- Cache-busting versions in index.html were updated to 0.4.59.
+- Cache-busting versions in index.html were updated to 0.4.60.
+
+
+## 0.4.60 PN calculation redesign
+- Requirement references now appear beside each input instead of a large guideline table.
+- Removed line allowance. Mixed TPN volume is clinician-entered; factor = mixed / actually infused main TPN volume.
+- Actual component volumes are calculated directly from requirement and product concentration. Amount to mix = actual × factor; sterile water is q.s. separately for actual and mixed volumes.
+- Peditrace is 1 mL/kg/day, max 10 mL/day. Zinc sulfate supplies only residual zinc after trace-element zinc.
+- Dextrose uses one editable input (GIR, g/kg/day, or final glucose %) and calculates the other two automatically.
+- Requested default rounding updated for concentrated products.
+
+
+## 0.4.62 PN product/recheck redesign
+- Removed the duplicate Pharmacy Order block from PN Recheck; Recheck now contains only Actual Delivered to Patient.
+- PN Products table now carries the final order rows for heparin, main TPN actual/mixed volume, prescribed rate, TPN factor, ILE, and selected vitamins.
+- Actual-delivered nutrient recheck is calculated back from the rounded mixed component volumes divided by the TPN factor.
+- Recheck derives amino acids, dextrose g/kg/day/GIR/final glucose %, ILE g/kg/day, Na/K, Ca/P/Mg, zinc, total energy, Protein:CHO:Fat distribution, NPC:P, fluid percentages, and entered osmolarity from the final order.
+- Energy constants: amino acids 4 kcal/g, dextrose 3.4 kcal/g, ILE 10 kcal/g.
+
+
+## 0.4.62 PN delivered-dose corrections
+- PN Recheck now treats prescribed ILE volume as the source of truth; the rounded ILE + vitamin rate is display-only and does not change delivered fat dose.
+- Main TPN, ILE + vitamins, and total-fluid percentages are calculated against Holliday–Segar maintenance fluid requirement rather than the prescribed PN fluid target.
+- Na/K Recheck is calculated from final mixed Na/K/phosphate product volumes divided by TPN factor; mEq/100 kcal uses Holliday–Segar kcal equivalent.
+- Ca/P/Mg display mmol/kg/day plus mg/kg/day using Ca 40.08, P 30.97, Mg 24.305 mg/mmol.
+- Zinc Recheck uses the selected trace product after rounding: Peditrace 250 mcg/mL or Addamel N 650 mcg/mL, plus zinc sulfate 1,000 mcg/mL, all divided by factor before dose/kg calculation.
+- Energy and NPC:P continue to use delivered AA, dextrose, and ILE: 4, 3.4, and 10 kcal/g respectively.
+- TPN osmolarity remains clinician/pharmacy-entered; peripheral >900 mOsm/L stays a review warning, not an automatic compatibility calculation.
