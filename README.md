@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.76
+# Pediatric Nutrition PWA 0.4.77
 
 ## PN guideline revision
 
@@ -186,6 +186,10 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Added Clear Patient button: clears current Patient / Case fields only; keeps Daily Requirements and all other tabs.
 - Added Clear Diet Design button: resets the entire Diet Design draft for the current case while keeping Patient, Requirements, PN, intake, and other tabs. The cleared Diet Design is saved only when Save Diet Design is pressed.
 
+
+## 0.4.77
+- Diet Design: added Copy Diet Order, Copy Milk/Formula Order, Copy Modular Order, and Copy Full Diet Order.
+- Copy text uses the current Diet Design draft (including unsaved edits), formula feed schedule/concentration/fortifiers, and modular recipe/final volume/feed schedule for handoff.
 
 ## 0.4.76
 - Added Clear Daily Requirements button in Patient tab. It resets all Daily Requirements for the current case while keeping Patient, Diet Design, PN, intake, and other tabs.

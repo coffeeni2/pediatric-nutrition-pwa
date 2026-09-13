@@ -887,11 +887,73 @@ function renderAutoAllocation(){
   $('designDietFatPct').value=a.dietFatPct??'';$('designModularFatPct').value=a.modularFatPct??'';
   const enabled=[d.dietEnabled?'diet':null,d.formulaEnabled?'formula':null,d.modularEnabled?'modular':null].filter(Boolean),sum=enabled.reduce((z,k)=>z+num(a[k+'Pct']),0);$('designAllocationTotal').textContent=`Total ${round(sum,1)}%`;
 }
+function designOrderCaseHeader(){
+  const pt=state.patient||{},bits=[];
+  if(pt.alias)bits.push(`Case: ${pt.alias}`);
+  if(num(pt.weight)>0)bits.push(`Weight: ${round(num(pt.weight),1)} kg`);
+  return bits.length?bits.join(' | '):'DIET DESIGN ORDER';
+}
+function designRowName(r){return state.foodDB.find(f=>f.id===r?.dbMatchId)?.name||r?.name||'Unspecified item'}
+function designAmountText(r){
+  const a=(r?.amount!==''&&r?.amount!=null)?round(num(r.amount),1):'—',u=r?.unit||'';
+  return `${a}${u?' '+u:''}`;
+}
+function dietOrderText(){
+  const d=ensureDesignDraft(),lines=[designOrderCaseHeader(),'','DIET ORDER'];
+  if(!d.dietEnabled){lines.push('Diet: OFF');return lines.join('\n')}
+  const rows=d.dietItems||[];
+  if(!rows.length)lines.push('- No diet items entered');
+  rows.forEach(r=>lines.push(`- ${designRowName(r)}: ${designAmountText(r)}`));
+  return lines.join('\n');
+}
+function formulaOrderText(){
+  const d=ensureDesignDraft(),lines=[designOrderCaseHeader(),'','MILK / FORMULA ORDER'];
+  if(!d.formulaEnabled){lines.push('Milk/Formula: OFF');return lines.join('\n')}
+  const plans=d.formulaPlans||[];
+  if(!plans.length)lines.push('- No milk/formula entered');
+  plans.forEach((r,i)=>{
+    const mode=r.mode||'per_day',feeds=Math.max(0,Math.round(num(r.feeds))),given=mode==='per_feed'?`${designAmountText(r)} per feed${feeds?` × ${feeds} feeds/day`:''}`:`${designAmountText(r)} per day`;
+    let line=`- ${designRowName(r)}: ${given}`;
+    if(num(r.kcalPerOz)>0)line+=` @ ${round(num(r.kcalPerOz),1)} kcal/oz`;
+    lines.push(line);
+    (r.fortifiers||[]).forEach(ft=>{const fm=ft.mode||'per_day',fg=fm==='per_feed'?`${designAmountText(ft)} per feed${feeds?` × ${feeds} feeds/day`:''}`:`${designAmountText(ft)} per day`;lines.push(`  + ${designRowName(ft)}: ${fg}`)});
+  });
+  return lines.join('\n');
+}
+function modularOrderText(){
+  const d=ensureDesignDraft(),m=d.modular||{},lines=[designOrderCaseHeader(),'','MODULAR DIET ORDER'];
+  if(!d.modularEnabled){lines.push('Modular Diet: OFF');return lines.join('\n')}
+  lines.push(`Recipe: ${m.name||'Modular diet'}`);
+  const comps=m.components||[];
+  if(!comps.length)lines.push('- No components entered');
+  comps.forEach(r=>lines.push(`- ${designRowName(r)}: ${designAmountText(r)}`));
+  if(num(m.finalVolume)>0)lines.push(`Add water q.s. to final volume: ${round(num(m.finalVolume),1)} mL`);
+  if(num(m.feedVolume)>0||num(m.feeds)>0){lines.push(`Give: ${round(num(m.feedVolume),1)} mL/feed × ${Math.max(0,Math.round(num(m.feeds)))} feeds/day`);lines.push(`Daily prescribed volume: ${round(num(m.feedVolume)*num(m.feeds),1)} mL/day`)}
+  if(m.note)lines.push(`Note: ${m.note}`);
+  return lines.join('\n');
+}
+function fullDietOrderText(){
+  const d=ensureDesignDraft(),parts=[dietOrderText(),formulaOrderText().split('\n').slice(2).join('\n'),modularOrderText().split('\n').slice(2).join('\n')];
+  if(num(d.fluid?.freeWater)>0||num(d.fluid?.otherFluid)>0||d.fluid?.note){
+    const f=['FLUID / FLUSH'];
+    if(num(d.fluid?.freeWater)>0)f.push(`- Free water / flush: ${round(num(d.fluid.freeWater),1)} mL/day`);
+    if(num(d.fluid?.otherFluid)>0)f.push(`- Other recorded fluid: ${round(num(d.fluid.otherFluid),1)} mL/day`);
+    if(d.fluid?.note)f.push(`- Note: ${d.fluid.note}`);
+    parts.push(f.join('\n'));
+  }
+  return parts.join('\n\n');
+}
+async function designCopyText(kind){
+  const text=kind==='diet'?dietOrderText():kind==='formula'?formulaOrderText():kind==='modular'?modularOrderText():fullDietOrderText();
+  try{await navigator.clipboard.writeText(text)}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}
+  const st=$('designCopyStatus');if(st){st.textContent='✓ Copied';setTimeout(()=>{if(st.textContent==='✓ Copied')st.textContent=''},1800)}
+}
 function renderDietDesign(){const d=ensureDesignDraft(),ds=dietStructureSettings(d);$('designSaveStatus').innerHTML=designDirty?'<span class="dirty-pill">Unsaved changes</span>':'<span class="saved-pill">Saved</span>';$('designDietEnabled').checked=!!d.dietEnabled;$('designFormulaEnabled').checked=!!d.formulaEnabled;$('designModularEnabled').checked=!!d.modularEnabled;$('designStructureEnabled').checked=!!ds.enabled;$('designStructureStarch').checked=!!ds.starch;$('designStructureProtein').checked=!!ds.protein;$('designStructureVegetable').checked=!!ds.vegetable;$('designStructureFruit').checked=!!ds.fruit;renderDesignTargets();renderAutoAllocation();renderDietRows(d);renderFormulaPlans(d);const m=d.modular;$('designModName').value=m.name||'';$('designModFinalVolume').value=m.finalVolume||'';$('designModNote').value=m.note||'';$('designModFeedVolume').value=m.feedVolume||'';$('designModFeeds').value=m.feeds||'';$('designModDailyVolume').value=num(m.feedVolume)*num(m.feeds)||'';renderDesignModComponents(d);$('designFreeWater').value=d.fluid?.freeWater||'';$('designOtherFluid').value=d.fluid?.otherFluid||'';$('designFluidNote').value=d.fluid?.note||'';const c=designCombined(d);$('dietDesignSummary').innerHTML=nutrientMetricGrid(c.diet.total);$('formulaDesignSummary').innerHTML=nutrientMetricGrid(c.formula.total);$('modularDesignSummary').innerHTML=`<strong>Daily delivered modular diet</strong>${nutrientMetricGrid(c.modular.daily)}<p class="muted top-gap">Whole recipe ${round(c.modular.recipe.kcal,1)} kcal • final volume ${round(c.modular.finalVol,0)} mL • prescribed ${round(c.modular.dailyVol,0)} mL/day</p>`;renderDesignRemaining();renderDesignRecheck()}
 [['designDietPct','dietPct'],['designFormulaPct','formulaPct'],['designModularPct','modularPct'],['designDietFatPct','dietFatPct'],['designModularFatPct','modularFatPct']].forEach(([id,k])=>$(id).addEventListener('change',()=>{ensureDesignDraft().allocation[k]=$(id).value;markDesignDirty();renderDietDesign()}));[['designStructureEnabled','enabled'],['designStructureStarch','starch'],['designStructureProtein','protein'],['designStructureVegetable','vegetable'],['designStructureFruit','fruit']].forEach(([id,k])=>$(id).addEventListener('change',()=>{dietStructureSettings(ensureDesignDraft())[k]=$(id).checked;markDesignDirty();renderDietDesign()}));$('autoBuildPrescriptionBtn').onclick=autoBuildPrescriptionFromRequirements;$('autoCalculateDesignBtn').onclick=autoCalculateDesignFromRequirements;$('calculateCurrentDesignBtn').onclick=calculateCurrentDesignNoRebalance;
 ['designDietEnabled','designFormulaEnabled','designModularEnabled'].forEach(id=>$(id).addEventListener('change',()=>{const d=ensureDesignDraft();d[id==='designDietEnabled'?'dietEnabled':id==='designFormulaEnabled'?'formulaEnabled':'modularEnabled']=$(id).checked;markDesignDirty();renderDietDesign()}));
 function setAllDesignRowsAuto(){const d=ensureDesignDraft();(d.dietItems||[]).forEach(r=>{r.constraintMode='auto';r.locked=false});(d.formulaPlans||[]).forEach(p=>{p.constraintMode='auto';p.locked=false;(p.fortifiers||[]).forEach(ft=>{ft.constraintMode='auto';ft.locked=false})});(d.modular?.components||[]).forEach(r=>{r.constraintMode='auto';r.locked=false});markDesignDirty();renderDietDesign()}
 $('setAllDesignAutoBtn').onclick=setAllDesignRowsAuto;
+$('copyDietOrderBtn')?.addEventListener('click',()=>designCopyText('diet'));$('copyFormulaOrderBtn')?.addEventListener('click',()=>designCopyText('formula'));$('copyModularOrderBtn')?.addEventListener('click',()=>designCopyText('modular'));$('copyFullDietOrderBtn')?.addEventListener('click',()=>designCopyText('full'));
 $('addDesignDietBtn').onclick=()=>{ensureDesignDraft().dietItems.push(blankDesignDietItem());markDesignDirty();renderDietDesign()};$('addFormulaPlanBtn').onclick=()=>{ensureDesignDraft().formulaPlans.push(blankFormulaPlan());markDesignDirty();renderDietDesign()};$('addDesignModCompBtn').onclick=()=>addDesignModularRole('other');$('prepareModularTemplateBtn').onclick=prepareModularComponentTemplate;$('clearDesignDietBtn').onclick=()=>clearDesignSection('diet');$('clearDesignFormulaBtn').onclick=()=>clearDesignSection('formula');$('clearDesignModularBtn').onclick=()=>clearDesignSection('modular');
 [['designModName','name'],['designModFinalVolume','finalVolume'],['designModNote','note'],['designModFeedVolume','feedVolume'],['designModFeeds','feeds']].forEach(([id,k])=>$(id).addEventListener('change',()=>{ensureDesignDraft().modular[k]=['finalVolume','feedVolume'].includes(k)?applyRoundRuleValue($(id).value,'5'):k==='feeds'?Math.max(0,Math.round(num($(id).value))):$(id).value;markDesignDirty();renderDietDesign()}));[['designFreeWater','freeWater'],['designOtherFluid','otherFluid'],['designFluidNote','note']].forEach(([id,k])=>$(id).addEventListener('change',()=>{ensureDesignDraft().fluid[k]=$(id).value;markDesignDirty();renderDietDesign()}));
 $('refreshDesignRecheckBtn').onclick=()=>{renderDesignRemaining();renderDesignRecheck()};
@@ -1264,7 +1326,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.76',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.77',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
