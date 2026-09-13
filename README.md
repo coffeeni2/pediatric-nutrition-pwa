@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.57
+# Pediatric Nutrition PWA 0.4.59
 
 ## PN guideline revision
 
@@ -92,3 +92,10 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Restored clearly labeled Export full backup (.json) and Import full backup (.json) controls in Settings & Backup.
 - Export syncs the active case before generating the JSON file.
 - Import validates the JSON root and expected backup content before replacing local state, then refreshes all views.
+
+
+## 0.4.59 PN component calculation fix
+- Component volumes now calculate even before a prescribed main-TPN rate is entered: the calculated main-TPN rate is used temporarily as the effective rate.
+- Entering a prescribed rate immediately replaces the temporary calculated rate and recalculates Factor, mixed volume, Amount to mix, and Actual delivered.
+- PN weight/rate/allocation numeric inputs now sync on mobile input events, reducing stale-value calculations.
+- Cache-busting versions in index.html were updated to 0.4.59.
