@@ -893,7 +893,7 @@ $('sendDesignToDailyModularBtn').onclick=()=>{const d=ensureDesignDraft(),m=d.mo
 // ===== Parenteral Nutrition 0.4.62 =====
 let pnDirty=false;
 function ensurePn(){
- const d={patient:{birthStatus:'term',ageYears:'',ageMonths:'',ageDays:'',weight:''},phase:'stable',ageGroup:'auto',neonatalPhase:'auto',venousAccess:'central',osmolarity:'',peripheralOverride:false,ileProduct:'smoflipid',vitaminMode:'none',ileVitRate:'',dexMode:'gir',naUnit:'mmolkg',kUnit:'mmolkg',phosProduct:'glycophos',traceProduct:'none',naClAlloc:'',naAcAlloc:'',kClAlloc:'',kAcAlloc:'',heparinUnitMl:'',productRounding:{aa:0.5,dextrose:0.5,glycophos:0.1,k2po4:0.5,nacl:0.5,naacetate:0.5,kcl:0.5,kacetate:0.5,cagluconate:0.5,mgso4:0.1,peditrace:0.5,addamel:0.1,zinc:0.01,sterilewater:0.1},requirements:{fluidMl:'',energy:'',protein:'',gir:'',dexGkg:'',dexPct:'',fat:'',sodium:'',potassium:'',calcium:'',phosphorus:'',magnesium:'',zinc:''},rate:'',mixedVolume:'',aaProduct:'aminoven',products:{aa:0,dextrose:0,nacl:0,naacetate:0,kcl:0,kacetate:0,k2po4:0,cagluconate:0,glycophos:0,mgso4:0,peditrace:0,addamel:0,zinc:0,sterilewater:0,lipid:0,vitalipidInfant:0,vitalipidAdult:0,soluvit:0,cernevit:0},updatedAt:''};
+ const d={patient:{birthStatus:'term',ageYears:'',ageMonths:'',ageDays:'',weight:''},phase:'stable',ageGroup:'auto',neonatalPhase:'auto',venousAccess:'central',osmolarity:'',peripheralOverride:false,ileProduct:'smoflipid',vitaminMode:'none',ileVitRate:'',dexMode:'gir',naUnit:'mmolkg',kUnit:'mmolkg',phosProduct:'glycophos',traceProduct:'none',naClAlloc:'',naAcAlloc:'',kClAlloc:'',kAcAlloc:'',heparinUnitMl:'',productRounding:{aa:0.5,dextrose:0.5,glycophos:0.1,k2po4:0.5,nacl:0.5,naacetate:0.5,kcl:0.5,kacetate:0.5,cagluconate:0.5,mgso4:0.1,peditrace:0.5,addamel:0.1,zinc:0.1,sterilewater:0.1},requirements:{fluidMl:'',energy:'',protein:'',gir:'',dexGkg:'',dexPct:'',fat:'',sodium:'',potassium:'',calcium:'',phosphorus:'',magnesium:'',zinc:''},rate:'',mixedVolume:'',aaProduct:'aminoven',products:{aa:0,dextrose:0,nacl:0,naacetate:0,kcl:0,kacetate:0,k2po4:0,cagluconate:0,glycophos:0,mgso4:0,peditrace:0,addamel:0,zinc:0,sterilewater:0,lipid:0,vitalipidInfant:0,vitalipidAdult:0,soluvit:0,cernevit:0},updatedAt:''};
  // Preserve the same PN object reference. Replacing state.pn on every helper call
  // caused product calculations to mutate a stale object, so Amount to mix stayed 0 mL.
  if(!state.pn || typeof state.pn!=='object')state.pn={};
@@ -1005,7 +1005,7 @@ function pnDelivered(){
   na100:maint?na/(maint/100):0,k100:maint?k/(maint/100):0};
 }
 function pnResiduals(){const p=ensurePn(),w=num(ensurePn().patient.weight),pReq=num(p.requirements.phosphorus),naFrom=p.phosProduct==='glycophos'?pReq*2:0,kFrom=p.phosProduct==='k2hpo4'?pReq*2:0;return {naTarget:pnNaKTarget('na'),kTarget:pnNaKTarget('k'),naFrom,kFrom,naRemain:Math.max(0,pnNaKTarget('na')-naFrom),kRemain:Math.max(0,pnNaKTarget('k')-kFrom),naExcess:naFrom>pnNaKTarget('na'),kExcess:kFrom>pnNaKTarget('k')}}
-function pnRoundingStep(key){const p=ensurePn(),defaults={aa:.5,dextrose:.5,glycophos:.1,k2po4:.5,nacl:.5,naacetate:.5,kcl:.5,kacetate:.5,cagluconate:.5,mgso4:.1,peditrace:.5,addamel:.1,zinc:.01,sterilewater:.1};const v=num(p.productRounding?.[key]);return [1,.5,.1,.01].includes(v)?v:(defaults[key]||.1)}
+function pnRoundingStep(key){const p=ensurePn(),defaults={aa:.5,dextrose:.5,glycophos:.1,k2po4:.5,nacl:.5,naacetate:.5,kcl:.5,kacetate:.5,cagluconate:.5,mgso4:.1,peditrace:.5,addamel:.1,zinc:.1,sterilewater:.1};const v=num(p.productRounding?.[key]);return [1,.5,.1,.01].includes(v)?v:(defaults[key]||.1)}
 
 function pnRoundMixVolume(v,key){const step=pnRoundingStep(key);return Math.max(0,Math.round(num(v)/step)*step)}
 function pnAutoCalculateProducts(){
@@ -1013,7 +1013,7 @@ function pnAutoCalculateProducts(){
  if(!(w>0)){p.pnCalcStatus='Enter PN weight';return false}
  pnSyncDextrose(p.dexMode||'gir');
  p.products=p.products||{};p.productActual=p.productActual||{};
- const pr=p.products,pa=p.productActual,factor=num(vf.factor);
+ const pr=p.products,pa=p.productActual,factor=(num(vf.actual)>0&&num(vf.mixed)>0)?num(vf.mixed)/num(vf.actual):0;
  const setActual=(key,actual)=>{actual=Math.max(0,num(actual));pa[key]=actual;pr[key]=factor>0?pnRoundMixVolume(actual*factor,key):0;return actual};
  setActual('aa',num(r.protein)*w/pnAaConc());
  let dexVol=0,rate=num(vf.effectiveRate),actualTpn=num(vf.actual);
@@ -1033,8 +1033,8 @@ function pnAutoCalculateProducts(){
  const iv=pnIleVitaminPlan();pr.lipid=iv.ile;pr.vitalipidInfant=iv.vit.vitalipidInfant;pr.vitalipidAdult=iv.vit.vitalipidAdult;pr.soluvit=iv.vit.soluvit;pr.cernevit=iv.vit.cernevit;
  const bag=['aa','dextrose','nacl','naacetate','kcl','kacetate','k2po4','cagluconate','glycophos','mgso4','peditrace','addamel','zinc'];
  const actualUsed=bag.reduce((z,k)=>z+num(pa[k]),0),mixedUsed=bag.reduce((z,k)=>z+num(pr[k]),0);
- pa.sterilewater=vf.actual>0?pnRoundMixVolume(Math.max(0,vf.actual-actualUsed),'sterilewater'):0;
- pr.sterilewater=(vf.mixed>0&&factor>0)?pnRoundMixVolume(Math.max(0,vf.mixed-mixedUsed),'sterilewater'):0;
+ pa.sterilewater=vf.actual>0?Math.max(0,vf.actual-actualUsed):0;
+ pr.sterilewater=(vf.mixed>0&&factor>0)?Math.max(0,vf.mixed-mixedUsed):0;
  p.pnCalcStatus=(vf.actual>0&&vf.mixed>0)?'Calculated from actual delivered volume; mixed components = actual × factor':'Actual component volumes calculated; enter Mixed TPN volume to calculate factor and pharmacy amounts';
  return {actualUsed:actualUsed+num(pa.sterilewater),mixedUsed:mixedUsed+num(pr.sterilewater),exceedsActual:vf.actual>0&&actualUsed>vf.actual+.01,exceedsMixed:vf.mixed>0&&mixedUsed>vf.mixed+.01,factorApplied:factor>0}
 }
@@ -1053,7 +1053,7 @@ function renderPnProducts(){
  const names={aa:p.aaProduct==='aminoplasmal15'?'15% Aminoplasmal':p.aaProduct==='amiparen'?'10% Amiparen':'10% Aminoven Infant',dextrose:'50% Dextrose',glycophos:'Sodium glycerophosphate',k2po4:'8.7% K2HPO4',nacl:'3% NaCl',naacetate:'24.6% Na acetate',kcl:'15% KCl',kacetate:'29.4% K acetate',cagluconate:'10% Calcium gluconate',mgso4:'50% MgSO4',peditrace:'Peditrace',addamel:'Addamel N',zinc:'Zinc sulfate',sterilewater:'Sterile water'};
  const conc={aa:`${pnAaConc()} g AA/mL`,dextrose:'0.5 g/mL',glycophos:'P 1 mmol/mL; Na 2 mEq/mL',k2po4:'P 0.5 mmol/mL; K 1 mEq/mL',nacl:'Na 0.513 mEq/mL',naacetate:'Na 3 mEq/mL',kcl:'K 2 mEq/mL',kacetate:'K 3 mEq/mL',cagluconate:'Ca 0.225 mmol/mL',mgso4:'Mg 2 mmol/mL',peditrace:'Zn 250 mcg/mL',addamel:'Zn 650 mcg/mL',zinc:'Zn 1,000 mcg/mL',sterilewater:'q.s. to volume'};
  const order=['aa','dextrose',p.phosProduct==='k2hpo4'?'k2po4':'glycophos','nacl','naacetate','kcl','kacetate','cagluconate','mgso4',p.traceProduct==='addamel'?'addamel':'peditrace','zinc','sterilewater'];
- const rows=order.map(k=>{const mixed=num(p.products[k]),actual=p.productActual&&p.productActual[k]!=null?num(p.productActual[k]):(x.factor>0?mixed/x.factor:0),step=pnRoundingStep(k);return `<tr><td>${esc(names[k])}</td><td>${esc(conc[k])}</td><td><strong>${round(actual,2)} mL/day</strong></td><td><strong>${round(mixed,2)} mL</strong></td><td><select class="pn-rounding-select" data-round-key="${k}"><option value="1" ${step===1?'selected':''}>1 mL</option><option value="0.5" ${step===.5?'selected':''}>0.5 mL</option><option value="0.1" ${step===.1?'selected':''}>0.1 mL</option><option value="0.01" ${step===.01?'selected':''}>0.01 mL</option></select></td><td>${k==='sterilewater'?'q.s. to volume':(x.factor>0?'× '+round(x.factor,4):'enter mixed volume')}</td></tr>`}).join('');
+ const rows=order.map(k=>{const mixed=num(p.products[k]),actual=p.productActual&&p.productActual[k]!=null?num(p.productActual[k]):(x.factor>0?mixed/x.factor:0),step=pnRoundingStep(k),roundCell=k==='sterilewater'?'exact':`<select class="pn-rounding-select" data-round-key="${k}"><option value="1" ${step===1?'selected':''}>1 mL</option><option value="0.5" ${step===.5?'selected':''}>0.5 mL</option><option value="0.1" ${step===.1?'selected':''}>0.1 mL</option><option value="0.01" ${step===.01?'selected':''}>0.01 mL</option></select>`;return `<tr><td>${esc(names[k])}</td><td>${esc(conc[k])}</td><td><strong>${round(actual,2)} mL/day</strong></td><td><strong>${round(mixed,2)} mL</strong></td><td>${roundCell}</td><td>${k==='sterilewater'?'q.s. exact to volume':(x.factor>0?'× '+round(x.factor,4):'enter mixed volume')}</td></tr>`}).join('');
  const hep=num(p.heparinUnitMl),hepUnits=hep*num(x.mixed),vit=pnVitaminPlan(),ileName=(ILE_INFO[p.ileProduct]||ILE_INFO.smoflipid).name;
  const tail=[];
  tail.push(`<tr class="summary-row"><td><strong>Heparin</strong></td><td>${hep?`${round(hep,2)} unit/mL main TPN bag`:'—'}</td><td>—</td><td><strong>${hep?`${round(hepUnits,1)} units/bag`:'—'}</strong></td><td>—</td><td>volume not counted</td></tr>`);
@@ -1067,7 +1067,7 @@ function renderPnProducts(){
  if(vit.cernevit)tail.push(`<tr class="summary-row"><td>Vitamin</td><td>Cernevit</td><td><strong>${round(vit.cernevit,1)} mL/day</strong></td><td><strong>${round(vit.cernevit,1)} mL</strong></td><td>—</td><td>separate vitamin</td></tr>`);
  $('pnProductRows').innerHTML=rows+tail.join('');
  $('pnProductRows').querySelectorAll('.pn-rounding-select').forEach(el=>el.addEventListener('change',()=>{p.productRounding[el.dataset.roundKey]=num(el.value);pnAutoCalculateProducts();markPnDirty();renderPnProducts();renderPnRecheck()}));
- if($('pnProductRoundingNote'))$('pnProductRoundingNote').textContent=(p.pnCalcStatus||'')+' • Amount to mix uses the selected rounding. PN Recheck recalculates delivered nutrients from mixed volumes ÷ TPN factor.';
+ if($('pnProductRoundingNote'))$('pnProductRoundingNote').textContent=(p.pnCalcStatus||'')+' • Mixed volume = Actual delivered × TPN factor using the selected rounding; sterile water is exact q.s. PN Recheck recalculates delivered nutrients from mixed volumes ÷ TPN factor.';
 }
 function targetPct(actual,target){target=num(target);return target>0?round(actual/target*100,1):null}
 function pnRangeStatus(v,r){if(!r||!isFinite(v))return '—';if(r.min!=null&&v<r.min)return 'Below reference';if(r.max!=null&&v>r.max)return 'Above reference';return 'Within reference'}

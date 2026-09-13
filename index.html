@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.62" />
+  <link rel="stylesheet" href="styles.css?v=0.4.63" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -214,7 +214,7 @@
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>4. Parenteral Components / PN Products</h2><p class="muted">Actual delivered volume is calculated directly from requirement × PN weight ÷ product concentration. Amount to mix = actual delivered × TPN factor. Sterile water is q.s. separately to actual or mixed main TPN volume.</p></div></div>
+      <div class="section-title-row"><div><h2>4. Parenteral Components / PN Products</h2><p class="muted">Actual delivered volume is calculated directly from requirement × PN weight ÷ product concentration. Mixed = actual delivered × TPN factor. Sterile water is q.s. separately to actual or mixed main TPN volume.</p></div></div>
       <div class="grid-3">
         <label>Amino acid product<select id="pnAaProduct"><option value="aminoven">10% Aminoven Infant — 0.10 g/mL</option><option value="amiparen">10% Amiparen — 0.10 g/mL</option><option value="aminoplasmal15">15% Aminoplasmal — 0.15 g/mL</option></select></label>
         <label>Phosphate source<select id="pnPhosProduct"><option value="glycophos">Sodium glycerophosphate — P 1 mmol/mL + Na 2 mEq/mL</option><option value="k2hpo4">8.7% K2HPO4 — P 0.5 mmol/mL + K 1 mEq/mL</option></select></label>
@@ -228,7 +228,7 @@
         <label>Heparin (unit/mL main TPN bag)<input id="pnHeparinUnitMl" type="number" min="0" step="0.1" placeholder="0.5–1" /></label>
       </div>
       <div id="pnAllocationWarning" class="top-gap"></div>
-      <div class="table-wrap top-gap"><table class="design-recheck-table"><thead><tr><th>Component</th><th>Product / concentration</th><th>Actual delivered</th><th>Amount to mix</th><th>Rounding</th><th>Factor</th></tr></thead><tbody id="pnProductRows"></tbody></table></div>
+      <div class="table-wrap top-gap"><table class="design-recheck-table"><thead><tr><th>Component</th><th>Product / concentration</th><th>Actual delivered</th><th>Mixed</th><th>Rounding</th><th>Factor</th></tr></thead><tbody id="pnProductRows"></tbody></table></div>
       <p id="pnProductRoundingNote" class="muted top-gap"></p>
     </div>
 
@@ -331,6 +331,6 @@
   </section>
 </main>
 <footer><strong>PWA 0.4.62</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.62"></script>
+<script src="app.js?v=0.4.63"></script>
 </body>
 </html>

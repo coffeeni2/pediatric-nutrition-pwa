@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.62
+# Pediatric Nutrition PWA 0.4.63
 
 ## PN guideline revision
 
@@ -110,7 +110,7 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Requested default rounding updated for concentrated products.
 
 
-## 0.4.62 PN product/recheck redesign
+## 0.4.63 PN product/recheck redesign
 - Removed the duplicate Pharmacy Order block from PN Recheck; Recheck now contains only Actual Delivered to Patient.
 - PN Products table now carries the final order rows for heparin, main TPN actual/mixed volume, prescribed rate, TPN factor, ILE, and selected vitamins.
 - Actual-delivered nutrient recheck is calculated back from the rounded mixed component volumes divided by the TPN factor.
@@ -118,7 +118,7 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Energy constants: amino acids 4 kcal/g, dextrose 3.4 kcal/g, ILE 10 kcal/g.
 
 
-## 0.4.62 PN delivered-dose corrections
+## 0.4.63 PN delivered-dose corrections
 - PN Recheck now treats prescribed ILE volume as the source of truth; the rounded ILE + vitamin rate is display-only and does not change delivered fat dose.
 - Main TPN, ILE + vitamins, and total-fluid percentages are calculated against Holliday–Segar maintenance fluid requirement rather than the prescribed PN fluid target.
 - Na/K Recheck is calculated from final mixed Na/K/phosphate product volumes divided by TPN factor; mEq/100 kcal uses Holliday–Segar kcal equivalent.
