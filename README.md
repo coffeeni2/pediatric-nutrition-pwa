@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.63
+# Pediatric Nutrition PWA 0.4.64
 
 ## PN guideline revision
 
@@ -126,3 +126,19 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Zinc Recheck uses the selected trace product after rounding: Peditrace 250 mcg/mL or Addamel N 650 mcg/mL, plus zinc sulfate 1,000 mcg/mL, all divided by factor before dose/kg calculation.
 - Energy and NPC:P continue to use delivered AA, dextrose, and ILE: 4, 3.4, and 10 kcal/g respectively.
 - TPN osmolarity remains clinician/pharmacy-entered; peripheral >900 mOsm/L stays a review warning, not an automatic compatibility calculation.
+
+
+## 0.4.64 PN requirements compact layout
+- Removed the visible Guideline age group selector; guideline grouping is derived automatically from PN age and Term/Preterm status.
+- Removed the large Selected ILE / EFAD reference box from PN Requirements.
+- Compacted PN Requirements into a four-column desktop / two-column mobile-oriented grid.
+- Dextrose uses one editable source input at a time; the other two remain visible read-only calculated fields without disabled/grey styling.
+- GIR, dextrose g/kg/day, and final main TPN glucose % resync when PN rate/actual volume changes.
+
+
+## 0.4.64 PN compact requirements + dextrose synchronization
+- Removed the manual Guideline age group selector; PN guideline grouping now derives only from PN age plus Term/Preterm status.
+- Removed the Selected ILE / EFAD summary boxes from PN Requirements; relevant ILE reference remains inline with the prescribed ILE field.
+- Compacted the PN Requirements layout to reduce vertical space.
+- GIR, dextrose g/kg/day and final glucose % remain visible together. Only the selected input is editable; the other two are read-only but remain visually clear rather than greyed out.
+- Dextrose conversions use actual infused main TPN volume and prescribed/effective main TPN rate: GIR→%/gkg, gkg→%/GIR, and %→GIR/gkg.
