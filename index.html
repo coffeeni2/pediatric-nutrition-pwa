@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.71" />
+  <link rel="stylesheet" href="styles.css?v=0.4.73" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -157,7 +157,7 @@
       <div class="grid-4 top-gap">
         <label>PN case<select id="pnCaseSelector"></select></label>
         <label>Anonymous name / ID<input id="pnCaseId" autocomplete="off" placeholder="e.g. NICU-012" /></label>
-        <div class="inline-actions pn-case-actions"><button id="pnNewCaseBtn" class="secondary" type="button">New case</button><button id="pnDeleteCaseBtn" class="danger" type="button">Delete case</button><button id="pnClearBtn" class="secondary" type="button">Clear boxes</button></div>
+        <div class="inline-actions pn-case-actions"><button id="pnNewCaseBtn" class="secondary" type="button">New case</button><button id="pnDeleteCaseBtn" class="danger" type="button">Delete case</button><button id="pnClearBtn" class="secondary" type="button">Clear boxes</button><button id="pnCopyRequirementsBtn" class="secondary" type="button">Copy Requirements</button><button id="pnCopyMixedBtn" class="secondary" type="button">Copy Mixed TPN Order</button><button id="pnCopyFullBtn" class="primary" type="button">Copy Full PN Order</button><span id="pnCopyStatus" class="muted"></span></div>
       </div>
       <div class="grid-5 top-gap">
         <label>Term / Preterm<select id="pnBirthStatus"><option value="term">Term</option><option value="preterm">Preterm</option></select></label>
@@ -337,7 +337,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.71</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.71"></script>
+<footer><strong>PWA 0.4.73</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.73"></script>
 </body>
 </html>

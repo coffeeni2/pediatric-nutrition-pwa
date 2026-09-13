@@ -1179,6 +1179,32 @@ function renderPnRecheck(){
  const sw=num(p.products.sterilewater),volWarn=sw<-.01?`<div class="warning-box"><strong>HARD WARNING — PN volume not feasible</strong><br>Sterile water = <strong>${round(sw,1)} mL</strong>. Components exceed the final mixed TPN volume by <strong>${round(Math.abs(sw),1)} mL</strong>. Review/reduce component volume(s) by at least ${round(Math.abs(sw),1)} mL or increase the final mixed TPN volume. Do not compound with negative sterile water.</div>`:'',correction=pnVolumeCorrectionHtml();
  $('pnRecheck').innerHTML=`${volWarn}${correction}<h3>Actual Delivered to Patient</h3><div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Actual delivered</th></tr></thead><tbody>${rows.map(a=>`<tr><td>${esc(a[0])}</td><td><strong>${a[1]}</strong></td></tr>`).join('')}</tbody></table></div><p class="muted top-gap">Calculated back from final mixed component volumes ÷ TPN factor. Fluid percentages use Holliday–Segar maintenance requirement. ILE dose uses prescribed ILE volume (20% ILE = 0.2 g/mL), not the displayed rounded rate. Na/K include phosphate-product contributions; Ca/P/Mg mg values are converted from mmol using atomic weights. Zinc includes the selected trace product (Peditrace 250 mcg/mL or Addamel N 650 mcg/mL) plus zinc sulfate. Energy: amino acid 4 kcal/g, dextrose 3.4 kcal/g, ILE 10 kcal/g. Estimated osmolarity uses: AA(g/L)×8 + glucose(g/L)×7 + Na(mEq/L)×2 + P(mg/L)×0.2 − 50, calculated from the final mixed TPN bag; it is an estimate, not a measured pharmacy osmolarity.</p>`;
 }
+
+function pnCopyFmt(v,d=1){v=num(v);return Number.isFinite(v)?String(round(v,d)):'—'}
+function pnRequirementText(){
+ pnSyncFormToState();pnAutoCalculateProducts();const p=ensurePn(),r=p.requirements||{},w=num(p.patient?.weight),osm=pnEstimatedOsmolarity().value;
+ const naUnit=p.naUnit==='meq100'?'mEq/100 kcal/day':'mmol/kg/day',kUnit=p.kUnit==='meq100'?'mEq/100 kcal/day':'mmol/kg/day';
+ return [
+  'PN REQUIREMENTS',`Case: ${p.patient?.caseId||'—'}`,`Weight: ${w?pnCopyFmt(w,2)+' kg':'—'}`,`Birth status: ${p.patient?.birthStatus==='preterm'?'Preterm':'Term'}`,`Venous access: ${p.venousAccess==='peripheral'?'Peripheral':'Central'}`,
+  `Total fluid target: ${pnCopyFmt(r.fluidMl)} mL/day`,`Energy target: ${pnCopyFmt(r.energy)} kcal/kg/day`,`Amino acid: ${pnCopyFmt(r.protein)} g/kg/day`,`ILE: ${pnCopyFmt(r.fat)} g/kg/day`,
+  `GIR: ${pnCopyFmt(r.gir)} mg/kg/min`,`Dextrose: ${pnCopyFmt(r.dexGkg)} g/kg/day`,`Final main TPN glucose: ${pnCopyFmt(r.dexPct)}%`,
+  `Na: ${pnCopyFmt(r.sodium)} ${naUnit}`,`K: ${pnCopyFmt(r.potassium)} ${kUnit}`,`Ca: ${pnCopyFmt(r.calcium)} mmol/kg/day`,`P: ${pnCopyFmt(r.phosphorus)} mmol/kg/day`,`Mg: ${pnCopyFmt(r.magnesium)} mmol/kg/day`,`Zinc: ${pnCopyFmt(r.zinc)} mcg/kg/day`,
+  `Estimated TPN osmolarity: ${osm?pnCopyFmt(osm)+' mOsm/L':'—'}`
+ ].join('\n');
+}
+function pnMixedOrderText(){
+ pnSyncFormToState();pnAutoCalculateProducts();const p=ensurePn(),pr=p.products||{},vf=pnFactor(),iv=pnIleVitaminPlan(),vit=pnVitaminPlan(),osm=pnEstimatedOsmolarity().value;
+ const aaName=p.aaProduct==='aminoplasmal15'?'15% Aminoplasmal':p.aaProduct==='amiparen'?'10% Amiparen':'10% Aminoven Infant',phosKey=p.phosProduct==='k2hpo4'?'k2po4':'glycophos',phosName=p.phosProduct==='k2hpo4'?'8.7% K2HPO4':'Sodium glycerophosphate';
+ const lines=['MIXED TPN ORDER',`Case: ${p.patient?.caseId||'—'}`,`Main TPN final mixed volume: ${pnCopyFmt(vf.mixed)} mL`,`Infuse main TPN: ${pnCopyFmt(num(p.rate)||num(vf.effectiveRate))} mL/hr`,`TPN factor: ${vf.factor>0?pnCopyFmt(vf.factor,4):'—'}`,'',`${aaName}: ${pnCopyFmt(pr.aa)} mL`,`50% Dextrose: ${pnCopyFmt(pr.dextrose)} mL`,`${phosName}: ${pnCopyFmt(pr[phosKey])} mL`,`3% NaCl: ${pnCopyFmt(pr.nacl)} mL`,`24.6% Na acetate: ${pnCopyFmt(pr.naacetate)} mL`,`15% KCl: ${pnCopyFmt(pr.kcl)} mL`,`29.4% K acetate: ${pnCopyFmt(pr.kacetate)} mL`,`10% Calcium gluconate: ${pnCopyFmt(pr.cagluconate)} mL`,`50% MgSO4: ${pnCopyFmt(pr.mgso4)} mL`];
+ if(p.traceProduct==='peditrace')lines.push(`Peditrace: ${pnCopyFmt(pr.peditrace)} mL`);if(p.traceProduct==='addamel')lines.push(`Addamel N: ${pnCopyFmt(pr.addamel)} mL`);if(num(pr.zinc)>0)lines.push(`Zinc sulfate: ${pnCopyFmt(pr.zinc)} mL`);
+ lines.push(`Sterile water: ${pnCopyFmt(pr.sterilewater)} mL`);if(num(p.heparinUnitMl)>0)lines.push(`Heparin: ${pnCopyFmt(num(p.heparinUnitMl)*num(vf.mixed))} units/bag (${pnCopyFmt(p.heparinUnitMl,2)} unit/mL)`);
+ lines.push('',`ILE (${(ILE_INFO[p.ileProduct]||ILE_INFO.smoflipid).name}): ${pnCopyFmt(iv.ile)} mL/day`);if(vit.vitalipidInfant)lines.push(`Vitalipid N Infant: ${pnCopyFmt(vit.vitalipidInfant)} mL/day`);if(vit.vitalipidAdult)lines.push(`Vitalipid N Adult: ${pnCopyFmt(vit.vitalipidAdult)} mL/day`);if(vit.soluvit)lines.push(`Soluvit N: ${pnCopyFmt(vit.soluvit)} mL/day`);if(vit.cernevit)lines.push(`Cernevit: ${pnCopyFmt(vit.cernevit)} mL/day`);lines.push(`ILE + vitamins 24-h infusion: ${pnCopyFmt(iv.planned)} mL/day (~${pnCopyFmt(iv.suggested)} mL/hr)`,`Estimated TPN osmolarity: ${osm?pnCopyFmt(osm)+' mOsm/L':'—'}`);
+ if(num(pr.sterilewater)<0)lines.push(`WARNING: Sterile water ${pnCopyFmt(pr.sterilewater)} mL; components exceed mixed volume by ${pnCopyFmt(Math.abs(num(pr.sterilewater)))} mL.`);
+ return lines.join('\n');
+}
+function pnFullOrderText(){return pnRequirementText()+'\n\n'+pnMixedOrderText()}
+async function pnCopyText(kind){const text=kind==='requirements'?pnRequirementText():kind==='mixed'?pnMixedOrderText():pnFullOrderText();try{await navigator.clipboard.writeText(text)}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}const st=$('pnCopyStatus');if(st){st.textContent='✓ Copied';setTimeout(()=>{if(st.textContent==='✓ Copied')st.textContent=''},1800)}}
+
 function pnCaseLabel(c){const id=c?.pn?.patient?.caseId||'';return id||c?.patient?.alias||'Untitled PN case'}
 function renderPnCaseSelector(){const el=$('pnCaseSelector');if(!el)return;el.innerHTML=(state.cases||[]).map(c=>`<option value="${esc(c.id)}">${esc(pnCaseLabel(c))}</option>`).join('');el.value=state.activeCaseId||''}
 function loadPnCase(id){if(!id||id===state.activeCaseId)return;pnSyncFormToState();syncActiveCase();const c=state.cases.find(x=>x.id===id);if(!c)return;state.activeCaseId=id;state.patient=clone(c.patient||blankCase().patient);state.requirements=clone(c.requirements||blankCase().requirements);state.dietDesign=clone(c.dietDesign||blankDietDesign());state.pn=clone(c.pn||blankPn());state.pnif=clone(c.pnif||{});state.meals=clone(c.meals||[]);state.modular=clone(c.modular||blankCase().modular);state.lastSummary=c.lastSummary||null;pnDirty=false;localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));renderPn()}
@@ -1199,6 +1225,9 @@ $('pnCaseId')?.addEventListener('change',()=>{ensurePn().patient.caseId=$('pnCas
 $('pnNewCaseBtn')?.addEventListener('click',newPnCase);
 $('pnDeleteCaseBtn')?.addEventListener('click',deletePnCase);
 $('pnClearBtn')?.addEventListener('click',clearPnBoxes);
+$('pnCopyRequirementsBtn')?.addEventListener('click',()=>pnCopyText('requirements'));
+$('pnCopyMixedBtn')?.addEventListener('click',()=>pnCopyText('mixed'));
+$('pnCopyFullBtn')?.addEventListener('click',()=>pnCopyText('full'));
 $('pnPeripheralOverride')?.addEventListener('change',()=>{ensurePn().peripheralOverride=$('pnPeripheralOverride').checked;markPnDirty();renderPnRecheck()});$('pnCalculateBtn')?.addEventListener('click',pnCalculateProducts);$('pnRefreshBtn')?.addEventListener('click',renderPnRecheck);$('pnSaveBtn')?.addEventListener('click',savePn);
 
 // ===== End Parenteral Nutrition =====
@@ -1209,7 +1238,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.71',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.73',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }

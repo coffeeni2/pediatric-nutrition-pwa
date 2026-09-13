@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.71
+# Pediatric Nutrition PWA 0.4.73
 
 ## PN guideline revision
 
@@ -164,3 +164,14 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Added always-visible full backup Export/Import JSON controls in the app header.
 - One JSON backup contains data across all tabs/cases, including PN and Custom Database.
 - Settings & Backup controls remain available and use the same full-backup format.
+
+
+## 0.4.72
+- Added Copy Requirements, Copy Mixed TPN Order, and Copy Full PN Order in the PN tab.
+- Copied mixed order uses final post-rounding pharmacy volumes, includes sterile water, infusion rate, ILE/vitamins, osmolarity, and negative-water warning.
+- Copy Requirements includes current clinician-entered PN targets and calculated dextrose equivalents.
+
+## 0.4.73
+- Added compact responsive layout for Android/mobile screens (<=600 px).
+- Reduced PN text, table, control, button, and spacing sizes on phones while preserving desktop/Mac sizing.
+- Kept PN requirement fields in a compact two-column layout on phones and reduced wide-table minimum widths for easier horizontal viewing.
