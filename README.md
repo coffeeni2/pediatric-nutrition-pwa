@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.70
+# Pediatric Nutrition PWA 0.4.71
 
 ## PN guideline revision
 
@@ -153,8 +153,14 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Regression-tested the screenshot-equivalent PN case (10 kg, GIR 4, protein 3 g/kg/day, ILE 2 g/kg/day, 1000 mL/day fluid, main TPN rate 37 mL/hr, mixed 900 mL): factor 1.0135, AA 300→304 mL, dextrose 115.2→117 mL, P 2→2 mL, dex 5.76 g/kg/day and 6.4865%.
 
 
-## 0.4.70 PN case controls + recheck formatting
+## 0.4.71 PN case controls + recheck formatting
 - Added PN-specific anonymous name / ID and PN case selector.
 - Added New case, Delete case, and Clear boxes controls inside the Parenteral Nutrition tab.
 - Clear boxes resets PN calculation fields while keeping the anonymous name / ID.
 - PN Recheck numeric display is limited to at most 1 decimal place.
+
+
+## 0.4.71
+- Added always-visible full backup Export/Import JSON controls in the app header.
+- One JSON backup contains data across all tabs/cases, including PN and Custom Database.
+- Settings & Backup controls remain available and use the same full-backup format.

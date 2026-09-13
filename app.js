@@ -1203,6 +1203,31 @@ $('pnPeripheralOverride')?.addEventListener('change',()=>{ensurePn().peripheralO
 
 // ===== End Parenteral Nutrition =====
 
-$('defaultSource').addEventListener('change',()=>{state.settings.defaultSource='Custom';$('defaultSource').value='Custom';saveState()});$('exportBtn').addEventListener('click',()=>{syncActiveCase();localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=`ped-nutrition-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)});$('importBackupInput').addEventListener('change',async e=>{const input=e.target,f=input.files&&input.files[0];if(!f)return;try{const text=await f.text();const parsed=JSON.parse(text);if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw new Error('Invalid backup root');if(!Array.isArray(parsed.cases)&&!Array.isArray(parsed.foodDB))throw new Error('Missing backup data');state=merge(defaultState,parsed);saveState();foodDbDraft=null;foodDbDirty=false;resetReviewDraft();resetModularDraft();resetDesignDraft();renderPatient();renderMeals();renderFoodDB();renderModular();renderDietDesign();renderPn();alert('Restore สำเร็จ')}catch(err){console.error(err);alert('Backup ไม่ถูกต้องหรืออ่านไฟล์ไม่ได้')}finally{input.value=''}});$('resetBtn').addEventListener('click',()=>{if(confirm('This will permanently delete local patient/case data and custom data on this device. Export a backup first. Continue?')){localStorage.removeItem('pedNutritionStateV4');localStorage.removeItem('pedNutritionStateV3');location.reload()}});
+$('defaultSource').addEventListener('change',()=>{state.settings.defaultSource='Custom';$('defaultSource').value='Custom';saveState()});
+function exportFullBackup(){
+  // Capture current PN form first so the all-tabs backup includes the latest visible PN values.
+  try{pnSyncFormToState()}catch{}
+  syncActiveCase();
+  localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.71',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
+  a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function importFullBackup(e){
+  const input=e.target,f=input.files&&input.files[0];if(!f)return;
+  try{
+    const text=await f.text(),parsed=JSON.parse(text);
+    if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw new Error('Invalid backup root');
+    if(!Array.isArray(parsed.cases)&&!Array.isArray(parsed.foodDB))throw new Error('Missing backup data');
+    const meta=parsed.backup_meta;delete parsed.backup_meta;
+    state=merge(defaultState,parsed);saveState();foodDbDraft=null;foodDbDirty=false;resetReviewDraft();resetModularDraft();resetDesignDraft();renderPatient();renderMeals();renderFoodDB();renderModular();renderDietDesign();renderPn();
+    alert(`Restore สำเร็จ — นำเข้าข้อมูล backup ทุก tab${meta?.version?' จาก v'+meta.version:''}`);
+  }catch(err){console.error(err);alert('Backup ไม่ถูกต้องหรืออ่านไฟล์ไม่ได้')}finally{input.value=''}
+}
+$('exportBtn')?.addEventListener('click',exportFullBackup);
+$('globalExportBtn')?.addEventListener('click',exportFullBackup);
+$('importBackupInput')?.addEventListener('change',importFullBackup);
+$('globalImportBackupInput')?.addEventListener('change',importFullBackup);
+$('resetBtn').addEventListener('click',()=>{if(confirm('This will permanently delete local patient/case data and custom data on this device. Export a backup first. Continue?')){localStorage.removeItem('pedNutritionStateV4');localStorage.removeItem('pedNutritionStateV3');location.reload()}});
 
 resetDesignDraft();renderPatient();renderMeals();renderFoodDB();renderModular();renderDietDesign();renderPn();

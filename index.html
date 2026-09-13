@@ -8,13 +8,17 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.70" />
+  <link rel="stylesheet" href="styles.css?v=0.4.71" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
 <header class="app-header">
   <div><div class="eyebrow">Pediatric Nutrition Toolkit</div><h1>Pediatric Nutrition Calculator</h1></div>
-  <button id="installBtn" class="secondary hidden">Install App</button>
+  <div class="header-actions">
+    <button id="globalExportBtn" class="secondary">Export backup JSON</button>
+    <label class="file-button secondary">Import backup JSON<input id="globalImportBackupInput" type="file" accept="application/json,.json" hidden /></label>
+    <button id="installBtn" class="secondary hidden">Install App</button>
+  </div>
 </header>
 <main>
   <nav class="tabs">
@@ -328,12 +332,12 @@
       <div class="grid-3">
         <label>Food source<select id="defaultSource" disabled><option value="Custom">Custom Database only</option></select></label>
       </div>
-      <p class="muted">เวอร์ชันนี้คำนวณจาก Custom Database เท่านั้น เพื่อให้ผลลัพธ์ deterministic และไม่แสดง source ที่ยังไม่มี connector ใช้งานจริง.</p><hr><h2>Backup & Restore</h2><p class="muted">Backup รวม anonymous cases, visits, intake, modular diet, Custom DB, custom conversions และ settings. ข้อมูลทำงานใน browser ของอุปกรณ์นี้; Google Drive sync เตรียมไว้สำหรับระยะถัดไป.</p>
+      <p class="muted">เวอร์ชันนี้คำนวณจาก Custom Database เท่านั้น เพื่อให้ผลลัพธ์ deterministic และไม่แสดง source ที่ยังไม่มี connector ใช้งานจริง.</p><hr><h2>Backup & Restore</h2><p class="muted">Backup เป็นไฟล์เดียวรวมข้อมูลจากทุก tab: Patient/Cases, Diet Design, PN, PNIF/Intake, Review Intake ที่บันทึกแล้ว, Modular Diet, Custom Database, Summary/Calculation data และ Settings. ข้อมูลทำงานใน browser ของอุปกรณ์นี้; Google Drive sync เตรียมไว้สำหรับระยะถัดไป.</p>
       <div class="actions"><button id="exportBtn" class="primary">Export full backup (.json)</button><label class="file-button secondary">Import full backup (.json)<input id="importBackupInput" type="file" accept="application/json" hidden /></label><button id="resetBtn" class="danger">Reset all local data...</button></div>
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.70</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.70"></script>
+<footer><strong>PWA 0.4.71</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.71"></script>
 </body>
 </html>
