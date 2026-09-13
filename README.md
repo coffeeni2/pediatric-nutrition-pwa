@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.65
+# Pediatric Nutrition PWA 0.4.66
 
 ## PN guideline revision
 
@@ -144,7 +144,7 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Dextrose conversions use actual infused main TPN volume and prescribed/effective main TPN rate: GIR→%/gkg, gkg→%/GIR, and %→GIR/gkg.
 
 
-## 0.4.65 PN AA guideline + dextrose/mixed-volume state fix
+## 0.4.66 PN AA guideline + dextrose/mixed-volume state fix
 - Amino-acid guideline: preterm DOL 1 1.5–2.5 g/kg/day; preterm DOL >=2 2.5–3.5 g/kg/day; term 0–<2 months 1.5–3; 2 months–<3 years 1–2.5; 3–18 years 1–2 g/kg/day.
 - Fixed GIR mode so dextrose g/kg/day and final main-TPN glucose % are derived reliably from GIR, PN weight, and effective main TPN rate/volume.
 - Calculated dextrose fields are no longer read back from transient DOM values during rendering.

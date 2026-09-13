@@ -890,7 +890,7 @@ $('refreshDesignRecheckBtn').onclick=()=>{renderDesignRemaining();renderDesignRe
 $('sendDesignToDailyModularBtn').onclick=()=>{const d=ensureDesignDraft(),m=d.modular;if(!d.modularEnabled&&!confirm('Modular Diet is currently disabled in Diet Design. Copy recipe anyway?'))return;const feedVol=num(m.feedVolume),feeds=Math.max(0,Math.floor(num(m.feeds)));state.modular={name:m.name||'Designed modular recipe',finalVolume:m.finalVolume||'',notes:m.note||'',components:(m.components||[]).map(x=>({id:uid(),name:x.name||state.foodDB.find(f=>f.id===x.dbMatchId)?.name||'',amount:x.amount,unit:x.unit,dbMatchId:x.dbMatchId,source:'Custom',note:''})),feeds:Array.from({length:feeds},(_,i)=>({id:uid(),time:'',prescribed:feedVol||'',actual:'',note:`Feed ${i+1}`})),route:'',durationHr:''};saveState();resetModularDraft();renderModular();alert('Copied to Daily Modular Diet. Review and Save/adjust actual intake in the Modular Diet tab.')};
 
 
-// ===== Parenteral Nutrition 0.4.65 =====
+// ===== Parenteral Nutrition 0.4.66 =====
 let pnDirty=false;
 function ensurePn(){
  const d={patient:{birthStatus:'term',ageYears:'',ageMonths:'',ageDays:'',weight:''},phase:'stable',ageGroup:'auto',neonatalPhase:'auto',venousAccess:'central',osmolarity:'',peripheralOverride:false,ileProduct:'smoflipid',vitaminMode:'none',ileVitRate:'',dexMode:'gir',naUnit:'mmolkg',kUnit:'mmolkg',phosProduct:'glycophos',traceProduct:'none',naClAlloc:'',naAcAlloc:'',kClAlloc:'',kAcAlloc:'',heparinUnitMl:'',productRounding:{aa:0.5,dextrose:0.5,glycophos:0.1,k2po4:0.5,nacl:0.5,naacetate:0.5,kcl:0.5,kacetate:0.5,cagluconate:0.5,mgso4:0.1,peditrace:0.5,addamel:0.1,zinc:0.1,sterilewater:0.1},requirements:{fluidMl:'',energy:'',protein:'',gir:'',dexGkg:'',dexPct:'',fat:'',sodium:'',potassium:'',calcium:'',phosphorus:'',magnesium:'',zinc:''},rate:'',mixedVolume:'',aaProduct:'aminoven',products:{aa:0,dextrose:0,nacl:0,naacetate:0,kcl:0,kacetate:0,k2po4:0,cagluconate:0,glycophos:0,mgso4:0,peditrace:0,addamel:0,zinc:0,sterilewater:0,lipid:0,vitalipidInfant:0,vitalipidAdult:0,soluvit:0,cernevit:0},updatedAt:''};
@@ -899,10 +899,21 @@ function ensurePn(){
  if(!state.pn || typeof state.pn!=='object')state.pn={};
  const p=state.pn;
  Object.keys(d).forEach(k=>{if(p[k]===undefined||p[k]===null)p[k]=clone(d[k])});
- p.patient={...d.patient,...(p.patient||{})};
- p.requirements={...d.requirements,...(p.requirements||{})};
- p.products={...d.products,...(p.products||{})};
- p.productRounding={...d.productRounding,...(p.productRounding||{})};
+ // IMPORTANT: keep nested PN object references stable as well. Several calculation
+ // helpers call ensurePn() recursively (for example pnRoundMixVolume ->
+ // pnRoundingStep -> ensurePn). Replacing p.products / p.requirements here makes
+ // local references such as `pr` or `r` stale mid-calculation, so writes go to an
+ // orphan object and the Mixed column remains 0 even when TPN factor is > 0.
+ const mergeDefaultsInPlace=(key,defaults)=>{
+   if(!p[key] || typeof p[key]!=='object' || Array.isArray(p[key]))p[key]={};
+   const obj=p[key];
+   Object.entries(defaults).forEach(([k,v])=>{if(obj[k]===undefined||obj[k]===null)obj[k]=clone(v)});
+   return obj;
+ };
+ mergeDefaultsInPlace('patient',d.patient);
+ mergeDefaultsInPlace('requirements',d.requirements);
+ mergeDefaultsInPlace('products',d.products);
+ mergeDefaultsInPlace('productRounding',d.productRounding);
  if(!p.roundingDefaultsV0460){
    const keys=['k2po4','nacl','naacetate','kcl','kacetate','cagluconate','peditrace'];
    if(keys.every(k=>num(p.productRounding[k])===0.1))keys.forEach(k=>p.productRounding[k]=0.5);
