@@ -1,4 +1,21 @@
-# Pediatric Nutrition PWA 0.4.91
+# Pediatric Nutrition PWA 0.4.94
+
+## 0.4.94
+
+- Revised Modular Diet calculation sequence per clinical workflow.
+- Step 5 is now energy-based: remaining kcal after protein + LCT + MCT are filled by selected CHO sources (e.g. cooked rice, dextrin, sucrose) using each Custom DB item’s actual kcal density.
+- Removed the fixed assumption that remaining CHO energy must first be converted with 4 kcal/g; CHO grams shown in recheck now come from the selected Custom DB items.
+- Cooked-rice tube-feeding warning/cap remains >8 g/100 mL warning and 9 g/100 mL Auto cap.
+- Formula/milk Ca-first → remaining protein → MCT → LCT → CHO-source energy → Ca/Na/K → optional trace element sequence retained.
+
+## 0.4.93
+- Modular Diet cooked-rice CHO calculation now uses the selected Custom DB item nutrient density and unit conversion; removed the fixed 2.75 g rice = 1 g CHO assumption. Tube-feeding rice concentration limits remain unchanged.
+- Diet Design > Modular Diet now has a dedicated clinical sequence calculator: formula/milk calcium-first while respecting protein and formula concentration limits → remaining protein → MCT → LCT → CHO → Ca/Na/K → optional trace element.
+- MCT target uses `(MCT % × total energy)/8.3`; LCT uses `[(total fat % × total energy) − MCT kcal]/9`; CHO uses remaining energy after protein, LCT and MCT.
+- Formula/milk inside Modular Diet is increased toward calcium requirement but stopped if the protein requirement or formula maximum concentration would be exceeded. Remaining protein is filled from selected non-formula protein sources.
+- Added Modular Diet route (Oral / Tube feeding). For tube feeding, Auto cooked-rice is capped at 9 g/100 mL final recipe and a warning is shown above 8 g/100 mL.
+- After macronutrients, selected/available medication-mineral sources are used to fill remaining Ca, Na and K when possible. Trace-element rows remain optional and are not auto-dosed without a requirement target.
+- Added an on-screen calculation sequence trace so the generated amounts can be reviewed before saving. Manual/Locked rows remain unchanged.
 
 ## 0.4.91
 - Diet Design > Modular Diet: Custom DB item is now a searchable dropdown. Type any part of an item name (for example `pan`) and tap/select the result; filtering still follows the selected component role while preserving direct DB item IDs.

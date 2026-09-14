@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.91" />
+  <link rel="stylesheet" href="styles.css?v=0.4.94" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -85,7 +85,7 @@
       <div class="section-title-row"><div><h2>Diet Design / Nutrition Prescription</h2><p class="muted">ออกแบบสิ่งที่สั่งให้รับประทาน แยกจาก actual intake • ทุกค่าปรับเองได้ • คำนวณจาก Custom Database เท่านั้น</p></div><div class="inline-actions"><button id="copyFullDietOrderBtn" class="secondary">Copy Full Diet Order</button><button id="cancelDesignBtn" class="secondary">Cancel changes</button><button id="clearDesignBtn" class="secondary">Clear Diet Design</button><button id="saveDesignBtn" class="primary">Save Diet Design</button><span id="designCopyStatus" class="muted"></span><span id="designSaveStatus" class="muted"></span></div></div>
       <div id="designTargetSummary" class="summary-box"></div>
       <div class="auto-design-box top-gap">
-        <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">ลำดับการ optimize: Energy + Protein → Fat ±5% → Minerals • % energy เป็นค่าเริ่มต้นและระบบปรับสัดส่วน source ได้ • Auto = ระบบปรับได้ • แก้ Amount เอง → Manual • Manual/Locked จะไม่ถูก Recalculate • Maximum / Rounding ยังมีผล</p></div><div class="inline-actions"><button id="autoBuildPrescriptionBtn" class="primary">Generate optimized draft</button><button id="autoCalculateDesignBtn" class="secondary">Recalculate to targets</button><button id="calculateCurrentDesignBtn" class="secondary">Calculate current values — no recalc</button><button id="setAllDesignAutoBtn" class="secondary">Set all to Auto</button></div></div>
+        <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">ลำดับ Modular Diet: formula/milk โดยดู Ca ก่อน (ไม่เกิน protein/concentration) → protein ที่เหลือ → MCT → LCT → CHO → Ca/Na/K → ± trace element • % energy เป็นค่าเริ่มต้นและระบบปรับสัดส่วน source ได้ • Auto = ระบบปรับได้ • แก้ Amount เอง → Manual • Manual/Locked จะไม่ถูก Recalculate • Maximum / Rounding ยังมีผล</p></div><div class="inline-actions"><button id="autoBuildPrescriptionBtn" class="primary">Generate optimized draft</button><button id="autoCalculateDesignBtn" class="secondary">Recalculate to targets</button><button id="calculateCurrentDesignBtn" class="secondary">Calculate current values — no recalc</button><button id="setAllDesignAutoBtn" class="secondary">Set all to Auto</button></div></div>
         <div class="grid-3">
           <label>Diet (% energy)<input id="designDietPct" type="number" min="0" max="100" step="0.1" /></label>
           <label>Milk / Formula (% energy)<input id="designFormulaPct" type="number" min="0" max="100" step="0.1" /></label>
@@ -122,9 +122,10 @@
         <label>Note<input id="designModNote" /></label>
         <label>Volume per feed (mL)<input id="designModFeedVolume" type="number" min="0" step="1" /></label>
         <label>Feeds/day<input id="designModFeeds" type="number" min="0" step="1" /></label>
+        <label>Route<select id="designModRoute"><option value="oral">Oral</option><option value="tube">Tube feeding</option></select></label>
         <label>Daily prescribed volume<input id="designModDailyVolume" disabled /></label>
       </div>
-      <div class="section-title-row top-gap"><div><h3>Components by nutrient role</h3><p class="muted">จัดส่วนประกอบเป็น Protein • CHO • Fat (LCT/MCT) • Medication/minerals ก่อน แล้วค่อยกำหนด source และปริมาณ</p></div><div class="inline-actions"><button id="prepareModularTemplateBtn" class="secondary">Prepare component template</button><button id="addDesignModCompBtn" class="secondary">+ Add other</button></div></div>
+      <div class="section-title-row top-gap"><div><h3>Components by nutrient role</h3><p class="muted">เลือก source ในแต่ละ role ก่อน แล้วใช้ Calculate modular sequence: formula/milk → remaining protein → MCT → LCT → CHO → Ca/Na/K. Tube feeding จะเตือน rice concentration >8 g/100 mL และ Auto rice จำกัดไม่เกิน 9 g/100 mL</p></div><div class="inline-actions"><button id="calculateModularSequenceBtn" class="primary">Calculate modular sequence</button><button id="prepareModularTemplateBtn" class="secondary">Prepare component template</button><button id="addDesignModCompBtn" class="secondary">+ Add other</button></div></div>
       <div id="designModComponents"></div>
       <div class="actions"><button id="sendDesignToDailyModularBtn" class="secondary">Send to Daily Modular Diet</button></div>
       <div id="modularDesignSummary" class="summary-box top-gap"></div>
@@ -332,7 +333,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.91</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.91"></script>
+<footer><strong>PWA 0.4.94</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.94"></script>
 </body>
 </html>
