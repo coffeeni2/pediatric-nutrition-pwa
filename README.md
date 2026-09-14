@@ -1,8 +1,11 @@
-# Pediatric Nutrition PWA 0.4.99
+# Pediatric Nutrition PWA 0.4.100
 
 
 
-## 0.4.99
+## 0.4.100
+- HBV protein now explicitly includes whey and casein; existing Custom DB items named whey/casein are migrated to counted HBV sources.
+- Nutrient Recheck A/B/C tables add an HBV protein (g) column for Diet, Milk/Formula + Fortifiers, and Modular Diet.
+- Total Daily Prescription order now places Total fat (% energy) and MCT (% energy) before CHO.
 - Diet Design > Nutrient Recheck > Modular Diet: removed Calculation sequence from the recheck area.
 - Modular Diet recheck rows now show food/formula/modular ingredients first and medication/mineral/trace-element items last.
 - Added preparation instructions beside the recheck table: add water q.s. to final volume, mL/feed × feeds/day, daily prescribed volume, route, and per-feed energy.
