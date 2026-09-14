@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.77
+# Pediatric Nutrition PWA 0.4.83
 
 ## PN guideline revision
 
@@ -193,3 +193,32 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 
 ## 0.4.76
 - Added Clear Daily Requirements button in Patient tab. It resets all Daily Requirements for the current case while keeping Patient, Diet Design, PN, intake, and other tabs.
+
+
+## 0.4.78
+- Renamed protein summary to High biological value protein.
+- PN GIR/dextrose/final glucose values now display/calculate to 2 decimal places.
+- Separated ILE and vitamin volumes with independent rounding (ILE default 1 mL; vitamin default 0.5 mL).
+- PN Products reordered to Component → Mixed → Actual delivered → Product/concentration; ILE/vitamin rows support rounding selection.
+- PN Recheck is phone-friendly without forced horizontal scrolling, and Ca/P/Mg display delivered product volume to 2 decimals.
+
+
+## 0.4.82
+- Removed the Diet structure controls and structure-only optimizer rule.
+- Added age-based Thai food-guide anchors for Diet generation using the user-provided recommendations (6–11 months, 12–23 months, 2–5 years, 6–11 years, 12–18 years).
+- Generated Diet group amounts now start near the age guide and Auto optimization keeps food-group quantities generally within ±25% of the age anchor, while Manual/Locked rows remain clinician-controlled.
+- Added the age-guide anchor to Diet recheck so extreme fruit/vegetable/starch/meat generation is visible.
+
+## 0.4.82
+- Corrected Thai food-guide anchor for age 12–23 months: rice/starch 15 tablespoons/day (about 3 ladles/day), not 12 ladles/day.
+- Added plain-milk guidance to the age anchor: 2 glasses/day; 200 mL/glass for 12 months–11 years and 225–250 mL/glass for 12–18 years.
+- Added clearer oil/fat guidance: 2 tsp/day at 12–23 months, 1.5 tsp/day at 2–5 years, no more than 3 tsp/day at 6–11 years, and no more than 4 tsp/day at 12–18 years.
+
+## 0.4.82
+- Infant Diet Design (6–11 months): standardized household unit wording to **ช้อนโต๊ะ (tbsp)**.
+- Defined 1 ช้อนโต๊ะ (tbsp) = 15 mL for the age-guide display; gram conversion remains food-specific via database conversion.
+
+
+## 0.4.83
+- Corrected generic fruit exchange in Custom Database to 1 portion = CHO 15 g = 60 kcal (protein 0 g, fat 0 g).
+- Added migration for the seeded generic fruit item from 45 kcal to 60 kcal without overwriting a user-modified fruit item.
