@@ -853,7 +853,7 @@ function thaiFoodGuideSummary(){
   return `<strong>Thai food-guide age anchor: ${esc(g.label)}</strong><p>${parts.map(esc).join(' • ')}</p><p class="muted">${g.infant?'For age 6–11 months, 1 ช้อนโต๊ะ (tbsp) = 15 mL; gram conversion still follows the selected food-specific conversion in the database. ':''}Auto-generated Diet amounts are kept near these age-based proportions (generally within ±25%) unless you set a row to Manual/Locked. Energy, protein and clinical requirements are still rechecked separately.${g.note?' '+esc(g.note):''}</p>`;
 }
 function optimizationTargets(){const r=state.requirements,d=ensureDesignDraft(),a=d.allocation||{};return {kcal:num(r.energy),protein:num(r.protein),proteinKey:proteinTargetKey(),fatKcal:fatTargetKcal(),dietFatPct:num(a.dietFatPct),modularFatPct:num(a.modularFatPct),calcium:num(r.calcium),sodium:requirementElectrolyteMg('na',r),potassium:requirementElectrolyteMg('k',r)}}
-function optimizationScore(c,t,d=ensureDesignDraft()){
+function optimizationScore(c,t,d=ensureDesignDraft(),phase='food'){
   const rel=(v,target)=>target>0?(num(v)-target)/target:0;
   const e=rel(c.total.kcal,t.kcal),p=rel(c.total[t.proteinKey],t.protein),f=Math.abs(rel(fatEnergyKcal(c.total),t.fatKcal)),fatOutside=t.fatKcal>0?Math.max(0,f-0.05):0;
   const primary=(t.kcal>0?e*e:0)+(t.protein>0?p*p:0);
@@ -861,14 +861,20 @@ function optimizationScore(c,t,d=ensureDesignDraft()){
   // They are softer than the whole-prescription Energy/Protein/Fat targets, but stronger than minerals.
   const sourceFatErr=(src,targetPct)=>targetPct>0&&num(src?.kcal)>0?((fatEnergyPct(src)-targetPct)/targetPct)**2:0;
   const sourceFat=sourceFatErr(c.diet.total,t.dietFatPct)+sourceFatErr(c.modular.daily,t.modularFatPct);
-  const mineral=[['calcium',t.calcium],['sodium',t.sodium],['potassium',t.potassium]].reduce((s,[k,v])=>s+(v>0?rel(c.total[k],v)**2:0),0);
-  return primary*1e6+fatOutside*fatOutside*2e4+sourceFat*5e3+mineral*10+thaiFoodGuidePenalty(d);
+  const caErr=t.calcium>0?rel(c.total.calcium,t.calcium)**2:0;
+  const otherMineral=[['sodium',t.sodium],['potassium',t.potassium]].reduce((s,[k,v])=>s+(v>0?rel(c.total[k],v)**2:0),0);
+  // Food-first phase deliberately gives calcium meaningful weight. This lets the optimizer
+  // discover whether the SELECTED milk/formula can efficiently correct Ca (and, depending
+  // on its actual DB nutrient profile, fat) while compensating protein/energy with other foods.
+  // It does not assume that every milk/formula is high-fat.
+  const caWeight=phase==='food'?2e4:2e3;
+  return primary*1e6+fatOutside*fatOutside*2e4+sourceFat*5e3+caErr*caWeight+otherMineral*100+thaiFoodGuidePenalty(d);
 }
 function optimizationStep(row,kind){const rule=String(row?.roundRule||defaultRoundRule(row,kind));return rule==='0.1'?0.1:rule==='0.5'?0.5:rule==='5'?5:1}
-function optimizationVariables(d){const vars=[];const add=(row,kind,opts={})=>{if(!row||rowIsConstrained(row)||!row.dbMatchId)return;const u=rowUnitNut(row,opts);if(!u||TOTAL_KEYS.every(k=>Math.abs(num(u[k]))<1e-12))return;vars.push({row,kind,opts,step:optimizationStep(row,kind)});};
+function optimizationVariables(d,opts={}){const vars=[];const includeMedication=opts.includeMedication!==false;const add=(row,kind,opts={})=>{if(!row||rowIsConstrained(row)||!row.dbMatchId)return;const u=rowUnitNut(row,opts);if(!u||TOTAL_KEYS.every(k=>Math.abs(num(u[k]))<1e-12))return;vars.push({row,kind,opts,step:optimizationStep(row,kind)});};
   if(d.dietEnabled)(d.dietItems||[]).forEach(r=>add(r,'diet'));
   if(d.formulaEnabled)(d.formulaPlans||[]).forEach(p=>{const opts={mode:p.mode||'per_day',feeds:(p.mode||'per_day')==='per_feed'?Math.max(0,num(p.feeds)):1,kcalPerOz:p.kcalPerOz};add(p,'formula',opts);(p.fortifiers||[]).forEach(ft=>add(ft,'fortifier',{mode:ft.mode||'per_day',feeds:opts.feeds}))});
-  if(d.modularEnabled&&!d.modular?.clinicalSequenceApplied)(d.modular?.components||[]).forEach(r=>add(r,'modular'));
+  if(d.modularEnabled&&!d.modular?.clinicalSequenceApplied)(d.modular?.components||[]).forEach(r=>{const f=state.foodDB.find(x=>x.id===r.dbMatchId);if(!includeMedication&&f?.type==='medication')return;add(r,'modular')});
   return vars;
 }
 function optimizationMaxAmount(v,d){const r=v.row;if(v.kind==='diet'&&num(r.maxAmount)>0)return num(r.maxAmount);if(v.kind==='modular'){const f=state.foodDB.find(x=>x.id===r.dbMatchId);if(f?.type==='formula'&&num(f.max_kcal_oz)>0&&num(d.modular?.finalVolume)>0&&num(f.kcal)>0&&num(f.basis_value)>0){const maxKcal=num(f.max_kcal_oz)*num(d.modular.finalVolume)/30;return maxKcal*num(f.basis_value)/num(f.kcal)}}return Infinity}
@@ -886,20 +892,38 @@ function ensureCalciumSupplementForRequirement(d=ensureDesignDraft()){
   (m.components||(m.components=[])).push(row);return row;
 }
 function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
-  const t=optimizationTargets();ensureCalciumSupplementForRequirement(d);applyDesignRounding(d);const vars=optimizationVariables(d),multipliers=[-20,-10,-5,-2,-1,1,2,5,10,20];let current=designCombined(d),bestScore=optimizationScore(current,t),guard=0;
-  while(guard++<220){let best=null,bestCandidateScore=bestScore;for(const v of vars){const old=num(v.row.amount),mx=optimizationMaxAmount(v,d),gb=thaiFoodGuideBoundsForVariable(v,d);for(const m of multipliers){let nv=applyRoundRuleValue(Math.max(0,old+v.step*m),v.row.roundRule||defaultRoundRule(v.row,v.kind));if(Number.isFinite(mx))nv=Math.min(mx,nv);if(gb){nv=Math.max(gb.min,Math.min(gb.max,nv));}if(Math.abs(nv-old)<1e-9)continue;v.row.amount=nv;const score=optimizationScore(designCombined(d),t);v.row.amount=old;if(score+1e-9<bestCandidateScore){bestCandidateScore=score;best={v,nv}}}}if(!best)break;best.v.row.amount=best.nv;bestScore=bestCandidateScore;}
-  // Fine pair search helps recover energy/protein after discrete rounding and coupled foods.
-  for(let pass=0;pass<4;pass++){let improved=false;for(let i=0;i<vars.length;i++)for(let j=i+1;j<vars.length;j++){const a=vars[i],b=vars[j],oa=num(a.row.amount),ob=num(b.row.amount),ma=optimizationMaxAmount(a,d),mb=optimizationMaxAmount(b,d),ga=thaiFoodGuideBoundsForVariable(a,d),gb=thaiFoodGuideBoundsForVariable(b,d);for(const da of [-1,1])for(const db of [-1,1]){let na=applyRoundRuleValue(Math.max(0,oa+da*a.step),a.row.roundRule||defaultRoundRule(a.row,a.kind)),nb=applyRoundRuleValue(Math.max(0,ob+db*b.step),b.row.roundRule||defaultRoundRule(b.row,b.kind));if(Number.isFinite(ma))na=Math.min(ma,na);if(Number.isFinite(mb))nb=Math.min(mb,nb);if(ga)na=Math.max(ga.min,Math.min(ga.max,na));if(gb)nb=Math.max(gb.min,Math.min(gb.max,nb));a.row.amount=na;b.row.amount=nb;const s=optimizationScore(designCombined(d),t);a.row.amount=oa;b.row.amount=ob;if(s+1e-9<bestScore){a.row.amount=na;b.row.amount=nb;bestScore=s;improved=true;break}}if(improved)break}if(!improved)break;}
-  applyDesignRounding(d);current=designCombined(d);syncAllocationToActual(d);
+  const t=optimizationTargets();applyDesignRounding(d);
+  // Stage 1 — food/formula first. Medication/mineral rows are excluded. The optimizer uses
+  // each selected product's REAL Custom DB profile, so a higher-fat milk can help Ca+fat,
+  // while a low-fat milk is only favored to the extent that its Ca benefit justifies its
+  // protein/energy cost. Pair moves allow formula ↑ while meat/egg/whey/casein or CHO ↓.
+  const runOptimize=(vars,phase,maxGuard=220)=>{
+    let current=designCombined(d),bestScore=optimizationScore(current,t,d,phase),guard=0;
+    const multipliers=[-20,-10,-5,-2,-1,1,2,5,10,20];
+    while(guard++<maxGuard){let best=null,bestCandidateScore=bestScore;for(const v of vars){const old=num(v.row.amount),mx=optimizationMaxAmount(v,d),gb=thaiFoodGuideBoundsForVariable(v,d);for(const m of multipliers){let nv=applyRoundRuleValue(Math.max(0,old+v.step*m),v.row.roundRule||defaultRoundRule(v.row,v.kind));if(Number.isFinite(mx))nv=Math.min(mx,nv);if(gb)nv=Math.max(gb.min,Math.min(gb.max,nv));if(Math.abs(nv-old)<1e-9)continue;v.row.amount=nv;const score=optimizationScore(designCombined(d),t,d,phase);v.row.amount=old;if(score+1e-9<bestCandidateScore){bestCandidateScore=score;best={v,nv}}}}if(!best)break;best.v.row.amount=best.nv;bestScore=bestCandidateScore;}
+    // Pair search is essential for rebalancing: e.g. milk/formula up while meat or CHO down.
+    for(let pass=0;pass<6;pass++){let improved=false;for(let i=0;i<vars.length;i++)for(let j=i+1;j<vars.length;j++){const a=vars[i],b=vars[j],oa=num(a.row.amount),ob=num(b.row.amount),ma=optimizationMaxAmount(a,d),mb=optimizationMaxAmount(b,d),ga=thaiFoodGuideBoundsForVariable(a,d),gb=thaiFoodGuideBoundsForVariable(b,d);for(const da of [-1,1])for(const db of [-1,1]){let na=applyRoundRuleValue(Math.max(0,oa+da*a.step),a.row.roundRule||defaultRoundRule(a.row,a.kind)),nb=applyRoundRuleValue(Math.max(0,ob+db*b.step),b.row.roundRule||defaultRoundRule(b.row,b.kind));if(Number.isFinite(ma))na=Math.min(ma,na);if(Number.isFinite(mb))nb=Math.min(mb,nb);if(ga)na=Math.max(ga.min,Math.min(ga.max,na));if(gb)nb=Math.max(gb.min,Math.min(gb.max,nb));a.row.amount=na;b.row.amount=nb;const sc=optimizationScore(designCombined(d),t,d,phase);a.row.amount=oa;b.row.amount=ob;if(sc+1e-9<bestScore){a.row.amount=na;b.row.amount=nb;bestScore=sc;improved=true;break}}if(improved)break}if(!improved)break;}
+    return bestScore;
+  };
+  runOptimize(optimizationVariables(d,{includeMedication:false}),'food',260);
+  applyDesignRounding(d);
+
+  // Stage 2 — only after food/formula rebalancing, create/use Ca medication if Ca remains
+  // materially short. This prevents CaCO3 from masking a useful milk/formula adjustment.
+  let foodFirst=designCombined(d);
+  if(t.calcium>0&&num(foodFirst.total.calcium)<t.calcium*0.98)ensureCalciumSupplementForRequirement(d);
+  runOptimize(optimizationVariables(d,{includeMedication:true}),'final',180);
+  applyDesignRounding(d);let current=designCombined(d);syncAllocationToActual(d);
+
   const warnings=[],proteinLabel=(state.requirements.proteinMode||'total')==='counted'?'High biological value protein':'Total protein';
   if(t.kcal>0&&Math.abs(current.total.kcal/t.kcal-1)>0.01)warnings.push(`Energy ${round(current.total.kcal,1)} / ${round(t.kcal,1)} kcal (${round(current.total.kcal/t.kcal*100,1)}%) — closest result with selected items, locks, limits and rounding`);
   if(t.protein>0&&Math.abs(num(current.total[t.proteinKey])/t.protein-1)>0.01)warnings.push(`${proteinLabel} ${round(current.total[t.proteinKey],2)} / ${round(t.protein,2)} g (${round(current.total[t.proteinKey]/t.protein*100,1)}%) — closest result with selected items, locks, limits and rounding`);
   if(t.fatKcal>0&&Math.abs(fatEnergyKcal(current.total)/t.fatKcal-1)>0.05)warnings.push(`Fat energy ${round(fatEnergyKcal(current.total),1)} / ${round(t.fatKcal,1)} kcal (${round(fatEnergyKcal(current.total)/t.fatKcal*100,1)}%) — outside ±5% target`);
   if(t.dietFatPct>0&&current.diet.total.kcal>0&&Math.abs(fatEnergyPct(current.diet.total)-t.dietFatPct)>2)warnings.push(`Diet fat ${round(fatEnergyPct(current.diet.total),1)}% / target ${round(t.dietFatPct,1)}% of Diet energy — closest result with current items and constraints`);
   if(t.modularFatPct>0&&current.modular.daily.kcal>0&&Math.abs(fatEnergyPct(current.modular.daily)-t.modularFatPct)>2)warnings.push(`Modular fat ${round(fatEnergyPct(current.modular.daily),1)}% / target ${round(t.modularFatPct,1)}% of Modular energy — closest result with current items and constraints`);
-  if(t.calcium>0&&Math.abs(current.total.calcium/t.calcium-1)>0.02)warnings.push(`Calcium ${round(current.total.calcium,1)} / ${round(t.calcium,1)} mg — closest result with selected calcium source and rounding${!d.modularEnabled?' (Modular Diet is Off, so medication/mineral components are not included)':''}`);
+  if(t.calcium>0&&Math.abs(current.total.calcium/t.calcium-1)>0.02)warnings.push(`Calcium ${round(current.total.calcium,1)} / ${round(t.calcium,1)} mg — food/formula was rebalanced first using the selected product's actual Custom DB Ca/fat/protein/energy profile; remaining deficit uses a selected Ca source when available${!d.modularEnabled?' (Modular Diet is Off, so medication/mineral components are not included)':''}`);
   warnings.push(...thaiFoodGuideWarnings(d));
-  return {combined:current,warnings,score:bestScore};
+  return {combined:current,warnings,score:optimizationScore(current,t,d,'final')};
 }
 function balancePrescriptionToRequirements(d=ensureDesignDraft()){return optimizePrescriptionToRequirements(d)}
 
