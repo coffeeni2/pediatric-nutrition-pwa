@@ -110,3 +110,28 @@ label small.muted{display:block;margin:3px 0 5px;font-weight:400;line-height:1.2
 .modular-db-search-option small{color:#6b7280;font-weight:400;white-space:nowrap}
 .modular-db-search-empty{padding:8px;color:#6b7280;font-size:.82rem}
 @media(max-width:600px){.modular-db-search-menu{max-height:220px}.modular-db-search-option{padding:6px;font-size:.76rem}.modular-db-search-option small{font-size:.64rem}}
+
+/* v0.4.95: source selection lives in Auto Prescription Draft */
+.auto-source-picker{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:10px 0 14px;padding:10px 12px;border:1px solid var(--border,#d7dce2);border-radius:10px;background:var(--card-soft,#f7f9fb)}
+.auto-source-picker .switch-line{margin:0;min-height:38px;padding:7px 10px;border:1px solid var(--border,#d7dce2);border-radius:9px;background:var(--card,#fff)}
+@media (max-width:640px){.auto-source-picker{align-items:stretch;gap:8px}.auto-source-picker>strong{width:100%}.auto-source-picker .switch-line{flex:1 1 100%;justify-content:flex-start}}
+
+/* v0.4.96: sticky target gap bar for Diet Design */
+.target-gap-bar{position:sticky;top:72px;z-index:8;margin:0 0 14px;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.97);box-shadow:0 4px 16px rgba(31,55,61,.10);backdrop-filter:blur(8px)}
+.target-gap-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+.target-gap-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.target-gap-item{border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff;min-width:0}
+.target-gap-item .gap-label{font-size:.72rem;color:var(--muted);font-weight:700}
+.target-gap-item .gap-main{font-size:.92rem;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.target-gap-item .gap-sub{font-size:.70rem;margin-top:2px;line-height:1.25}
+.target-gap-item.gap-within{border-left:4px solid #5aa876}
+.target-gap-item.gap-near{border-left:4px solid #e1a83a}
+.target-gap-item.gap-far{border-left:4px solid #c95a5a}
+.target-gap-item.gap-missing{border-left:4px solid #9aa9ad}
+.target-gap-note{font-size:.72rem;color:var(--muted)}
+.design-total-table .remaining-cell{font-weight:800}
+.design-total-table .remaining-within{color:var(--ok)}
+.design-total-table .remaining-near{color:#9a6b00}
+.design-total-table .remaining-far{color:#a33}
+@media(max-width:700px){.target-gap-bar{top:64px;padding:7px;margin-bottom:10px}.target-gap-head{margin-bottom:5px}.target-gap-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.target-gap-item{padding:6px}.target-gap-item .gap-main{font-size:.82rem}.target-gap-item .gap-sub{font-size:.64rem}.target-gap-note{display:none}.design-total-table th:first-child,.design-total-table td:first-child{width:22%}.design-total-table th:not(:first-child),.design-total-table td:not(:first-child){width:auto}}
+@media(max-width:700px){.design-total-table .source-detail-col{display:none}.design-total-table{table-layout:fixed}.design-total-table th:nth-child(1),.design-total-table td:nth-child(1){width:26%}.design-total-table th:nth-child(2),.design-total-table td:nth-child(2){width:18%}.design-total-table th:nth-child(3),.design-total-table td:nth-child(3){width:20%}.design-total-table th:nth-child(4),.design-total-table td:nth-child(4){width:20%}.design-total-table th:nth-child(5),.design-total-table td:nth-child(5){width:16%}}

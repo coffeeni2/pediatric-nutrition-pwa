@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.94" />
+  <link rel="stylesheet" href="styles.css?v=0.4.96" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -83,9 +83,15 @@
   <section id="tab-design" class="tab-panel">
     <div class="card">
       <div class="section-title-row"><div><h2>Diet Design / Nutrition Prescription</h2><p class="muted">ออกแบบสิ่งที่สั่งให้รับประทาน แยกจาก actual intake • ทุกค่าปรับเองได้ • คำนวณจาก Custom Database เท่านั้น</p></div><div class="inline-actions"><button id="copyFullDietOrderBtn" class="secondary">Copy Full Diet Order</button><button id="cancelDesignBtn" class="secondary">Cancel changes</button><button id="clearDesignBtn" class="secondary">Clear Diet Design</button><button id="saveDesignBtn" class="primary">Save Diet Design</button><span id="designCopyStatus" class="muted"></span><span id="designSaveStatus" class="muted"></span></div></div>
-      <div id="designTargetSummary" class="summary-box"></div>
+      <div id="designTargetGapBar" class="target-gap-bar" aria-live="polite"></div>
       <div class="auto-design-box top-gap">
-        <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">ลำดับ Modular Diet: formula/milk โดยดู Ca ก่อน (ไม่เกิน protein/concentration) → protein ที่เหลือ → MCT → LCT → CHO → Ca/Na/K → ± trace element • % energy เป็นค่าเริ่มต้นและระบบปรับสัดส่วน source ได้ • Auto = ระบบปรับได้ • แก้ Amount เอง → Manual • Manual/Locked จะไม่ถูก Recalculate • Maximum / Rounding ยังมีผล</p></div><div class="inline-actions"><button id="autoBuildPrescriptionBtn" class="primary">Generate optimized draft</button><button id="autoCalculateDesignBtn" class="secondary">Recalculate to targets</button><button id="calculateCurrentDesignBtn" class="secondary">Calculate current values — no recalc</button><button id="setAllDesignAutoBtn" class="secondary">Set all to Auto</button></div></div>
+        <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">เลือก source ที่ต้องการใช้จากตรงนี้ก่อน Generate/Recalculate • ลำดับ Modular Diet: formula/milk โดยดู Ca ก่อน (ไม่เกิน protein/concentration) → protein ที่เหลือ → MCT → LCT → CHO → Ca/Na/K → ± trace element • % energy เป็นค่าเริ่มต้นและระบบปรับสัดส่วน source ได้ • Auto = ระบบปรับได้ • แก้ Amount เอง → Manual • Manual/Locked จะไม่ถูก Recalculate • Maximum / Rounding ยังมีผล</p></div><div class="inline-actions"><button id="autoBuildPrescriptionBtn" class="primary">Generate optimized draft</button><button id="autoCalculateDesignBtn" class="secondary">Recalculate to targets</button><button id="calculateCurrentDesignBtn" class="secondary">Calculate current values — no recalc</button><button id="setAllDesignAutoBtn" class="secondary">Set all to Auto</button></div></div>
+        <div class="auto-source-picker">
+          <strong>Use in prescription draft</strong>
+          <label class="switch-line"><input id="designDietEnabled" type="checkbox" /> Diet</label>
+          <label class="switch-line"><input id="designFormulaEnabled" type="checkbox" /> Milk / Formula</label>
+          <label class="switch-line"><input id="designModularEnabled" type="checkbox" /> Modular Diet</label>
+        </div>
         <div class="grid-3">
           <label>Diet (% energy)<input id="designDietPct" type="number" min="0" max="100" step="0.1" /></label>
           <label>Milk / Formula (% energy)<input id="designFormulaPct" type="number" min="0" max="100" step="0.1" /></label>
@@ -99,23 +105,22 @@
         <p class="muted"><strong id="designAllocationTotal">Total 0%</strong> • Allocation เป็นค่าเริ่มต้น ไม่ใช่ข้อบังคับ • Diet fat / Modular fat เป็น optional target ของ fat kcal ภายใน source นั้น โดยใช้ LCT×9 + MCT×8.3 • Auto สามารถปรับ % Diet / Milk-Formula / Modular เพื่อให้ Energy และ Protein ใกล้ target ที่สุด • Fat รวมเป้าหมาย ±5% • Minerals เป็นลำดับถัดไป • หลังแก้เองใช้ “Calculate current values — no recalc”</p>
 
       </div>
-      <div id="designRemaining" class="summary-box top-gap"></div>
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>1. Diet</h2><p class="muted">Amount คือปริมาณจริง • Rounding เลือกทีละ 1 / ทีละ 5 / ทศนิยม 1 ตำแหน่ง • Lock = ห้าม Auto เปลี่ยน • Maximum เป็นเพดาน optional</p></div><div class="inline-actions"><label class="switch-line"><input id="designDietEnabled" type="checkbox" /> Use Diet</label><button id="copyDietOrderBtn" class="secondary">Copy Diet Order</button><button id="addDesignDietBtn" class="secondary">+ Add food</button><button id="clearDesignDietBtn" class="secondary">Clear Diet</button></div></div>
+      <div class="section-title-row"><div><h2>1. Diet</h2><p class="muted">Amount คือปริมาณจริง • Rounding เลือกทีละ 1 / ทีละ 5 / ทศนิยม 1 ตำแหน่ง • Lock = ห้าม Auto เปลี่ยน • Maximum เป็นเพดาน optional</p></div><div class="inline-actions"><button id="copyDietOrderBtn" class="secondary">Copy Diet Order</button><button id="addDesignDietBtn" class="secondary">+ Add food</button><button id="clearDesignDietBtn" class="secondary">Clear Diet</button></div></div>
       <div id="designDietRows"></div>
       <div id="dietDesignSummary" class="summary-box top-gap"></div>
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>2. Milk / Formula</h2><p class="muted">ใช้ mL หรือกล่อง 180/200/225 mL • รองรับ fortified milk/formula ด้วย maltodextrin, oil, whey, casein หรือรายการอื่นจาก Custom DB</p></div><div class="inline-actions"><label class="switch-line"><input id="designFormulaEnabled" type="checkbox" /> Use Milk/Formula</label><button id="copyFormulaOrderBtn" class="secondary">Copy Milk/Formula Order</button><button id="addFormulaPlanBtn" class="secondary">+ Add milk/formula</button><button id="clearDesignFormulaBtn" class="secondary">Clear Milk/Formula</button></div></div>
+      <div class="section-title-row"><div><h2>2. Milk / Formula</h2><p class="muted">ใช้ mL หรือกล่อง 180/200/225 mL • รองรับ fortified milk/formula ด้วย maltodextrin, oil, whey, casein หรือรายการอื่นจาก Custom DB</p></div><div class="inline-actions"><button id="copyFormulaOrderBtn" class="secondary">Copy Milk/Formula Order</button><button id="addFormulaPlanBtn" class="secondary">+ Add milk/formula</button><button id="clearDesignFormulaBtn" class="secondary">Clear Milk/Formula</button></div></div>
       <div id="formulaPlanRows"></div>
       <div id="formulaDesignSummary" class="summary-box top-gap"></div>
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>3. Modular Diet Builder</h2><p class="muted">เลือกส่วนประกอบและจำนวนจริง • เติมน้ำจนครบ final volume • กำหนด mL/feed × feeds/day</p></div><div class="inline-actions"><label class="switch-line"><input id="designModularEnabled" type="checkbox" /> Use Modular Diet</label><button id="copyModularOrderBtn" class="secondary">Copy Modular Order</button><button id="clearDesignModularBtn" class="secondary">Clear Modular</button></div></div>
+      <div class="section-title-row"><div><h2>3. Modular Diet Builder</h2><p class="muted">เลือกส่วนประกอบและจำนวนจริง • เติมน้ำจนครบ final volume • กำหนด mL/feed × feeds/day</p></div><div class="inline-actions"><button id="copyModularOrderBtn" class="secondary">Copy Modular Order</button><button id="clearDesignModularBtn" class="secondary">Clear Modular</button></div></div>
       <div class="grid-3">
         <label>Recipe name<input id="designModName" /></label>
         <label>เติมน้ำจนครบ / Final volume (mL)<input id="designModFinalVolume" type="number" min="0" step="1" /></label>
@@ -333,7 +338,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.94</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.94"></script>
+<footer><strong>PWA 0.4.96</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.96"></script>
 </body>
 </html>

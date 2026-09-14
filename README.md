@@ -1,4 +1,14 @@
-# Pediatric Nutrition PWA 0.4.94
+# Pediatric Nutrition PWA 0.4.96
+
+
+## 0.4.96
+- Diet Design: replaced the separate Targets and Remaining boxes with a sticky Target Gap Bar that stays visible while editing.
+- Target Gap Bar shows Energy, the active protein target, Total fat % energy, and MCT % energy with current/target, remaining gap, and near/far/within-target status.
+- Total Daily Prescription now includes a Remaining column (Requirement - Total) and prioritizes Total → Requirement → Remaining → % target before source detail columns.
+- Added Total fat (% energy) to Total Daily Prescription so fat-target gap can be reviewed directly.
+
+## 0.4.95
+- Moved Diet / Milk-Formula / Modular Diet source checkboxes into Auto Prescription Draft so source selection is made before Generate/Recalculate. Removed duplicate Use checkboxes from each section header.
 
 ## 0.4.94
 
