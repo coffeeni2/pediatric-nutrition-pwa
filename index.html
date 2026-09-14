@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.86" />
+  <link rel="stylesheet" href="styles.css?v=0.4.91" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -72,8 +72,8 @@
         <label>Total fat (% total energy)<input id="reqFatPct" type="number" min="0" max="100" step="0.1" /></label>
         <label>MCT (% total energy)<input id="reqMctPct" type="number" min="0" max="100" step="0.1" /></label>
         <label>Calcium (mg/day) <span class="muted">optional</span><input id="reqCalcium" type="number" min="0" step="1" /></label>
-        <label>Sodium (Na, mg/day) <span class="muted">optional</span><input id="reqSodium" type="number" min="0" step="1" /></label>
-        <label>Potassium (K, mg/day) <span class="muted">optional</span><input id="reqPotassium" type="number" min="0" step="1" /></label>
+        <label>Sodium (Na) <span class="muted">optional</span><select id="reqSodiumUnit"><option value="mg_day">mg/day</option><option value="meq100">mEq/100 kcal/day (Holliday–Segar)</option></select><input id="reqSodium" type="number" min="0" step="0.1" /></label>
+        <label>Potassium (K) <span class="muted">optional</span><select id="reqPotassiumUnit"><option value="mg_day">mg/day</option><option value="meq100">mEq/100 kcal/day (Holliday–Segar)</option></select><input id="reqPotassium" type="number" min="0" step="0.1" /></label>
       </div>
       <div id="requirementSummary" class="summary-box top-gap"></div>
     </div>
@@ -332,7 +332,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.86</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.86"></script>
+<footer><strong>PWA 0.4.91</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.91"></script>
 </body>
 </html>

@@ -1,4 +1,12 @@
-# Pediatric Nutrition PWA 0.4.86
+# Pediatric Nutrition PWA 0.4.91
+
+## 0.4.91
+- Diet Design > Modular Diet: Custom DB item is now a searchable dropdown. Type any part of an item name (for example `pan`) and tap/select the result; filtering still follows the selected component role while preserving direct DB item IDs.
+
+- Fixed Diet Design > Modular Diet Custom DB selection. Replaced the text/datalist picker with a real clickable dropdown grouped by Formula / Modular / Food / Medication.
+- Broadened nutrient-role filtering so valid sources are not hidden; Protein includes all formulas (including Panenteral), protein-containing foods, and protein modular products.
+- Selecting a Custom DB item now stores its ID directly, avoiding failed selection caused by exact-name text matching.
+
 
 ## PN guideline revision
 
@@ -237,3 +245,17 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 ## 0.4.86
 - Diet Design: Milk/Formula, fortifier, and Modular Diet rounding choices are now 0.5, 1, and 5.
 - New Milk/Formula, fortifier, and Modular Diet items default to rounding 0.5.
+
+
+## 0.4.87
+- Diet Design Nutrient Recheck D reordered to Diet → Milk/Formula → Modular → Total → % target → Requirement and optimized for Android.
+- D row order follows the requested clinical review sequence and uses 1 decimal display.
+- Duplicate Protein/macronutrient recheck box removed.
+- Milk/Formula + Fortifier amounts show per day or per feed with feeds/day.
+- A/B/C column order standardized and Iron/Zn added.
+
+
+## 0.4.91
+- Patient > Daily Requirements: Sodium and Potassium can now be entered as either mg/day or mEq/100 kcal/day using the Holliday–Segar maintenance kcal equivalent.
+- When mEq/100 kcal/day is selected, Diet Design converts the target internally to mg/day for optimization and recheck while preserving the entered unit/value in the Patient tab.
+- Existing cases without a stored Na/K unit remain interpreted as mg/day for backward compatibility.
