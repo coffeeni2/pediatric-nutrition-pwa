@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.83" />
+  <link rel="stylesheet" href="styles.css?v=0.4.86" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -68,7 +68,7 @@
         <label class="check-card"><span><input id="trackFluid" type="checkbox" style="width:auto;margin-right:6px" /> Track total fluid</span><small class="muted">เหมาะกับ tube feed / formula-only / modular-only</small></label>
         <label>Fluid target (mL/day)<input id="reqFluid" type="number" min="0" step="1" /></label>
         <label>Energy (kcal/day)<input id="reqEnergy" type="number" min="0" step="1" /></label>
-        <label>Protein target type<select id="reqProteinMode"><option value="counted">Meat + egg + milk + formula protein</option><option value="total">Total protein</option></select></label><label>Protein target (g/day)<input id="reqProtein" type="number" min="0" step="0.1" /></label>
+        <label>Protein target type<select id="reqProteinMode"><option value="counted">High biological value protein</option><option value="total">Total protein</option></select></label><label>Protein target (g/day)<input id="reqProtein" type="number" min="0" step="0.1" /></label>
         <label>Total fat (% total energy)<input id="reqFatPct" type="number" min="0" max="100" step="0.1" /></label>
         <label>MCT (% total energy)<input id="reqMctPct" type="number" min="0" max="100" step="0.1" /></label>
         <label>Calcium (mg/day) <span class="muted">optional</span><input id="reqCalcium" type="number" min="0" step="1" /></label>
@@ -332,7 +332,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.83</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.83"></script>
+<footer><strong>PWA 0.4.86</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.86"></script>
 </body>
 </html>

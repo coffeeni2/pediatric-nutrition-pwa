@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.83
+# Pediatric Nutrition PWA 0.4.86
 
 ## PN guideline revision
 
@@ -219,6 +219,21 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Defined 1 ช้อนโต๊ะ (tbsp) = 15 mL for the age-guide display; gram conversion remains food-specific via database conversion.
 
 
+## 0.4.84
+- Diet Design > Diet rounding options changed to 0.5, 1, and 5 only.
+- Default rounding for new/generated Diet items is 0.5.
+- Added 0.5-step rounding support to the Diet calculation engine.
+
 ## 0.4.83
 - Corrected generic fruit exchange in Custom Database to 1 portion = CHO 15 g = 60 kcal (protein 0 g, fat 0 g).
 - Added migration for the seeded generic fruit item from 45 kcal to 60 kcal without overwriting a user-modified fruit item.
+
+
+## 0.4.85
+- Renamed the Patient protein target type label from “Meat + egg + milk + formula protein” / “Counted protein” to “High biological value protein”.
+- Updated Diet Design target, remaining, recheck, and nutrient display labels to use “High biological value protein” consistently. Calculation logic is unchanged.
+
+
+## 0.4.86
+- Diet Design: Milk/Formula, fortifier, and Modular Diet rounding choices are now 0.5, 1, and 5.
+- New Milk/Formula, fortifier, and Modular Diet items default to rounding 0.5.
