@@ -875,7 +875,11 @@ function optimizationStep(row,kind){const rule=String(row?.roundRule||defaultRou
 function optimizationVariables(d,opts={}){const vars=[];const includeMedication=opts.includeMedication!==false;const add=(row,kind,opts={})=>{if(!row||rowIsConstrained(row)||!row.dbMatchId)return;const u=rowUnitNut(row,opts);if(!u||TOTAL_KEYS.every(k=>Math.abs(num(u[k]))<1e-12))return;vars.push({row,kind,opts,step:optimizationStep(row,kind)});};
   if(d.dietEnabled)(d.dietItems||[]).forEach(r=>add(r,'diet'));
   if(d.formulaEnabled)(d.formulaPlans||[]).forEach(p=>{const opts={mode:p.mode||'per_day',feeds:(p.mode||'per_day')==='per_feed'?Math.max(0,num(p.feeds)):1,kcalPerOz:p.kcalPerOz};add(p,'formula',opts);(p.fortifiers||[]).forEach(ft=>add(ft,'fortifier',{mode:ft.mode||'per_day',feeds:opts.feeds}))});
-  if(d.modularEnabled&&!d.modular?.clinicalSequenceApplied)(d.modular?.components||[]).forEach(r=>{const f=state.foodDB.find(x=>x.id===r.dbMatchId);if(!includeMedication&&f?.type==='medication')return;add(r,'modular')});
+  // Modular clinicalSequenceApplied only controls the INITIAL modular build order.
+  // Final whole-prescription deficit correction must still be able to rebalance Auto/unlocked
+  // modular food/oil/CHO rows together with Diet and Milk/Formula. Medication/mineral rows remain
+  // excluded during the food-first phase and are enabled only in the final correction phase.
+  if(d.modularEnabled)(d.modular?.components||[]).forEach(r=>{const f=state.foodDB.find(x=>x.id===r.dbMatchId);if(!includeMedication&&f?.type==='medication')return;add(r,'modular')});
   return vars;
 }
 function optimizationMaxAmount(v,d){const r=v.row;if(v.kind==='diet'&&num(r.maxAmount)>0)return num(r.maxAmount);if(v.kind==='modular'){const f=state.foodDB.find(x=>x.id===r.dbMatchId);if(f?.type==='formula'&&num(f.max_kcal_oz)>0&&num(d.modular?.finalVolume)>0&&num(f.kcal)>0&&num(f.basis_value)>0){const maxKcal=num(f.max_kcal_oz)*num(d.modular.finalVolume)/30;return maxKcal*num(f.basis_value)/num(f.kcal)}}return Infinity}
@@ -891,6 +895,51 @@ function ensureCalciumSupplementForRequirement(d=ensureDesignDraft()){
   const m=d.modular||(d.modular=blankDietDesign().modular);
   const row={id:uid(),role:'medication',dbMatchId:ca.id,name:ca.name,amount:0,unit:ca.basis_unit||'เม็ด',concentrationKcalOz:'',roundRule:'1',constraintMode:'auto',locked:false};
   (m.components||(m.components=[])).push(row);return row;
+}
+function wholePrescriptionDeficitCorrection(d,t,includeMedication=false,maxPass=12){
+  // This pass works on the COMBINED Diet + Milk/Formula + Modular prescription. It is intentionally
+  // source-agnostic: if an order mixes regular foods with modular ingredients, every Auto/unlocked
+  // row is eligible. Each candidate is rounded first, then the complete nutrient profile is rebuilt.
+  const vars=optimizationVariables(d,{includeMedication});
+  const clip=(v,value)=>{let nv=applyRoundRuleValue(Math.max(0,value),v.row.roundRule||defaultRoundRule(v.row,v.kind)),mx=optimizationMaxAmount(v,d),g=thaiFoodGuideBoundsForVariable(v,d);if(Number.isFinite(mx))nv=Math.min(mx,nv);if(g)nv=Math.max(g.min,Math.min(g.max,nv));return nv};
+  const unit=(v)=>rowUnitNut(v.row,v.opts)||{};
+  const score=()=>optimizationScore(designCombined(d),t,d,includeMedication?'final':'food');
+  let bestScore=score();
+  for(let pass=0;pass<maxPass;pass++){
+    const c=designCombined(d),fatDef=t.fatKcal>0?t.fatKcal-fatEnergyKcal(c.total):0,caDef=t.calcium>0?t.calcium-num(c.total.calcium):0;
+    const energyErr=t.kcal>0?num(c.total.kcal)-t.kcal:0,proteinErr=t.protein>0?num(c.total[t.proteinKey])-t.protein:0;
+    let best=null,bestCandidate=bestScore;
+    // Prioritize a source that directly addresses the current deficit, then compensate excess
+    // energy/protein with another source. This enables milk ↑ + meat/rice ↓, oil ↑ + CHO ↓,
+    // and—when medication is allowed—Ca supplement ↑ without being blocked by the modular sequence.
+    const primary=vars.filter(v=>{const u=unit(v);const fK=num(u.fat)*9+num(u.mct)*8.3;return (fatDef>Math.max(5,t.fatKcal*.02)&&fK>0)||(caDef>Math.max(5,t.calcium*.02)&&num(u.calcium)>0)});
+    const sources=primary.length?primary:vars;
+    for(const a of sources){
+      const oa=num(a.row.amount),ua=unit(a),step=a.step||1;
+      for(const mult of [1,2,5,10,20,50]){
+        const na=clip(a,oa+step*mult);if(Math.abs(na-oa)<1e-9)continue;
+        a.row.amount=na;
+        let sc=score();
+        if(sc+1e-9<bestCandidate){bestCandidate=sc;best={a,na,b:null,nb:null}}
+        // Pair compensation against energy or target protein after the rounded primary move.
+        for(const b of vars){if(b===a)continue;const ob=num(b.row.amount),ub=unit(b);const deltaA=na-oa,cands=[];
+          if(Math.abs(num(ub.kcal))>1e-9)cands.push(ob-(deltaA*num(ua.kcal))/num(ub.kcal));
+          if(Math.abs(num(ub[t.proteinKey]))>1e-9)cands.push(ob-(deltaA*num(ua[t.proteinKey]))/num(ub[t.proteinKey]));
+          // If energy/protein are already high, explicitly allow reduction of the second source.
+          if(energyErr>0||proteinErr>0)cands.push(ob-b.step*Math.max(1,mult));
+          for(const raw of cands){const nb=clip(b,raw);if(Math.abs(nb-ob)<1e-9)continue;b.row.amount=nb;sc=score();b.row.amount=ob;if(sc+1e-9<bestCandidate){bestCandidate=sc;best={a,na,b,nb}}}
+        }
+        a.row.amount=oa;
+      }
+    }
+    if(!best)break;
+    best.a.row.amount=best.na;if(best.b)best.b.row.amount=best.nb;
+    bestScore=bestCandidate;
+    // No blanket post-rounding is needed: every accepted amount was already rounded before recheck.
+    const cc=designCombined(d),energyOK=!(t.kcal>0)||Math.abs(num(cc.total.kcal)/t.kcal-1)<=0.01,proteinOK=!(t.protein>0)||Math.abs(num(cc.total[t.proteinKey])/t.protein-1)<=0.02,fatOK=!(t.fatKcal>0)||Math.abs(fatEnergyKcal(cc.total)/t.fatKcal-1)<=0.05,caOK=!(t.calcium>0)||num(cc.total.calcium)>=t.calcium*.98;
+    if(energyOK&&proteinOK&&fatOK&&caOK)break;
+  }
+  return designCombined(d);
 }
 function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
   const t=optimizationTargets();applyDesignRounding(d);
@@ -945,6 +994,10 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
   // Stage 2 — only after repeated food/formula rechecks, create/use Ca medication if Ca remains
   // materially short. Then recheck the entire prescription again because a mineral product may
   // also contribute energy or other nutrients in Custom DB.
+  // Explicit combined-order correction after the generic optimizer. This is the key pass for
+  // mixed orders (Diet + Milk/Formula + Modular): it rechecks the ACTUAL rounded totals and can
+  // replace energy/protein across sections while improving fat and calcium deficits.
+  wholePrescriptionDeficitCorrection(d,t,false,14);
   let foodFirst=designCombined(d);
   if(t.calcium>0&&num(foodFirst.total.calcium)<t.calcium*0.98)ensureCalciumSupplementForRequirement(d);
   let previousFinalScore=Infinity;
@@ -959,6 +1012,7 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
     if(energyOK&&proteinOK&&fatOK&&caOK)break;
     if(previousFinalScore-sc<1e-7)break;previousFinalScore=sc;
   }
+  wholePrescriptionDeficitCorrection(d,t,true,10);
   let current=designCombined(d);syncAllocationToActual(d);
 
   const warnings=[],proteinLabel=(state.requirements.proteinMode||'total')==='counted'?'High biological value protein':'Total protein';

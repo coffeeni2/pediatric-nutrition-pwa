@@ -1,8 +1,8 @@
-# Pediatric Nutrition PWA 0.4.102
+# Pediatric Nutrition PWA 0.4.103
 
 
 
-## 0.4.102
+## 0.4.103
 
 - Auto Prescription Draft now performs explicit repeated nutrient-deficit rechecks after rounding.
 - Added coordinated energy/protein-neutral pair rebalancing so milk/formula can increase while meat/CHO decreases in the same candidate move.
@@ -308,5 +308,11 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Existing cases without a stored Na/K unit remain interpreted as mg/day for backward compatibility.
 
 
-### v0.4.102
+### v0.4.103
 - Auto Prescription Draft now performs food/formula-first nutrient-profile-aware rebalancing before calcium medication correction. Selected milk/formula is evaluated from its actual Custom DB calcium, fat, protein, and energy profile; it is not assumed to be high-fat. Pair rebalancing can increase milk/formula while reducing other foods to preserve protein/energy targets. Calcium supplement is considered only after this food/formula pass. All moves respect rounding and are recalculated from rounded delivered amounts.
+
+
+## v0.4.103
+- Whole-prescription deficit correction now rechecks combined Diet + Milk/Formula + Modular after rounding.
+- Modular clinical sequence is initial-build logic only; Auto/unlocked modular rows remain available for final fat/Ca/energy/protein rebalancing.
+- Mixed orders can rebalance across sections (e.g. milk/formula up + meat/CHO down; oil up + CHO down) before mineral medication correction.
