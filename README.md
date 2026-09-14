@@ -1,8 +1,12 @@
-# Pediatric Nutrition PWA 0.4.101
+# Pediatric Nutrition PWA 0.4.102
 
 
 
-## 0.4.101
+## 0.4.102
+
+- Auto Prescription Draft now performs explicit repeated nutrient-deficit rechecks after rounding.
+- Added coordinated energy/protein-neutral pair rebalancing so milk/formula can increase while meat/CHO decreases in the same candidate move.
+- Whole-prescription fat and calcium deficits remain active optimization targets instead of stopping when energy/protein are merely close.
 - HBV protein now explicitly includes whey and casein; existing Custom DB items named whey/casein are migrated to counted HBV sources.
 - Nutrient Recheck A/B/C tables add an HBV protein (g) column for Diet, Milk/Formula + Fortifiers, and Modular Diet.
 - Total Daily Prescription order now places Total fat (% energy) and MCT (% energy) before CHO.
@@ -304,5 +308,5 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Existing cases without a stored Na/K unit remain interpreted as mg/day for backward compatibility.
 
 
-### v0.4.101
+### v0.4.102
 - Auto Prescription Draft now performs food/formula-first nutrient-profile-aware rebalancing before calcium medication correction. Selected milk/formula is evaluated from its actual Custom DB calcium, fat, protein, and energy profile; it is not assumed to be high-fat. Pair rebalancing can increase milk/formula while reducing other foods to preserve protein/energy targets. Calcium supplement is considered only after this food/formula pass. All moves respect rounding and are recalculated from rounded delivered amounts.

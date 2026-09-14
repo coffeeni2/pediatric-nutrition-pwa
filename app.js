@@ -855,20 +855,21 @@ function thaiFoodGuideSummary(){
 function optimizationTargets(){const r=state.requirements,d=ensureDesignDraft(),a=d.allocation||{};return {kcal:num(r.energy),protein:num(r.protein),proteinKey:proteinTargetKey(),fatKcal:fatTargetKcal(),dietFatPct:num(a.dietFatPct),modularFatPct:num(a.modularFatPct),calcium:num(r.calcium),sodium:requirementElectrolyteMg('na',r),potassium:requirementElectrolyteMg('k',r)}}
 function optimizationScore(c,t,d=ensureDesignDraft(),phase='food'){
   const rel=(v,target)=>target>0?(num(v)-target)/target:0;
-  const e=rel(c.total.kcal,t.kcal),p=rel(c.total[t.proteinKey],t.protein),f=Math.abs(rel(fatEnergyKcal(c.total),t.fatKcal)),fatOutside=t.fatKcal>0?Math.max(0,f-0.05):0;
+  const e=rel(c.total.kcal,t.kcal),p=rel(c.total[t.proteinKey],t.protein),f=rel(fatEnergyKcal(c.total),t.fatKcal);
   const primary=(t.kcal>0?e*e:0)+(t.protein>0?p*p:0);
-  // Optional source-level fat targets are expressed as % of that source's own energy.
-  // They are softer than the whole-prescription Energy/Protein/Fat targets, but stronger than minerals.
+  // Whole-prescription fat is a true target, not merely a warning band. Keep pressure on the
+  // optimizer until the actual rounded prescription is close to the requested fat energy.
+  const fatErr=t.fatKcal>0?f*f:0;
   const sourceFatErr=(src,targetPct)=>targetPct>0&&num(src?.kcal)>0?((fatEnergyPct(src)-targetPct)/targetPct)**2:0;
   const sourceFat=sourceFatErr(c.diet.total,t.dietFatPct)+sourceFatErr(c.modular.daily,t.modularFatPct);
   const caErr=t.calcium>0?rel(c.total.calcium,t.calcium)**2:0;
   const otherMineral=[['sodium',t.sodium],['potassium',t.potassium]].reduce((s,[k,v])=>s+(v>0?rel(c.total[k],v)**2:0),0);
-  // Food-first phase deliberately gives calcium meaningful weight. This lets the optimizer
-  // discover whether the SELECTED milk/formula can efficiently correct Ca (and, depending
-  // on its actual DB nutrient profile, fat) while compensating protein/energy with other foods.
-  // It does not assume that every milk/formula is high-fat.
-  const caWeight=phase==='food'?2e4:2e3;
-  return primary*1e6+fatOutside*fatOutside*2e4+sourceFat*5e3+caErr*caWeight+otherMineral*100+thaiFoodGuidePenalty(d);
+  // Food-first phase deliberately gives calcium and fat enough weight to trigger genuine
+  // rebalancing (for example milk/formula up while meat/CHO comes down), while Energy and
+  // Protein remain the strongest constraints. All candidate scores use the rounded amounts.
+  const caWeight=phase==='food'?8e4:2e4;
+  const fatWeight=phase==='food'?1.5e5:1.2e5;
+  return primary*8e5+fatErr*fatWeight+sourceFat*4e3+caErr*caWeight+otherMineral*250+thaiFoodGuidePenalty(d);
 }
 function optimizationStep(row,kind){const rule=String(row?.roundRule||defaultRoundRule(row,kind));return rule==='0.1'?0.1:rule==='0.5'?0.5:rule==='5'?5:1}
 function optimizationVariables(d,opts={}){const vars=[];const includeMedication=opts.includeMedication!==false;const add=(row,kind,opts={})=>{if(!row||rowIsConstrained(row)||!row.dbMatchId)return;const u=rowUnitNut(row,opts);if(!u||TOTAL_KEYS.every(k=>Math.abs(num(u[k]))<1e-12))return;vars.push({row,kind,opts,step:optimizationStep(row,kind)});};
@@ -901,19 +902,64 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
     let current=designCombined(d),bestScore=optimizationScore(current,t,d,phase),guard=0;
     const multipliers=[-20,-10,-5,-2,-1,1,2,5,10,20];
     while(guard++<maxGuard){let best=null,bestCandidateScore=bestScore;for(const v of vars){const old=num(v.row.amount),mx=optimizationMaxAmount(v,d),gb=thaiFoodGuideBoundsForVariable(v,d);for(const m of multipliers){let nv=applyRoundRuleValue(Math.max(0,old+v.step*m),v.row.roundRule||defaultRoundRule(v.row,v.kind));if(Number.isFinite(mx))nv=Math.min(mx,nv);if(gb)nv=Math.max(gb.min,Math.min(gb.max,nv));if(Math.abs(nv-old)<1e-9)continue;v.row.amount=nv;const score=optimizationScore(designCombined(d),t,d,phase);v.row.amount=old;if(score+1e-9<bestCandidateScore){bestCandidateScore=score;best={v,nv}}}}if(!best)break;best.v.row.amount=best.nv;bestScore=bestCandidateScore;}
-    // Pair search is essential for rebalancing: e.g. milk/formula up while meat or CHO down.
-    for(let pass=0;pass<6;pass++){let improved=false;for(let i=0;i<vars.length;i++)for(let j=i+1;j<vars.length;j++){const a=vars[i],b=vars[j],oa=num(a.row.amount),ob=num(b.row.amount),ma=optimizationMaxAmount(a,d),mb=optimizationMaxAmount(b,d),ga=thaiFoodGuideBoundsForVariable(a,d),gb=thaiFoodGuideBoundsForVariable(b,d);for(const da of [-1,1])for(const db of [-1,1]){let na=applyRoundRuleValue(Math.max(0,oa+da*a.step),a.row.roundRule||defaultRoundRule(a.row,a.kind)),nb=applyRoundRuleValue(Math.max(0,ob+db*b.step),b.row.roundRule||defaultRoundRule(b.row,b.kind));if(Number.isFinite(ma))na=Math.min(ma,na);if(Number.isFinite(mb))nb=Math.min(mb,nb);if(ga)na=Math.max(ga.min,Math.min(ga.max,na));if(gb)nb=Math.max(gb.min,Math.min(gb.max,nb));a.row.amount=na;b.row.amount=nb;const sc=optimizationScore(designCombined(d),t,d,phase);a.row.amount=oa;b.row.amount=ob;if(sc+1e-9<bestScore){a.row.amount=na;b.row.amount=nb;bestScore=sc;improved=true;break}}if(improved)break}if(!improved)break;}
+    // Coordinated pair search is essential for real rebalancing. A tiny +1/-1 step can get
+    // trapped because milk/formula must often rise substantially while an energy/protein source
+    // falls at the same time. For each proposed rounded change we calculate a second rounded
+    // amount that approximately offsets either ENERGY or PROTEIN, then recheck the full nutrient
+    // profile. This permits milk/formula ↑ + meat/CHO ↓ without accepting a bad intermediate state.
+    const pairScale=[1,2,5,10,20,50];
+    const clipAmount=(v,value)=>{let nv=applyRoundRuleValue(Math.max(0,value),v.row.roundRule||defaultRoundRule(v.row,v.kind)),mx=optimizationMaxAmount(v,d),g=thaiFoodGuideBoundsForVariable(v,d);if(Number.isFinite(mx))nv=Math.min(mx,nv);if(g)nv=Math.max(g.min,Math.min(g.max,nv));return nv};
+    for(let pass=0;pass<10;pass++){
+      let bestPair=null,bestPairScore=bestScore;
+      for(let i=0;i<vars.length;i++)for(let j=0;j<vars.length;j++){
+        if(i===j)continue;const a=vars[i],b=vars[j],oa=num(a.row.amount),ob=num(b.row.amount),ua=rowUnitNut(a.row,a.opts)||{},ub=rowUnitNut(b.row,b.opts)||{};
+        for(const dir of [-1,1])for(const mult of pairScale){
+          const na=clipAmount(a,oa+dir*a.step*mult);if(Math.abs(na-oa)<1e-9)continue;const deltaA=na-oa,candidates=[];
+          if(Math.abs(num(ub.kcal))>1e-9)candidates.push(ob-(deltaA*num(ua.kcal))/num(ub.kcal));
+          if(Math.abs(num(ub[t.proteinKey]))>1e-9)candidates.push(ob-(deltaA*num(ua[t.proteinKey]))/num(ub[t.proteinKey]));
+          // Also try a simple opposite rounded move for products whose nutrient density is unusual.
+          candidates.push(ob-dir*b.step*mult);
+          for(const rawB of candidates){const nb=clipAmount(b,rawB);if(Math.abs(nb-ob)<1e-9)continue;a.row.amount=na;b.row.amount=nb;const sc=optimizationScore(designCombined(d),t,d,phase);a.row.amount=oa;b.row.amount=ob;if(sc+1e-9<bestPairScore){bestPairScore=sc;bestPair={a,b,na,nb}}}
+        }
+      }
+      if(!bestPair)break;bestPair.a.row.amount=bestPair.na;bestPair.b.row.amount=bestPair.nb;bestScore=bestPairScore;
+    }
     return bestScore;
   };
-  runOptimize(optimizationVariables(d,{includeMedication:false}),'food',260);
-  applyDesignRounding(d);
+  // Stage 1 — explicitly RECHECK after each rounded optimization pass. If Energy/Protein are
+  // already close but Fat/Ca are still deficient, another pass is allowed to rebalance the actual
+  // delivered nutrients rather than treating the first near-energy solution as final.
+  let previousFoodScore=Infinity;
+  for(let recheckPass=0;recheckPass<5;recheckPass++){
+    runOptimize(optimizationVariables(d,{includeMedication:false}),'food',260);
+    applyDesignRounding(d);
+    const cc=designCombined(d),sc=optimizationScore(cc,t,d,'food');
+    const energyOK=!(t.kcal>0)||Math.abs(num(cc.total.kcal)/t.kcal-1)<=0.01;
+    const proteinOK=!(t.protein>0)||Math.abs(num(cc.total[t.proteinKey])/t.protein-1)<=0.01;
+    const fatOK=!(t.fatKcal>0)||Math.abs(fatEnergyKcal(cc.total)/t.fatKcal-1)<=0.05;
+    const caOK=!(t.calcium>0)||num(cc.total.calcium)>=t.calcium*0.98;
+    if(energyOK&&proteinOK&&fatOK&&caOK)break;
+    if(previousFoodScore-sc<1e-7)break;previousFoodScore=sc;
+  }
 
-  // Stage 2 — only after food/formula rebalancing, create/use Ca medication if Ca remains
-  // materially short. This prevents CaCO3 from masking a useful milk/formula adjustment.
+  // Stage 2 — only after repeated food/formula rechecks, create/use Ca medication if Ca remains
+  // materially short. Then recheck the entire prescription again because a mineral product may
+  // also contribute energy or other nutrients in Custom DB.
   let foodFirst=designCombined(d);
   if(t.calcium>0&&num(foodFirst.total.calcium)<t.calcium*0.98)ensureCalciumSupplementForRequirement(d);
-  runOptimize(optimizationVariables(d,{includeMedication:true}),'final',180);
-  applyDesignRounding(d);let current=designCombined(d);syncAllocationToActual(d);
+  let previousFinalScore=Infinity;
+  for(let recheckPass=0;recheckPass<4;recheckPass++){
+    runOptimize(optimizationVariables(d,{includeMedication:true}),'final',180);
+    applyDesignRounding(d);
+    const cc=designCombined(d),sc=optimizationScore(cc,t,d,'final');
+    const energyOK=!(t.kcal>0)||Math.abs(num(cc.total.kcal)/t.kcal-1)<=0.01;
+    const proteinOK=!(t.protein>0)||Math.abs(num(cc.total[t.proteinKey])/t.protein-1)<=0.01;
+    const fatOK=!(t.fatKcal>0)||Math.abs(fatEnergyKcal(cc.total)/t.fatKcal-1)<=0.05;
+    const caOK=!(t.calcium>0)||Math.abs(num(cc.total.calcium)/t.calcium-1)<=0.02;
+    if(energyOK&&proteinOK&&fatOK&&caOK)break;
+    if(previousFinalScore-sc<1e-7)break;previousFinalScore=sc;
+  }
+  let current=designCombined(d);syncAllocationToActual(d);
 
   const warnings=[],proteinLabel=(state.requirements.proteinMode||'total')==='counted'?'High biological value protein':'Total protein';
   if(t.kcal>0&&Math.abs(current.total.kcal/t.kcal-1)>0.01)warnings.push(`Energy ${round(current.total.kcal,1)} / ${round(t.kcal,1)} kcal (${round(current.total.kcal/t.kcal*100,1)}%) — closest result with selected items, locks, limits and rounding`);
