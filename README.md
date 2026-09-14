@@ -1,11 +1,24 @@
-# Pediatric Nutrition PWA 0.4.96
+# Pediatric Nutrition PWA 0.4.99
 
 
-## 0.4.96
-- Diet Design: replaced the separate Targets and Remaining boxes with a sticky Target Gap Bar that stays visible while editing.
-- Target Gap Bar shows Energy, the active protein target, Total fat % energy, and MCT % energy with current/target, remaining gap, and near/far/within-target status.
-- Total Daily Prescription now includes a Remaining column (Requirement - Total) and prioritizes Total → Requirement → Remaining → % target before source detail columns.
-- Added Total fat (% energy) to Total Daily Prescription so fat-target gap can be reviewed directly.
+
+## 0.4.99
+- Diet Design > Nutrient Recheck > Modular Diet: removed Calculation sequence from the recheck area.
+- Modular Diet recheck rows now show food/formula/modular ingredients first and medication/mineral/trace-element items last.
+- Added preparation instructions beside the recheck table: add water q.s. to final volume, mL/feed × feeds/day, daily prescribed volume, route, and per-feed energy.
+
+## 0.4.98
+- Modular Diet engine now uses rounded sequential recalculation at every step: calculate → round → recalculate actual delivered nutrients/energy → update remaining → next source.
+- Protein sources now fill the actual remaining protein sequentially after rounded formula/milk amounts.
+- MCT and LCT steps subtract actual nutrient delivery from all previously rounded components.
+- CHO now fills the actual remaining kcal after prior rounded components; order is cooked rice → fruit → dextrin/glucose polymer → sucrose → other CHO, using Custom DB kcal/conversions.
+- Tube-feeding rice warning/cap remains >8 and max 9 g/100 mL final modular volume.
+- Removed the second blanket modular rounding pass so Manual/Locked amounts are not silently changed after calculation.
+
+- Modular Diet calculation now fills selected protein, MCT/LCT and CHO sources sequentially in the visible row order instead of splitting the deficit equally across sources.
+- Formula/milk remains calcium-first, limited by protein requirement and concentration.
+- CHO remaining energy is filled sequentially from rice/dextrin/sucrose using each Custom DB item, with the tube-feeding rice concentration limit retained.
+
 
 ## 0.4.95
 - Moved Diet / Milk-Formula / Modular Diet source checkboxes into Auto Prescription Draft so source selection is made before Generate/Recalculate. Removed duplicate Use checkboxes from each section header.

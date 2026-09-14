@@ -904,7 +904,17 @@ function renderDesignRecheck(){
   const fmt=x=>round(num(x),1),pct=(v,t)=>num(t)>0?`${fmt(num(v)/num(t)*100)}%`:'—';
   const reqText=(v,u,kind='')=>{if(!(num(v)>0))return '—';if(kind==='na')return `${fmt(v)} mg / ${fmt(num(v)/23)} mEq`;if(kind==='k')return `${fmt(v)} mg / ${fmt(num(v)/39)} mEq`;return `${fmt(v)} ${u}`};
   const sourceCell=(x,k,kind='normal')=>{if(kind==='mctpct')return `${fmt(num(x.kcal)>0?num(x.mct)*8.3/num(x.kcal)*100:0)}%`;if(kind==='macro'){const q=macroEnergyPct(x);return `${fmt(q.p)} : ${fmt(q.c)} : ${fmt(q.f)}`;}if(kind==='na')return `${fmt(x.sodium)} mg / ${fmt(num(x.sodium)/23)} mEq`;if(kind==='k')return `${fmt(x.potassium)} mg / ${fmt(num(x.potassium)/39)} mEq`;return fmt(x[k]);};
-  let html=recheckTable('A. Diet',c.diet.rows,c.diet.total)+recheckTable('B. Milk / Formula + Fortifiers',c.formula.rows,c.formula.total,`<p class="muted">Amount ระบุชัดเป็น per day หรือ per feed; ถ้าเป็น per feed จะแสดงจำนวน feeds/day ด้วย • Recorded formula/milk fluid: ${fmt(c.formula.fluid)} mL/day</p>`)+recheckTable('C. Modular Diet',m.rows,m.daily,`<p class="muted">Whole recipe: ${fmt(m.recipe.kcal)} kcal • Final volume ${fmt(m.finalVol)} mL • Daily prescribed ${fmt(m.dailyVol)} mL (${fmt(m.ratio*100)}% of recipe) • Route ${esc(ensureDesignDraft().modular.route||'oral')}</p>${(ensureDesignDraft().modular.calculationTrace||[]).length?`<div class="calc-trace"><strong>Calculation sequence</strong><ol>${ensureDesignDraft().modular.calculationTrace.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`:''}${fcw.length?`<div class="status warn"><strong>Formula concentration check</strong><br>${fcw.map(esc).join('<br>')}</div>`:''}${m.finalVol?`<p class="muted">Per 100 mL: ${fmt(m.recipe.kcal/m.finalVol*100)} kcal • Protein ${fmt(m.recipe.protein/m.finalVol*100)} g • Per feed (${fmt(num(ensureDesignDraft().modular.feedVolume))} mL): ${fmt(m.recipe.kcal/m.finalVol*num(ensureDesignDraft().modular.feedVolume))} kcal</p>`:''}`);
+  const dm=ensureDesignDraft().modular,feedVol=num(dm.feedVolume),feedCount=Math.max(0,Math.round(num(dm.feeds)));
+  // Recheck is for the final prescription, not the calculation trace. Keep food/formula/modular
+  // ingredients first and medication/mineral/trace-element products last for easier bedside review.
+  const modularRecheckRows=[...m.rows].sort((a,b)=>{
+    const ta=String(a.food?.type||state.foodDB.find(f=>f.id===a.row?.dbMatchId)?.type||'').toLowerCase();
+    const tb=String(b.food?.type||state.foodDB.find(f=>f.id===b.row?.dbMatchId)?.type||'').toLowerCase();
+    const ma=ta==='medication'?1:0,mb=tb==='medication'?1:0;
+    return ma-mb;
+  });
+  const preparationText=m.finalVol>0?`<div class="modular-preparation-summary"><strong>Preparation / feeding</strong><div>เติมน้ำจนครบ (add water q.s. to final volume): <strong>${fmt(m.finalVol)} mL</strong></div><div>แบ่งให้: <strong>${feedVol>0?fmt(feedVol):'—'} mL/feed × ${feedCount||'—'} feeds/day</strong>${feedVol>0&&feedCount>0?` = ${fmt(feedVol*feedCount)} mL/day`:''}</div><div class="muted">Route ${esc(dm.route||'oral')} • Whole recipe ${fmt(m.recipe.kcal)} kcal${m.dailyVol>0?` • Daily prescribed ${fmt(m.dailyVol)} mL (${fmt(m.ratio*100)}% of recipe)`:''}</div></div>`:'';
+  let html=recheckTable('A. Diet',c.diet.rows,c.diet.total)+recheckTable('B. Milk / Formula + Fortifiers',c.formula.rows,c.formula.total,`<p class="muted">Amount ระบุชัดเป็น per day หรือ per feed; ถ้าเป็น per feed จะแสดงจำนวน feeds/day ด้วย • Recorded formula/milk fluid: ${fmt(c.formula.fluid)} mL/day</p>`)+recheckTable('C. Modular Diet',modularRecheckRows,m.daily,`${preparationText}${fcw.length?`<div class="status warn"><strong>Formula concentration check</strong><br>${fcw.map(esc).join('<br>')}</div>`:''}${m.finalVol?`<p class="muted">Per 100 mL: ${fmt(m.recipe.kcal/m.finalVol*100)} kcal • Protein ${fmt(m.recipe.protein/m.finalVol*100)} g${feedVol>0?` • Per feed (${fmt(feedVol)} mL): ${fmt(m.recipe.kcal/m.finalVol*feedVol)} kcal`:''}</p>`:''}`);
   const specs=[
     {label:'Total energy',k:'kcal',u:'kcal',target:r.energy},
     {label:'Total protein',k:'protein',u:'g',target:proteinKey==='protein'?r.protein:''},
@@ -1029,81 +1039,142 @@ function modularEnsureMedicationRow(d,nutrient,rx){
   const f=candidates.find(x=>rx.test(String(x.name||'')))||candidates[0];if(!f)return null;
   row=blankDesignModComp('medication');row.dbMatchId=f.id;row.name=f.name;row.unit=f.basis_unit||'mL';row.roundRule='0.5';row.constraintMode='auto';row.locked=false;(m.components||(m.components=[])).push(row);return row;
 }
-function modularFillDeficitByRows(d,rows,key,deficit,traceLabel){
-  let remain=Math.max(0,num(deficit));const usable=rows.filter(r=>{const u=modularUnitDailyNut(r,d);return u&&num(u[key])>0});if(!usable.length)return remain;
-  for(let i=0;i<usable.length&&remain>1e-9;i++){
-    const r=usable[i],u=modularUnitDailyNut(r,d),share=remain/(usable.length-i),wanted=share/num(u[key]);setModularAmountCapped(r,wanted);const got=num(modularUnitDailyNut(r,d)?.[key])*num(r.amount);remain=Math.max(0,remain-got);
+function modularFillDeficitByRows(d,rows,key,targetValue,traceParts){
+  // Rounded sequential recalculation: each Auto row is calculated from the CURRENT
+  // remaining target, rounded immediately, then the actual delivered nutrient is
+  // recalculated before moving to the next row.
+  const target=Math.max(0,num(targetValue));
+  for(const r of rows){
+    let remain=Math.max(0,target-num(designCombined(d).total[key]));
+    if(remain<=1e-9)break;
+    const u=modularUnitDailyNut(r,d),per=num(u?.[key]);
+    if(!(per>0))continue;
+    const before=num(designCombined(d).total[key]);
+    setModularAmountCapped(r,remain/per);
+    const after=num(designCombined(d).total[key]);
+    if(traceParts){
+      const f=state.foodDB.find(x=>x.id===r.dbMatchId);
+      traceParts.push(`${f?.name||r.name||'source'} ${round(num(r.amount),2)} ${r.unit||''} → +${round(Math.max(0,after-before),2)} ${key}`);
+    }
   }
-  return remain
+  return Math.max(0,target-num(designCombined(d).total[key]));
 }
 function modularRiceGramEquivalent(row){const f=state.foodDB.find(x=>x.id===row.dbMatchId);if(!f)return null;const old=row.amount;row.amount=1;const x={amount:1,unit:row.unit,convertUnit:row.unit,dbMatchId:f.id,convertFood:f.name,weight_g:'',volume_ml:''};const g=convertToGrams(x);row.amount=old;return g}
-function modularChoEnergyFill(d,energyDeficitKcal,trace){
-  let remain=Math.max(0,num(energyDeficitKcal));
+function modularChoPriority(row){
+  const f=state.foodDB.find(x=>x.id===row.dbMatchId),n=String(f?.name||row.name||'').toLowerCase(),g=String(f?.diet_group||'').toLowerCase(),c=String(f?.category||'').toLowerCase();
+  if(/ข้าวสวย|cooked rice|\brice\b/.test(n))return 0;
+  if(g==='fruit'||c==='fruit'||/ผลไม้|fruit|กล้วย|banana|แอปเป|apple|มะละกอ|papaya|องุ่น|grape|ส้ม|orange|pear|melon|mango|มะม่วง/.test(n))return 1;
+  if(/dextrin|maltodextrin|dextrose|glucose polymer/.test(n))return 2;
+  if(/sucrose|table sugar|น้ำตาลทราย|น้ำตาล/.test(n))return 3;
+  return 4;
+}
+function modularChoEnergyFill(d,energyTargetKcal,trace){
+  const target=Math.max(0,num(energyTargetKcal));
   const allRows=modularAutoRows(d,'cho');
-  const rows=allRows.filter(r=>num(modularUnitDailyNut(r,d)?.kcal)>0);
+  const usable=allRows.filter(r=>num(modularUnitDailyNut(r,d)?.kcal)>0);
   const unusable=allRows.filter(r=>!(num(modularUnitDailyNut(r,d)?.kcal)>0));
   if(unusable.length)trace.push(`CHO source warning: ${unusable.length} selected Auto source(s) have 0 kcal in Custom DB and were not used for energy filling.`);
-  if(!rows.length)return remain;
+  if(!usable.length)return Math.max(0,target-num(designCombined(d).total.kcal));
+  // Clinical CHO order: cooked rice → fruit → dextrin/glucose polymer → sucrose → other CHO.
+  // Preserve the visible row order inside each priority group.
+  const indexed=usable.map((r,i)=>({r,i,p:modularChoPriority(r)})).sort((a,b)=>a.p-b.p||a.i-b.i);
   const tube=String(d.modular?.route||'oral')==='tube',fv=num(d.modular?.finalVolume),riceCapG=tube&&fv>0?9*fv/100:Infinity;
-  // Step 5 is energy-based. Remaining kcal are distributed among the selected CHO sources
-  // using each selected Custom DB item's actual kcal density. No fixed 4 kcal/g or rice conversion is assumed.
-  for(let i=0;i<rows.length&&remain>1e-9;i++){
-    const r=rows[i],f=state.foodDB.find(x=>x.id===r.dbMatchId),name=String(f?.name||'').toLowerCase(),u=modularUnitDailyNut(r,d);
-    const shareKcal=remain/(rows.length-i),unitKcal=num(u?.kcal);if(!(unitKcal>0))continue;
-    let wanted=shareKcal/unitKcal;
-    if(/ข้าวสวย|rice/.test(name)&&tube&&Number.isFinite(riceCapG)){
+  const detail=[];
+  for(const z of indexed){
+    const r=z.r;
+    let remain=Math.max(0,target-num(designCombined(d).total.kcal));
+    if(remain<=1e-9)break;
+    const f=state.foodDB.find(x=>x.id===r.dbMatchId),name=String(f?.name||'').toLowerCase(),u=modularUnitDailyNut(r,d),unitKcal=num(u?.kcal);
+    if(!(unitKcal>0))continue;
+    let wanted=remain/unitKcal;
+    if(/ข้าวสวย|cooked rice|\brice\b/.test(name)&&tube&&Number.isFinite(riceCapG)){
       const gPerUnit=modularRiceGramEquivalent(r);if(gPerUnit>0)wanted=Math.min(wanted,riceCapG/gPerUnit);
     }
+    const before=num(designCombined(d).total.kcal);
     setModularAmountCapped(r,wanted);
-    const gotKcal=num(modularUnitDailyNut(r,d)?.kcal)*num(r.amount);
-    remain=Math.max(0,remain-gotKcal);
+    const after=num(designCombined(d).total.kcal);
+    detail.push(`${f?.name||r.name||'CHO source'} ${round(num(r.amount),2)} ${r.unit||''} → +${round(Math.max(0,after-before),1)} kcal; remaining ${round(Math.max(0,target-after),1)} kcal`);
   }
+  if(detail.length)trace.push(`5a. CHO rounded sequence: ${detail.join(' → ')}`);
   if(tube){
-    const riceRows=modularAllRows(d,'cho').filter(r=>/ข้าวสวย|rice/i.test(String(state.foodDB.find(x=>x.id===r.dbMatchId)?.name||'')));
+    const riceRows=modularAllRows(d,'cho').filter(r=>/ข้าวสวย|cooked rice|\brice\b/i.test(String(state.foodDB.find(x=>x.id===r.dbMatchId)?.name||'')));
     let grams=0;riceRows.forEach(r=>{const gu=modularRiceGramEquivalent(r);if(gu!=null)grams+=gu*num(r.amount)});
-    if(fv>0&&grams/fv*100>8)trace.push(`Tube feeding rice concentration ${round(grams/fv*100,1)} g/100 mL (warning above 8; hard cap 9 g/100 mL for Auto rice)`);
+    if(fv>0&&grams/fv*100>8)trace.push(`Tube feeding rice concentration ${round(grams/fv*100,1)} g/100 mL (warning above 8; Auto rice hard cap 9 g/100 mL)`);
   }
-  return remain
+  return Math.max(0,target-num(designCombined(d).total.kcal));
 }
 function buildModularDraft(d,targetKcal){
   const m=d.modular||(d.modular=blankDietDesign().modular);normalizeDesignModularRoles(m);if(!(m.components||[]).length)prepareModularComponentTemplate();
   const req=state.requirements,energyReq=Math.max(0,num(req.energy)||num(targetKcal)),proteinReq=Math.max(0,num(req.protein)),proteinKey=proteinTargetKey(),caReq=Math.max(0,num(req.calcium)),naReq=Math.max(0,requirementElectrolyteMg('na',req)),kReq=Math.max(0,requirementElectrolyteMg('k',req));
   if(!(num(m.finalVolume)>0))m.finalVolume=req.trackFluid&&num(req.fluid)>0?round(num(req.fluid),0):1000;if(!(num(m.feeds)>0))m.feeds=5;if(!(num(m.feedVolume)>0)&&num(m.finalVolume)>0)m.feedVolume=round(num(m.finalVolume)/num(m.feeds),0);if(!m.route)m.route='oral';
   const trace=[];m.clinicalSequenceApplied=true;
-  // Deterministic recalculation: keep Manual/Locked rows, reset only Auto modular rows.
+  // Keep Manual/Locked rows exactly as entered. Reset only Auto modular rows.
   (m.components||[]).forEach(r=>{r.roundRule=defaultRoundRule(r,'modular');if(!rowIsConstrained(r))r.amount=0});
-  const base=sumNut([dietDesignCalc(d).total,formulaDesignCalc(d).total]);
   const current=()=>designCombined(d).total;
-  const baseProtein=num(base[proteinKey]),proteinCeiling=Math.max(0,proteinReq-baseProtein);
   const proteinRows=modularAllRows(d,'protein'),formulaRows=proteinRows.filter(r=>modularFormulaLike(state.foodDB.find(x=>x.id===r.dbMatchId))&&!rowIsConstrained(r)),otherProteinRows=proteinRows.filter(r=>!modularFormulaLike(state.foodDB.find(x=>x.id===r.dbMatchId))&&!rowIsConstrained(r));
-  // 1) Formula/milk: calcium-first, with protein ceiling and formula concentration ceiling.
+
+  // 1) Formula/milk: Ca-first, but never intentionally exceed the remaining protein target
+  // or the product concentration ceiling. Round each source before recalculating the next.
   let caRemaining=Math.max(0,caReq-num(current().calcium)),proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));
-  formulaRows.forEach((r,idx)=>{const u=modularUnitDailyNut(r,d);if(!u)return;let wanted=0;if(caRemaining>0&&num(u.calcium)>0)wanted=caRemaining/num(u.calcium);else if(proteinRemaining>0&&num(u[proteinKey]||u.protein)>0)wanted=proteinRemaining/num(u[proteinKey]||u.protein);let maxA=modularRowMaxByFormulaConcentration(r,d);const pu=num(u[proteinKey]||u.protein);if(pu>0)maxA=Math.min(maxA,proteinRemaining/pu);setModularAmountCapped(r,wanted,maxA);const f=state.foodDB.find(x=>x.id===r.dbMatchId),recipeUnit=rowUnitNut(r),formulaKcal=num(recipeUnit?.kcal)*num(r.amount);if(f&&num(m.finalVolume)>0&&formulaKcal>0)r.concentrationKcalOz=round(formulaKcal/num(m.finalVolume)*30,2);caRemaining=Math.max(0,caReq-num(current().calcium));proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));});
-  trace.push(`1. Formula/milk by Ca first: Ca remaining ${round(caRemaining,1)} mg/day; protein remaining ${round(proteinRemaining,1)} g/day${formulaRows.length?'':' (no Auto formula/milk source selected)'}`);
-  // 2) Other protein sources fill remaining protein.
-  if(otherProteinRows.length&&proteinRemaining>0){for(let i=0;i<otherProteinRows.length;i++){const r=otherProteinRows[i],u=modularUnitDailyNut(r,d),pu=num(u?.[proteinKey]||u?.protein);if(!(pu>0))continue;const share=proteinRemaining/(otherProteinRows.length-i),wanted=share/pu;setModularAmountCapped(r,wanted);proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));}}
-  trace.push(`2. Other protein sources: protein remaining ${round(proteinRemaining,1)} g/day`);
-  // 3) MCT target = (%MCT × total energy)/8.3, then subtract MCT already supplied.
-  const mctTargetG=energyReq>0&&num(req.mctPct)>0?energyReq*num(req.mctPct)/100/8.3:0;let mctRemaining=Math.max(0,mctTargetG-num(current().mct));if(mctRemaining>0)mctRemaining=modularFillDeficitByRows(d,modularAutoRows(d,'fat_mct'),'mct',mctRemaining,'MCT');
-  trace.push(`3. MCT: target ${round(mctTargetG,1)} g/day; remaining ${round(Math.max(0,mctTargetG-num(current().mct)),1)} g/day`);
-  // 4) LCT = [(fat% × energy) − actual MCT energy]/9, then subtract LCT already supplied.
-  const fatTargetKcal=energyReq>0&&num(req.fatPct)>0?energyReq*num(req.fatPct)/100:0,actualMctKcal=num(current().mct)*8.3,lctTargetG=Math.max(0,(fatTargetKcal-actualMctKcal)/9);let lctRemaining=Math.max(0,lctTargetG-num(current().fat));if(lctRemaining>0)lctRemaining=modularFillDeficitByRows(d,modularAutoRows(d,'fat_lct'),'fat',lctRemaining,'LCT');
-  trace.push(`4. LCT: target ${round(lctTargetG,1)} g/day after MCT energy; remaining ${round(Math.max(0,lctTargetG-num(current().fat)),1)} g/day`);
-  // 5) CHO-source foods fill the REMAINING ENERGY after protein + LCT + MCT.
-  // Amounts of rice / dextrin / sucrose are calculated from the selected Custom DB item's kcal density.
-  const curBeforeCho=current();
-  const proteinEnergyKcal=num(curBeforeCho.protein)*4;
-  const lctEnergyKcal=num(curBeforeCho.fat)*9;
-  const mctEnergyKcal=num(curBeforeCho.mct)*8.3;
-  let choSourceEnergyRemaining=Math.max(0,energyReq-proteinEnergyKcal-lctEnergyKcal-mctEnergyKcal);
-  if(choSourceEnergyRemaining>0)choSourceEnergyRemaining=modularChoEnergyFill(d,choSourceEnergyRemaining,trace);
-  trace.push(`5. CHO-source energy: target ${round(Math.max(0,energyReq-proteinEnergyKcal-lctEnergyKcal-mctEnergyKcal),1)} kcal/day from remaining energy; remaining ${round(choSourceEnergyRemaining,1)} kcal/day; delivered CHO ${round(num(current().cho),1)} g/day (Custom DB)`);
-  // 7) Calcium, sodium, potassium medication/mineral correction after macro sources.
+  const fDetail=[];
+  for(const r of formulaRows){
+    caRemaining=Math.max(0,caReq-num(current().calcium));proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));
+    if(proteinRemaining<=1e-9)break;
+    const u=modularUnitDailyNut(r,d);if(!u)continue;
+    let wanted=0;if(caRemaining>0&&num(u.calcium)>0)wanted=caRemaining/num(u.calcium);else if(num(u[proteinKey]||u.protein)>0)wanted=proteinRemaining/num(u[proteinKey]||u.protein);
+    let maxA=modularRowMaxByFormulaConcentration(r,d);const pu=num(u[proteinKey]||u.protein);if(pu>0)maxA=Math.min(maxA,proteinRemaining/pu);
+    const before={ca:num(current().calcium),p:num(current()[proteinKey])};
+    setModularAmountCapped(r,wanted,maxA);
+    const f=state.foodDB.find(x=>x.id===r.dbMatchId),recipeUnit=rowUnitNut(r),formulaKcal=num(recipeUnit?.kcal)*num(r.amount);if(f&&num(m.finalVolume)>0&&formulaKcal>0)r.concentrationKcalOz=round(formulaKcal/num(m.finalVolume)*30,2);
+    const after=current();
+    fDetail.push(`${f?.name||r.name||'formula'} ${round(num(r.amount),2)} ${r.unit||''}: Ca +${round(Math.max(0,num(after.calcium)-before.ca),1)} mg, protein +${round(Math.max(0,num(after[proteinKey])-before.p),2)} g`);
+  }
+  caRemaining=Math.max(0,caReq-num(current().calcium));proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));
+  trace.push(`1. Formula/milk Ca-first (rounded sequential): Ca remaining ${round(caRemaining,1)} mg/day; protein remaining ${round(proteinRemaining,1)} g/day${fDetail.length?`; ${fDetail.join(' → ')}`:' (no Auto formula/milk source selected)'}`);
+
+  // 2) Non-formula protein sources: each row gets only the ACTUAL remaining protein after
+  // the prior rounded row has been recalculated.
+  const pDetail=[];
+  for(const r of otherProteinRows){
+    proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));if(proteinRemaining<=1e-9)break;
+    const u=modularUnitDailyNut(r,d),pu=num(u?.[proteinKey]||u?.protein);if(!(pu>0))continue;
+    const before=num(current()[proteinKey]);setModularAmountCapped(r,proteinRemaining/pu);const after=num(current()[proteinKey]);
+    const f=state.foodDB.find(x=>x.id===r.dbMatchId);pDetail.push(`${f?.name||r.name||'protein source'} ${round(num(r.amount),2)} ${r.unit||''} → +${round(Math.max(0,after-before),2)} g; remaining ${round(Math.max(0,proteinReq-after),2)} g`);
+  }
+  proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));
+  trace.push(`2. Other protein sources (rounded sequential): remaining ${round(proteinRemaining,1)} g/day${pDetail.length?`; ${pDetail.join(' → ')}`:''}`);
+
+  // 3) MCT target = (%MCT × target energy)/8.3. Subtract ACTUAL MCT from all rounded
+  // prior components, then round/recalculate each selected MCT source sequentially.
+  const mctTargetG=energyReq>0&&num(req.mctPct)>0?energyReq*num(req.mctPct)/100/8.3:0,mctDetail=[];
+  modularFillDeficitByRows(d,modularAutoRows(d,'fat_mct'),'mct',mctTargetG,mctDetail);
+  trace.push(`3. MCT (rounded sequential): target ${round(mctTargetG,1)} g/day; actual ${round(num(current().mct),1)} g/day; remaining ${round(Math.max(0,mctTargetG-num(current().mct)),1)} g/day${mctDetail.length?`; ${mctDetail.join(' → ')}`:''}`);
+
+  // 4) LCT target uses target fat energy minus ACTUAL rounded MCT energy. Then subtract
+  // ACTUAL LCT already delivered by formula/milk/protein sources before adding LCT oil.
+  const fatTargetKcal=energyReq>0&&num(req.fatPct)>0?energyReq*num(req.fatPct)/100:0,actualMctKcal=num(current().mct)*8.3,lctTargetG=Math.max(0,(fatTargetKcal-actualMctKcal)/9),lctDetail=[];
+  modularFillDeficitByRows(d,modularAutoRows(d,'fat_lct'),'fat',lctTargetG,lctDetail);
+  trace.push(`4. LCT (rounded sequential): target ${round(lctTargetG,1)} g/day after actual MCT ${round(actualMctKcal,1)} kcal; actual ${round(num(current().fat),1)} g/day; remaining ${round(Math.max(0,lctTargetG-num(current().fat)),1)} g/day${lctDetail.length?`; ${lctDetail.join(' → ')}`:''}`);
+
+  // 5) CHO is the ACTUAL ENERGY GAP after all prior rounded components—not a theoretical
+  // CHO gram target. Whole-food CHO is prioritized: rice → fruit → dextrin → sucrose.
+  const energyBeforeCho=num(current().kcal);
+  let choSourceEnergyRemaining=Math.max(0,energyReq-energyBeforeCho);
+  if(choSourceEnergyRemaining>0)choSourceEnergyRemaining=modularChoEnergyFill(d,energyReq,trace);
+  trace.push(`5. CHO-source energy from actual rounded prescription: energy before CHO ${round(energyBeforeCho,1)} kcal/day; target ${round(energyReq,1)}; remaining after CHO ${round(Math.max(0,energyReq-num(current().kcal)),1)} kcal/day; order rice → fruit → dextrin → sucrose → other CHO; delivered CHO ${round(num(current().cho),1)} g/day.`);
+
+  // 6) Rice tube-feeding limit is enforced inside the CHO step (warning >8 g/100 mL;
+  // Auto rice hard cap 9 g/100 mL final modular volume).
+  trace.push('6. Tube-feeding rice check: warning above 8 g/100 mL; Auto rice is capped at 9 g/100 mL final modular volume.');
+
+  // 7) Ca/Na/K correction is also rounded sequentially and recalculated from actual delivery.
   const mineralSpecs=[['calcium',caReq,/caco3|calcium|แคลเซียม/i,'Ca'],['sodium',naReq,/nacl|sodium|โซเดียม/i,'Na'],['potassium',kReq,/kcl|potassium|โพแทสเซียม/i,'K']];
-  mineralSpecs.forEach(([key,target,rx,label])=>{if(!(target>0))return;let deficit=Math.max(0,target-num(current()[key]));if(deficit<=0)return;const row=modularEnsureMedicationRow(d,key,rx);if(row&&!rowIsConstrained(row)){const u=modularUnitDailyNut(row,d),per=num(u?.[key]);if(per>0){setModularAmountCapped(row,deficit/per);deficit=Math.max(0,target-num(current()[key]));}}trace.push(`7. ${label}: remaining ${round(deficit,1)} ${key==='sodium'||key==='potassium'?'mg/day':'mg/day'}${row?'':' (no suitable medication/mineral in Custom DB)'}`)});
-  // 8) Trace-element rows are optional and are never auto-changed without a requirement target.
+  mineralSpecs.forEach(([key,target,rx,label])=>{if(!(target>0))return;let deficit=Math.max(0,target-num(current()[key]));if(deficit<=0){trace.push(`7. ${label}: target reached by food/formula (${round(num(current()[key]),1)} mg/day).`);return}const row=modularEnsureMedicationRow(d,key,rx);if(row&&!rowIsConstrained(row)){const u=modularUnitDailyNut(row,d),per=num(u?.[key]);if(per>0){setModularAmountCapped(row,deficit/per);deficit=Math.max(0,target-num(current()[key]));}}trace.push(`7. ${label}: actual ${round(num(current()[key]),1)} mg/day; remaining ${round(deficit,1)} mg/day${row?'':' (no suitable medication/mineral in Custom DB)'}`)});
   trace.push('8. Trace element: optional; selected Manual/Locked trace-element rows are retained and included in recheck.');
-  applyDesignRounding(d);m.calculationTrace=trace;syncAllocationToActual(d);return {combined:designCombined(d),warnings:trace.filter(x=>/remaining [1-9]|no suitable|warning/i.test(x)),trace};
+
+  // Do not run a second blanket rounding pass here: Auto rows were already rounded BEFORE
+  // every downstream calculation, and Manual/Locked rows must remain exactly as entered.
+  m.calculationTrace=trace;syncAllocationToActual(d);return {combined:designCombined(d),warnings:trace.filter(x=>/remaining [1-9]|no suitable|warning/i.test(x)),trace};
 }
 
 function autoBuildPrescriptionFromRequirements(){
