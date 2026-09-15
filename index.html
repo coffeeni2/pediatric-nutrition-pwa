@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.127" />
+  <link rel="stylesheet" href="styles.css?v=0.4.128" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -116,7 +116,6 @@
 
     <div class="card design-recheck-card">
       <div class="section-title-row"><div><h2>Nutrient Recheck</h2><p class="muted">Calculate Intake = ตรวจ nutrient จาก prescription ปัจจุบันเท่านั้น ไม่เปลี่ยน amount, rounding หรือสูตร • Optimize Again เท่านั้นที่อนุญาตให้ระบบปรับสูตร</p></div><div class="inline-actions"><button id="refreshDesignRecheckBtn" class="primary">Calculate Intake</button><button id="recheckOptimizeAgainBtn" class="secondary">Optimize Again</button></div></div>
-      <div id="designQuickEditor" class="design-quick-editor"></div>
       <div id="designRecheck"></div>
     </div>
     <div class="design-mobile-actionbar" aria-label="Diet Design actions"><button id="mobileCalculateIntakeBtn" class="primary">Calculate Intake</button><button id="mobileOptimizeAgainBtn" class="secondary">Optimize Again</button><span id="mobileDesignCalcStatus" class="muted"></span></div>
@@ -349,7 +348,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.127</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<footer><strong>PWA 0.4.128</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
 <script>
 // Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
 (function(){
@@ -369,6 +368,6 @@
   window.__pedFallbackTab=switchVisibleTab;
 })();
 </script>
-<script src="app.js?v=0.4.127"></script>
+<script src="app.js?v=0.4.128"></script>
 </body>
 </html>

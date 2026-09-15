@@ -326,11 +326,11 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
       await Promise.all(regs.map(r=>r.unregister()));
       if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
       sessionStorage.setItem(marker,'1');
-      const u=new URL(location.href); u.searchParams.set('appv','0.4.127');
+      const u=new URL(location.href); u.searchParams.set('appv','0.4.128');
       location.replace(u.toString());
       return;
     }
-    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.127',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.128',{updateViaCache:'none'});
     await reg.update();
   } catch(e){ console.warn('Service worker recovery/update failed',e); }
 });
@@ -605,7 +605,9 @@ function renderSummary(){
 function renderCalculationDetail(){
   const fb=$('foodCalcDetailBody'),ff=$('foodCalcDetailFoot'),mb=$('modCalcDetailBody'),mf=$('modCalcDetailFoot'),note=$('modCalcBasisNote'),warn=$('calcDetailWarnings');if(!fb||!mb)return;
   const foodRows=[];let foodTotal=emptyNut();const missing=[];const pushFood=(x,time,menu)=>{const f=matchedFood(x);if(!f){missing.push(`${time||''} ${x.food||menu||''}: no DB match`);return}const fac=factorFor(x,f);if(fac===null){missing.push(`${time||''} ${x.food||menu||''}: amount/unit not convertible`);return}const t=emptyNut();addNut(t,f,fac);TOTAL_KEYS.forEach(k=>foodTotal[k]+=t[k]);foodRows.push(`<tr><td>${esc(time||'—')} / ${esc(menu||x.food||'—')}</td><td>${esc(x.food||f.name)}</td><td>${esc(f.name)}</td><td>${esc(portionText(x)||'—')}</td><td>${fmt(t.kcal)}</td><td>${fmt(t.protein)}</td><td>${fmt(totalFatGrams(t))}</td><td>${fmt(t.calcium)}</td><td>${fmt(t.sodium)}</td><td>${fmt(t.potassium)}</td></tr>`)};
-  const detailMeals=(reviewDraft&&Array.isArray(reviewDraft))?reviewDraft:(state.meals||[]);
+  // Calculation Detail must use the exact persisted meal snapshot used by calculateIntake().
+  // A stale reviewDraft could previously make the detail table empty while Nutrient Summary had values.
+  const detailMeals=state.meals||[];
   detailMeals.forEach(m=>{const ings=m.ingredients||[];if(ings.length)ings.filter(hasPortion).forEach(x=>pushFood(x,m.time,m.food));else if(normalizeIntakeType(m.intake_type)==='formula')pushFood(m,m.time,m.food)});fb.innerHTML=foodRows.join('')||'<tr><td colspan="10">No calculated food/formula items — resolve Needs review items above.</td></tr>';if(ff)ff.innerHTML=`<tr class="calc-total-row"><th colspan="4">Food + Formula subtotal</th><th>${fmt(foodTotal.kcal)}</th><th>${fmt(foodTotal.protein)}</th><th>${fmt(totalFatGrams(foodTotal))}</th><th>${fmt(foodTotal.calcium)}</th><th>${fmt(foodTotal.sodium)}</th><th>${fmt(foodTotal.potassium)}</th></tr>`;
   const md=state.modular||{},mod=modularDailyCalculation(),modRows=[];(md.components||[]).forEach(x=>{const f=state.foodDB.find(z=>z.id===x.dbMatchId)||exactCustom(x.name);if(!f)return;const fac=factorFor({food:x.name,amount:x.amount,unit:x.unit,convertUnit:x.unit,dbMatchId:f.id,formulaKcalOz:x.formulaKcalOz||'',volume_ml:canonicalUnit(x.unit)==='ml'?x.amount:''},f);if(fac===null)return;const recipe=emptyNut();addNut(recipe,f,fac);const t=emptyNut();TOTAL_KEYS.forEach(k=>t[k]=recipe[k]*mod.factor);modRows.push(`<tr><td>${esc(x.name||f.name)}</td><td>${esc(f.name)}</td><td>${esc(x.amount||'—')} ${esc(x.unit||'')}</td><td>${mod.factor>0?`${round(mod.factor*100,1)}% of recipe`: '0'}</td><td>${fmt(t.kcal)}</td><td>${fmt(t.protein)}</td><td>${fmt(totalFatGrams(t))}</td><td>${fmt(t.calcium)}</td><td>${fmt(t.sodium)}</td><td>${fmt(t.potassium)}</td></tr>`)});mb.innerHTML=modRows.join('')||'<tr><td colspan="10">No modular components contributing to daily intake</td></tr>';if(mf)mf.innerHTML=`<tr class="calc-total-row"><th colspan="4">Modular daily subtotal</th><th>${fmt(mod.total.kcal)}</th><th>${fmt(mod.total.protein)}</th><th>${fmt(totalFatGrams(mod.total))}</th><th>${fmt(mod.total.calcium)}</th><th>${fmt(mod.total.sodium)}</th><th>${fmt(mod.total.potassium)}</th></tr>`;if(note)note.textContent=`Daily contribution uses ${mod.basis||'—'} intake ${mod.dailyMl||0} mL/day ÷ final recipe volume ${mod.finalVol||'—'} mL.`;if(warn)warn.innerHTML=[...missing,...mod.missing.map(x=>`${x.food}: ${x.reason}`)].length?`<div class="status warn"><strong>Calculation detail warnings</strong><br>${[...missing,...mod.missing.map(x=>`${x.food}: ${x.reason}`)].map(esc).join('<br>')}</div>`:'';
 }
@@ -1104,18 +1106,8 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
 }
 function balancePrescriptionToRequirements(d=ensureDesignDraft()){return optimizePrescriptionToRequirements(d)}
 
-function renderDesignQuickEditor(){
-  const box=$('designQuickEditor');if(!box)return;const d=ensureDesignDraft(),rows=[];
-  const add=(kind,obj,label,unit,sub='')=>rows.push({kind,obj,label,unit,sub});
-  if(d.dietEnabled)(d.dietItems||[]).forEach(x=>add('diet',x,x.name||state.foodDB.find(f=>f.id===x.dbMatchId)?.name||x.group||'Food',x.unit||'',x.constraintMode||'auto'));
-  if(d.formulaEnabled)(d.formulaPlans||[]).forEach(x=>{const suffix=x.mode==='per_feed'?` × ${Math.max(0,Math.round(num(x.feeds)))} feeds/day`:' /day';add('formula',x,x.name||state.foodDB.find(f=>f.id===x.dbMatchId)?.name||'Milk / Formula',x.unit||'',suffix);(x.fortifiers||[]).forEach(ft=>add('fortifier',ft,ft.name||state.foodDB.find(f=>f.id===ft.dbMatchId)?.name||'Fortifier',ft.unit||'',ft.mode==='per_feed'?'per feed':'per day'))});
-  if(d.modularEnabled)(d.modular?.components||[]).forEach(x=>add('modular',x,x.name||state.foodDB.find(f=>f.id===x.dbMatchId)?.name||x.role||'Component',x.unit||'',x.constraintMode||'auto'));
-  if(!rows.length){box.innerHTML='<p class="muted">Generate prescription first. Components will appear here for quick adjustment.</p>';return}
-  box.innerHTML=`<div class="quick-editor-head"><strong>Quick adjust prescription</strong><span class="muted">แก้ Amount ตรงนี้ แล้วกด Calculate Intake — ไม่ปรับสูตรอัตโนมัติ</span></div><div class="quick-editor-table-wrap"><table class="quick-editor-table"><thead><tr><th>Component</th><th>Amount</th><th>Unit</th></tr></thead><tbody>${rows.map((q,i)=>`<tr><td><strong>${esc(q.label)}</strong>${q.sub?`<small>${esc(q.sub)}</small>`:''}</td><td><input type="number" min="0" step="0.1" data-qidx="${i}" value="${esc(q.obj.amount??'')}"></td><td>${esc(q.unit)}</td></tr>`).join('')}</tbody></table></div>`;
-  box.querySelectorAll('[data-qidx]').forEach(inp=>inp.addEventListener('change',()=>{const q=rows[Number(inp.dataset.qidx)];q.obj.amount=inp.value===''?'':Math.max(0,num(inp.value));setManualAfterAmountEdit(q.obj);markDesignDirty();renderDesignTargetGapBar()}));
-}
+function renderDesignQuickEditor(){/* v0.4.128: Quick-adjust component list removed; prescription and nutrient contribution tables remain. */}
 function renderDesignRecheck(){
-  renderDesignQuickEditor();
   const c=designCombined(),r=state.requirements,m=c.modular,fcw=modularFormulaConstraintWarnings(),w=num(state.patient.weight),proteinKey=proteinTargetKey(),naReqMg=requirementElectrolyteMg('na',r),kReqMg=requirementElectrolyteMg('k',r);
   const fmt=x=>round(num(x),1),pct=(v,t)=>num(t)>0?`${fmt(num(v)/num(t)*100)}%`:'—';
   const reqText=(v,u,kind='')=>{if(!(num(v)>0))return '—';if(kind==='na')return `${fmt(v)} mg / ${fmt(num(v)/23)} mEq`;if(kind==='k')return `${fmt(v)} mg / ${fmt(num(v)/39)} mEq`;return `${fmt(v)} ${u}`};
@@ -1911,7 +1903,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.127',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.128',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
