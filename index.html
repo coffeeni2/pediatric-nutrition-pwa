@@ -29,8 +29,7 @@
     <button class="tab" data-tab="review">Review Intake</button>
     <button class="tab" data-tab="modular">Modular Diet</button>
     <button class="tab" data-tab="foods">Custom Database</button>
-    <button class="tab" data-tab="summary">Summary</button>
-    <button class="tab" data-tab="calc">Calculation Detail</button>
+    <button class="tab" data-tab="summary">Review & Calculate</button>
     <button class="tab" data-tab="data">Settings & Backup</button>
   </nav>
 
@@ -261,7 +260,7 @@
   <section id="tab-review" class="tab-panel">
     <div class="card">
       <div class="section-title-row">
-        <div><h2>Review Intake</h2><p class="muted">การ์ดสั้น: เวลา • เมนู • ส่วนประกอบ กด Edit เมื่อต้องการแก้รายละเอียด • การแก้ไขจะยังไม่บันทึกจนกด Save Review Intake</p></div><div class="inline-actions"><button id="cancelReviewBtn" class="secondary">Cancel changes</button><button id="saveReviewBtn" class="primary">Save Review Intake</button><span id="reviewSaveStatus" class="muted"></span></div>
+        <div><h2>Review Intake</h2><p class="muted">ชื่อเมนูเก็บไว้เพื่ออ่านง่าย แต่ไม่ต้องกรอก/match ระดับเมนู • คำนวณจาก ingredient • ค่าเริ่มต้นแสดงเฉพาะ Needs review</p></div><div class="inline-actions"><button id="clearEncounterIntakeBtn" class="danger">Clear intake</button><button id="cancelReviewBtn" class="secondary">Cancel changes</button><button id="saveReviewBtn" class="primary">Save Review Intake</button><span id="reviewSaveStatus" class="muted"></span></div>
         <div class="inline-actions"><button id="needsReviewBtn" class="secondary">Needs review only: Off</button><button id="addMealBtn" class="primary">+ Add food</button></div>
       </div>
       <div id="reviewSummary" class="review-summary"></div>
@@ -272,7 +271,7 @@
 
   <section id="tab-modular" class="tab-panel">
     <div class="card">
-      <div class="section-title-row"><div><h2>Daily Modular Recipe</h2><p class="muted">สูตรรวมทั้งวันครั้งเดียว แล้วบันทึก prescribed / actual volume ราย feed • การแก้ไขจะยังไม่บันทึกจนกด Save Modular Diet</p></div><div class="inline-actions"><button id="cancelModularBtn" class="secondary">Cancel changes</button><button id="saveModularBtn" class="primary">Save Modular Diet</button><span id="modularSaveStatus" class="muted"></span></div></div>
+      <div class="section-title-row"><div><h2>Daily Modular Recipe</h2><p class="muted">PNIF modular components จะเข้าหน้านี้อัตโนมัติ • แสดง compact บนมือถือ และเปิดแก้เฉพาะที่จำเป็น</p></div><div class="inline-actions"><button id="clearModularOnlyBtn" class="danger">Clear modular</button><button id="cancelModularBtn" class="secondary">Cancel changes</button><button id="saveModularBtn" class="primary">Save Modular Diet</button><span id="modularSaveStatus" class="muted"></span></div></div>
       <div class="grid-3">
         <label>Recipe name<input id="modName" /></label>
         <label>Final volume (mL)<input id="modFinalVolume" type="number" min="0" step="1" /></label>
@@ -290,14 +289,14 @@
   <section id="tab-foods" class="tab-panel">
     <div class="card">
       <div class="section-title-row">
-        <div><h2>Custom Database</h2><p class="muted">กด + Add item ที่มุมขวาบนเพื่อเพิ่มรายการใหม่ • เพิ่ม/แก้ Food, Formula, Modular และ Medication/Mineral ได้ • Formula เพิ่ม standard/min/max kcal/oz เพื่อใช้เป็น concentration constraint • Na, K, Ca, Mg, P เก็บเป็น mg ต่อ basis ที่กำหนด • Food ใช้ Food group คอลัมน์เดียวสำหรับ counted protein + age-based Diet Generate</p></div>
+        <div><h2>Custom Database</h2><p class="muted">กด + Add item ที่มุมขวาบนเพื่อเพิ่มรายการใหม่ • เพิ่ม/แก้ Food, Formula, Modular และ Medication/Mineral ได้ • Unit aliases: ชต.=ช้อนโต๊ะ, ชช.=ช้อนชา, cc=mL, กรัม=g • Formula เพิ่ม standard/min/max kcal/oz เพื่อใช้เป็น concentration constraint • Na, K, Ca, Mg, P เก็บเป็น mg ต่อ basis ที่กำหนด • Food ใช้ Food group คอลัมน์เดียวสำหรับ counted protein + age-based Diet Generate</p></div>
         <div class="inline-actions"><button id="addFoodDbBtn" class="primary">+ Add item</button><button id="cancelFoodDbBtn" class="secondary">Cancel changes</button><button id="saveFoodDbBtn" class="primary">Save Custom Database</button><span id="foodDbSaveStatus" class="muted"></span></div>
       </div>
       <div class="db-toolbar">
         <label>Filter<select id="dbTypeFilter"><option value="all">All</option><option value="food">Food</option><option value="formula">Medical formula</option><option value="modular">Modular component</option><option value="medication">Medication / mineral</option></select></label>
         <label>Search<input id="dbSearch" placeholder="ชื่ออาหาร/สูตร" /></label>
       </div>
-      <datalist id="dbUnitOptions"><option value="g"><option value="mL"><option value="portion"><option value="ทัพพี"><option value="ถ้วยตวง"><option value="ช้อนโต๊ะ"><option value="ช้อนชา"><option value="ฟอง"><option value="ชิ้น"><option value="ผล"><option value="แผ่น"><option value="scoop"><option value="เม็ด"><option value="ซอง"><option value="ขวด"><option value="ampule"><option value="mL"><option value="g"></datalist>
+      <datalist id="dbUnitOptions"><option value="g"><option value="mL"><option value="cc"><option value="portion"><option value="ทัพพี"><option value="ถ้วยตวง"><option value="ช้อนโต๊ะ"><option value="ชต."><option value="ช้อนชา"><option value="ชช."><option value="ฟอง"><option value="ชิ้น"><option value="ผล"><option value="แผ่น"><option value="scoop"><option value="เม็ด"><option value="ซอง"><option value="ขวด"><option value="ampule"><option value="mL"><option value="g"></datalist>
       <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Standard kcal/oz</th><th>Min kcal/oz</th><th>Max kcal/oz</th><th>Food group</th><th>kcal</th><th>Protein</th><th>LCT / %total fat</th><th>MCT</th><th>CHO</th><th>Ca (mg)</th><th>Mg (mg)</th><th>P (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
     </div>
   </section>
@@ -308,14 +307,10 @@
       <div id="nutrientSummary" class="summary-box"></div>
       <div id="unmatchedList"></div>
     </div>
-  </section>
-
-
-  <section id="tab-calc" class="tab-panel">
-    <div class="card">
+<div class="card">
       <div class="section-title-row">
-        <div><h2>Calculation Detail / Manual Recheck</h2><p class="muted">แสดงรายการที่ถูกนำไปคำนวณจริง พร้อม Custom Database item ที่อ้างอิง เพื่อให้ตรวจคำนวณซ้ำด้วยมือได้</p></div>
-        <button id="refreshCalcDetailBtn" class="primary">Refresh calculation</button>
+        <div><h2>Calculation Detail</h2><p class="muted">แสดงรายการที่ถูกนำไปคำนวณจริง พร้อม Custom Database item ที่อ้างอิง เพื่อให้ตรวจคำนวณซ้ำด้วยมือได้</p></div>
+        <button id="refreshCalcDetailBtn" class="primary">Refresh detail</button>
       </div>
       <h3 class="top-gap">1. Food + Formula / Review Intake</h3>
       <p class="muted">รวม food, formula และ Custom modular-component ที่ถูกใช้ใน Review Intake; ถ้าเมนูคำนวณจาก ingredients จะแสดงแต่ละ ingredient เป็นคนละแถว และ formula จะแสดง derived powder g เมื่อมี kcal/oz + volume.</p>
@@ -325,7 +320,9 @@
       <div class="table-wrap calc-detail-wrap"><table class="calc-detail-table"><thead><tr><th>Component</th><th>Custom DB reference</th><th>Recipe amount</th><th>Amount contributing to daily intake</th><th>Energy (kcal)</th><th>Total protein (g)</th><th>Fat (g)</th><th>Ca (mg)</th><th>Na (mg)</th><th>K (mg)</th></tr></thead><tbody id="modCalcDetailBody"></tbody><tfoot id="modCalcDetailFoot"></tfoot></table></div>
       <div id="calcDetailWarnings" class="top-gap"></div>
     </div>
+  
   </section>
+
 
   <section id="tab-data" class="tab-panel">
     <div class="card">
@@ -338,7 +335,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.103</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.103"></script>
+<footer><strong>PWA 0.4.105</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.105"></script>
 </body>
 </html>
