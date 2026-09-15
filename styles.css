@@ -304,3 +304,6 @@ label small.muted{display:block;margin:3px 0 5px;font-weight:400;line-height:1.2
   #tab-patient .patient-main-grid{grid-template-columns:1.25fr .9fr .65fr}
   #tab-patient .requirements-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+/* 0.4.119 mobile review/summary density */
+.nutrient-table{min-width:0!important;table-layout:fixed}.nutrient-table th,.nutrient-table td{padding:4px 6px;line-height:1.2}.nutrient-table th:nth-child(1){width:29%}.nutrient-table th:nth-child(2){width:35%}.nutrient-table th:nth-child(3){width:36%}.nutrient-table td{white-space:normal!important}.nutrient-table-wrap{overflow-x:hidden!important}
+@media(max-width:700px){#tab-review .card,#tab-modular .card,#tab-summary .card{padding:9px;margin-bottom:8px}#tab-review .time-card{margin:5px 0}.time-head{padding:6px 8px}.menu-row{padding:7px 8px}.ingredients-line{font-size:.78rem;line-height:1.25}.badge{font-size:.66rem}.nutrient-table th,.nutrient-table td{font-size:.68rem;padding:3px 4px}.nutrient-table td:nth-child(2){font-size:.7rem}.calc-detail-wrap{max-height:42vh;overflow:auto}.calc-detail-table{min-width:760px}.calc-detail-table th,.calc-detail-table td{padding:4px;font-size:.68rem}#unmatchedList .status{font-size:.72rem;line-height:1.25;max-height:28vh;overflow:auto}}

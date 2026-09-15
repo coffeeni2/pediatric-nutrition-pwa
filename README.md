@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.117
+# Pediatric Nutrition PWA 0.4.119
 
 
 
@@ -377,7 +377,14 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Rechecked Case, Modular Diet, and Diet Design action wiring after the startup fix.
 
 
-## v0.4.117
+## v0.4.118
 - New Case now force-saves the current Patient form/case snapshot before creating a blank case.
 - Saved Patient IDs remain listed in the global case dropdown after creating subsequent cases.
 - Case dropdown is rebuilt immediately after New Case.
+
+## v0.4.119
+- Review Intake unit aliases are normalized automatically (ชต./ช้อนโต๊ะ, ชช./ช้อนชา, cc/mL, กรัม/g, ลูก/ผล).
+- Review & Calculate now includes Daily Modular Diet scaled by actual intake (fallback prescribed) over final recipe volume.
+- Nutrient Summary is compact/mobile-first and adds protein g/kg/day, MCT % total energy, and Na/K mg/day + mEq/100 kcal Holliday-Segar/day.
+- Calculation Detail now shows actual calculated food/formula rows and modular daily contribution; Refresh recalculates before rendering.
+- Reduced vertical spacing on Review Intake, Modular Diet, and Review & Calculate for Android/mobile.
