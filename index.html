@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.132" />
+  <link rel="stylesheet" href="styles.css?v=0.4.133" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -327,10 +327,10 @@
       <div class="section-title-row top-gap"><div><p class="muted">แสดงเฉพาะ ingredient/formula ที่ถูกนำไปคำนวณจริง</p></div><button id="refreshCalcDetailBtn" class="secondary">Refresh</button></div>
       <h3 class="top-gap">1. Food + Formula / Review Intake</h3>
       <p class="muted">รวม food, formula และ Custom modular-component ที่ถูกใช้ใน Review Intake; ถ้าเมนูคำนวณจาก ingredients จะแสดงแต่ละ ingredient เป็นคนละแถว และ formula จะแสดง derived powder g เมื่อมี kcal/oz + volume.</p>
-      <div class="table-wrap calc-detail-wrap"><table class="calc-detail-table"><thead><tr><th>Time / Menu</th><th>Calculated item</th><th>Custom DB reference</th><th>Amount used</th><th>Energy (kcal)</th><th>Total protein (g)</th><th>Fat (g)</th><th>Ca (mg)</th><th>Na (mg)</th><th>K (mg)</th></tr></thead><tbody id="foodCalcDetailBody"></tbody><tfoot id="foodCalcDetailFoot"></tfoot></table></div>
+      <div class="table-wrap calc-detail-wrap"><table class="calc-detail-table"><thead><tr><th>Time / Menu</th><th>Calculated item</th><th>Custom DB reference</th><th>Amount used</th><th>Energy (kcal)</th><th>Protein (g)</th><th>Fat (g)</th><th>Fat (kcal)</th><th>MCT (g)</th><th>MCT (kcal)</th><th>CHO (g)</th><th>Ca (mg)</th><th>P (mg)</th><th>Mg (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe (mg)</th><th>Zn (mg)</th></tr></thead><tbody id="foodCalcDetailBody"></tbody><tfoot id="foodCalcDetailFoot"></tfoot></table></div>
       <h3 class="top-gap">2. From Daily Modular Diet</h3>
       <p id="modCalcBasisNote" class="muted"></p>
-      <div class="table-wrap calc-detail-wrap"><table class="calc-detail-table"><thead><tr><th>Component</th><th>Custom DB reference</th><th>Recipe amount</th><th>Amount contributing to daily intake</th><th>Energy (kcal)</th><th>Total protein (g)</th><th>Fat (g)</th><th>Ca (mg)</th><th>Na (mg)</th><th>K (mg)</th></tr></thead><tbody id="modCalcDetailBody"></tbody><tfoot id="modCalcDetailFoot"></tfoot></table></div>
+      <div class="table-wrap calc-detail-wrap"><table class="calc-detail-table"><thead><tr><th>Component</th><th>Custom DB reference</th><th>Recipe amount</th><th>Daily contribution</th><th>Energy (kcal)</th><th>Protein (g)</th><th>Fat (g)</th><th>Fat (kcal)</th><th>MCT (g)</th><th>MCT (kcal)</th><th>CHO (g)</th><th>Ca (mg)</th><th>P (mg)</th><th>Mg (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe (mg)</th><th>Zn (mg)</th></tr></thead><tbody id="modCalcDetailBody"></tbody><tfoot id="modCalcDetailFoot"></tfoot></table></div>
       <div id="calcDetailWarnings" class="top-gap"></div>
     </div>
   
@@ -348,7 +348,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.132</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<footer><strong>PWA 0.4.133</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
 <script>
 // Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
 (function(){
@@ -368,6 +368,6 @@
   window.__pedFallbackTab=switchVisibleTab;
 })();
 </script>
-<script src="app.js?v=0.4.132"></script>
+<script src="app.js?v=0.4.133"></script>
 </body>
 </html>
