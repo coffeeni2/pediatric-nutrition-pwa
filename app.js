@@ -326,11 +326,11 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
       await Promise.all(regs.map(r=>r.unregister()));
       if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
       sessionStorage.setItem(marker,'1');
-      const u=new URL(location.href); u.searchParams.set('appv','0.4.138');
+      const u=new URL(location.href); u.searchParams.set('appv','0.4.140');
       location.replace(u.toString());
       return;
     }
-    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.138',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.140',{updateViaCache:'none'});
     await reg.update();
   } catch(e){ console.warn('Service worker recovery/update failed',e); }
 });
@@ -650,7 +650,7 @@ function nutGrid(t,prefix=''){
   return `<div class="table-wrap nutrient-table-wrap"><table class="compact-summary-table nutrient-table"><thead><tr><th>Nutrient</th><th>Daily intake</th><th>Additional</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td><strong>${r[1]}</strong></td><td>${r[2]||'—'}</td></tr>`).join('')}</tbody></table></div>`
 }
 
-function renderSummaryFromSnapshot(sm){const box=$('nutrientSummary'),miss=$('unmatchedList');if(!box)return;const total=sm?.total||emptyNut();box.innerHTML=nutGrid(total)+requirementCompare(total);if(miss)miss.innerHTML=(sm?.missing||[]).length?`<div class="status warn top-gap"><strong>Items needing review</strong><br>${sm.missing.map(x=>`${esc(x.time||'')} ${esc(x.food||'')}: ${esc(x.reason||'')}`).join('<br>')}</div>`:'<div class="status ok top-gap">All reported calculated items have usable Custom Database matches/amounts.</div>'}function renderSummary(){renderSummaryFromSnapshot(calculateIntake())}
+function renderSummaryFromSnapshot(sm){const box=$('nutrientSummary'),miss=$('unmatchedList');if(!box)return;const total=sm?.total||emptyNut();box.innerHTML=nutGrid(total);if(miss)miss.innerHTML=(sm?.missing||[]).length?`<div class="status warn top-gap"><strong>Items needing review</strong><br>${sm.missing.map(x=>`${esc(x.time||'')} ${esc(x.food||'')}: ${esc(x.reason||'')}`).join('<br>')}</div>`:'<div class="status ok top-gap">All reported calculated items have usable Custom Database matches/amounts.</div>'}function renderSummary(){renderSummaryFromSnapshot(calculateIntake())}
 function renderCalculationDetail(){
   const fmt=v=>round(num(v),1);
   const fb=$('foodCalcDetailBody'),ff=$('foodCalcDetailFoot'),mb=$('modCalcDetailBody'),mf=$('modCalcDetailFoot'),note=$('modCalcBasisNote'),warn=$('calcDetailWarnings');if(!fb||!mb)return;
@@ -660,10 +660,10 @@ function renderCalculationDetail(){
   const foodRows=sm.detailFoodRows||[],foodTotal=sm.foodFormulaTotal||emptyNut();
   let lastMenuKey='';
   fb.innerHTML=foodRows.map(r=>{const t=r.nut||emptyNut(),menuLabel=`${r.time||'—'} • ${r.menu||r.reported||'—'}`,menuKey=`${r.time||''}|${r.menu||''}`;const group=menuKey!==lastMenuKey?`<tr class="calc-menu-group"><td colspan="18">${esc(menuLabel)}</td></tr>`:'';lastMenuKey=menuKey;return `${group}<tr class="calc-food-row"><td>${esc(r.time||'—')} / ${esc(r.menu||r.reported||'—')}</td><td>${esc(r.reported||r.dbName||'—')}</td><td>${esc(r.dbName||'—')}</td><td>${esc(r.amount||'—')}</td><td>${fmt(t.kcal)}</td><td>${fmt(t.protein)}</td><td>${fmt(totalFatGrams(t))}</td><td>${fmt(fatEnergyKcal(t))}</td><td>${fmt(t.mct)}</td><td>${fmt(mctKcal(t))}</td><td>${fmt(t.cho)}</td><td>${fmt(t.calcium)}</td><td>${fmt(t.phosphorus)}</td><td>${fmt(t.magnesium)}</td><td>${fmt(t.sodium)}</td><td>${fmt(t.potassium)}</td><td>${fmt(t.iron)}</td><td>${fmt(t.zinc)}</td></tr>`}).join('')||'<tr><td colspan="18">No calculated food/formula items — resolve Needs review items above.</td></tr>';
-  if(ff)ff.innerHTML=`<tr class="calc-total-row"><th colspan="4">Food + Formula subtotal</th><th>${fmt(foodTotal.kcal)}</th><th>${fmt(foodTotal.protein)}</th><th>${fmt(totalFatGrams(foodTotal))}</th><th>${fmt(fatEnergyKcal(foodTotal))}</th><th>${fmt(foodTotal.mct)}</th><th>${fmt(mctKcal(foodTotal))}</th><th>${fmt(foodTotal.cho)}</th><th>${fmt(foodTotal.calcium)}</th><th>${fmt(foodTotal.phosphorus)}</th><th>${fmt(foodTotal.magnesium)}</th><th>${fmt(foodTotal.sodium)}</th><th>${fmt(foodTotal.potassium)}</th><th>${fmt(foodTotal.iron)}</th><th>${fmt(foodTotal.zinc)}</th></tr>`;
+  if(ff)ff.innerHTML=`<tr class="calc-total-row"><th>Food + Formula subtotal</th><th></th><th></th><th></th><th>${fmt(foodTotal.kcal)}</th><th>${fmt(foodTotal.protein)}</th><th>${fmt(totalFatGrams(foodTotal))}</th><th>${fmt(fatEnergyKcal(foodTotal))}</th><th>${fmt(foodTotal.mct)}</th><th>${fmt(mctKcal(foodTotal))}</th><th>${fmt(foodTotal.cho)}</th><th>${fmt(foodTotal.calcium)}</th><th>${fmt(foodTotal.phosphorus)}</th><th>${fmt(foodTotal.magnesium)}</th><th>${fmt(foodTotal.sodium)}</th><th>${fmt(foodTotal.potassium)}</th><th>${fmt(foodTotal.iron)}</th><th>${fmt(foodTotal.zinc)}</th></tr>`;
   const modRows=sm.detailModRows||[],modTotal=sm.modularTotal||emptyNut(),basis=sm.modularBasis||{};
   mb.innerHTML=modRows.map(r=>{const t=r.nut||emptyNut();return `<tr><td>${esc(r.name||'—')}</td><td>${esc(r.dbName||'—')}</td><td>${esc(r.recipeAmount||'—')}</td><td>${num(r.factor)>0?`${round(num(r.factor)*100,1)}% of recipe`:'0'}</td><td>${fmt(t.kcal)}</td><td>${fmt(t.protein)}</td><td>${fmt(totalFatGrams(t))}</td><td>${fmt(fatEnergyKcal(t))}</td><td>${fmt(t.mct)}</td><td>${fmt(mctKcal(t))}</td><td>${fmt(t.cho)}</td><td>${fmt(t.calcium)}</td><td>${fmt(t.phosphorus)}</td><td>${fmt(t.magnesium)}</td><td>${fmt(t.sodium)}</td><td>${fmt(t.potassium)}</td><td>${fmt(t.iron)}</td><td>${fmt(t.zinc)}</td></tr>`}).join('')||'<tr><td colspan="18">No modular components contributing to daily intake</td></tr>';
-  if(mf)mf.innerHTML=`<tr class="calc-total-row"><th colspan="4">Modular daily subtotal</th><th>${fmt(modTotal.kcal)}</th><th>${fmt(modTotal.protein)}</th><th>${fmt(totalFatGrams(modTotal))}</th><th>${fmt(fatEnergyKcal(modTotal))}</th><th>${fmt(modTotal.mct)}</th><th>${fmt(mctKcal(modTotal))}</th><th>${fmt(modTotal.cho)}</th><th>${fmt(modTotal.calcium)}</th><th>${fmt(modTotal.phosphorus)}</th><th>${fmt(modTotal.magnesium)}</th><th>${fmt(modTotal.sodium)}</th><th>${fmt(modTotal.potassium)}</th><th>${fmt(modTotal.iron)}</th><th>${fmt(modTotal.zinc)}</th></tr>`;
+  if(mf)mf.innerHTML=`<tr class="calc-total-row"><th>Modular daily subtotal</th><th></th><th></th><th></th><th>${fmt(modTotal.kcal)}</th><th>${fmt(modTotal.protein)}</th><th>${fmt(totalFatGrams(modTotal))}</th><th>${fmt(fatEnergyKcal(modTotal))}</th><th>${fmt(modTotal.mct)}</th><th>${fmt(mctKcal(modTotal))}</th><th>${fmt(modTotal.cho)}</th><th>${fmt(modTotal.calcium)}</th><th>${fmt(modTotal.phosphorus)}</th><th>${fmt(modTotal.magnesium)}</th><th>${fmt(modTotal.sodium)}</th><th>${fmt(modTotal.potassium)}</th><th>${fmt(modTotal.iron)}</th><th>${fmt(modTotal.zinc)}</th></tr>`;
   if(note)note.textContent=`Daily contribution uses ${basis.basis||'—'} intake ${basis.dailyMl||0} mL/day ÷ final recipe volume ${basis.finalVol||'—'} mL.`;
   if(warn)warn.innerHTML=(sm.missing||[]).length?`<div class="status warn"><strong>Calculation detail warnings</strong><br>${sm.missing.map(x=>`${esc(x.time||'')} ${esc(x.food||'')}: ${esc(x.reason||'')}`).join('<br>')}</div>`:'';
 }
@@ -1200,7 +1200,7 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
 }
 function balancePrescriptionToRequirements(d=ensureDesignDraft()){return optimizePrescriptionToRequirements(d)}
 
-function renderDesignQuickEditor(){/* v0.4.138: Quick-adjust component list removed; prescription and nutrient contribution tables remain. */}
+function renderDesignQuickEditor(){/* v0.4.140: Quick-adjust component list removed; prescription and nutrient contribution tables remain. */}
 function renderDesignRecheck(){
   const c=designCombined(),r=state.requirements,m=c.modular,fcw=modularFormulaConstraintWarnings(),w=num(state.patient.weight),proteinKey=proteinTargetKey(),naReqMg=requirementElectrolyteMg('na',r),kReqMg=requirementElectrolyteMg('k',r);
   const fmt=x=>round(num(x),1),pct=(v,t)=>num(t)>0?`${fmt(num(v)/num(t)*100)}%`:'—';
@@ -1997,7 +1997,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.138',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.140',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }

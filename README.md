@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.138
+# Pediatric Nutrition PWA 0.4.140
 
 
 
@@ -412,11 +412,11 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Nutrient Recheck retains Diet / Milk-Formula / Modular / Total / Target / Remaining.
 
 
-## v0.4.138
+## v0.4.140
 - Removed the duplicate Quick adjust prescription/component list from Diet Design Nutrient Recheck; nutrient contribution tables A-D remain.
 - Fixed Review & Calculate Calculation Detail to render from the same persisted `state.meals` snapshot used by `calculateIntake()`, preventing stale `reviewDraft` from producing an empty detail table while the summary contained calculated food.
 
 
-## v0.4.138
+## v0.4.140
 - Nutrient Summary Additional now reports Energy % requirement; Protein/HBV g/kg/day + % requirement; Total fat/LCT/MCT kcal + % total energy; Calcium % requirement; Sodium/Potassium mEq/100 kcal Holliday-Segar/day + % requirement.
 - Requirement percentages use the active case Patient → Daily Requirements. Na/K support either mg/day or mEq/100 kcal/day targets through the existing Holliday-Segar conversion.
