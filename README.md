@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.124
+# Pediatric Nutrition PWA 0.4.127
 
 
 
@@ -382,7 +382,7 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Saved Patient IDs remain listed in the global case dropdown after creating subsequent cases.
 - Case dropdown is rebuilt immediately after New Case.
 
-## v0.4.120
+## v0.4.127
 - Review Intake unit aliases are normalized automatically (ชต./ช้อนโต๊ะ, ชช./ช้อนชา, cc/mL, กรัม/g, ลูก/ผล).
 - Review & Calculate now includes Daily Modular Diet scaled by actual intake (fallback prescribed) over final recipe volume.
 - Nutrient Summary is compact/mobile-first and adds protein g/kg/day, MCT % total energy, and Na/K mg/day + mEq/100 kcal Holliday-Segar/day.
@@ -390,7 +390,7 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Reduced vertical spacing on Review Intake, Modular Diet, and Review & Calculate for Android/mobile.
 
 
-## v0.4.121
+## v0.4.127
 - Simplified PNIF → Review Ingredients → Calculate workflow for mobile use.
 - Food menu names are labels only; nutrient calculation uses quantified ingredients. Standalone formula remains calculable.
 - Review autosaves to active case; removed mandatory Save/Cancel step.
@@ -399,13 +399,13 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Calculation Detail follows ingredient-only food calculation.
 
 
-## v0.4.124
+## v0.4.127
 - Keep explicit Clear actions in Diet Design, Review Intake, and Modular Intake.
 - Diet Design Nutrient Recheck keeps Requirement − Total Remaining.
 - Recheck preserves Diet / Milk-Formula / Modular contribution for every nutrient; on mobile the source breakdown is shown compactly under Total while full source columns remain on larger screens.
 
 
-## v0.4.124
+## v0.4.127
 - Diet Design mobile-first workflow: compact Daily Requirements target, Generate Diet Plan only before a prescription exists, then Calculate Intake / Optimize Again.
 - Quick adjust remains beside Nutrient Recheck; Calculate Intake never rebalances and now autosaves the current Diet Design.
 - Detailed Diet, Milk/Formula, Modular and Fluid editors plus source allocation/rounding controls are preserved under Advanced setup.

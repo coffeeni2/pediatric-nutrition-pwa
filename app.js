@@ -326,11 +326,11 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
       await Promise.all(regs.map(r=>r.unregister()));
       if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
       sessionStorage.setItem(marker,'1');
-      const u=new URL(location.href); u.searchParams.set('appv','0.4.124');
+      const u=new URL(location.href); u.searchParams.set('appv','0.4.127');
       location.replace(u.toString());
       return;
     }
-    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.124',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.127',{updateViaCache:'none'});
     await reg.update();
   } catch(e){ console.warn('Service worker recovery/update failed',e); }
 });
@@ -605,7 +605,8 @@ function renderSummary(){
 function renderCalculationDetail(){
   const fb=$('foodCalcDetailBody'),ff=$('foodCalcDetailFoot'),mb=$('modCalcDetailBody'),mf=$('modCalcDetailFoot'),note=$('modCalcBasisNote'),warn=$('calcDetailWarnings');if(!fb||!mb)return;
   const foodRows=[];let foodTotal=emptyNut();const missing=[];const pushFood=(x,time,menu)=>{const f=matchedFood(x);if(!f){missing.push(`${time||''} ${x.food||menu||''}: no DB match`);return}const fac=factorFor(x,f);if(fac===null){missing.push(`${time||''} ${x.food||menu||''}: amount/unit not convertible`);return}const t=emptyNut();addNut(t,f,fac);TOTAL_KEYS.forEach(k=>foodTotal[k]+=t[k]);foodRows.push(`<tr><td>${esc(time||'—')} / ${esc(menu||x.food||'—')}</td><td>${esc(x.food||f.name)}</td><td>${esc(f.name)}</td><td>${esc(portionText(x)||'—')}</td><td>${fmt(t.kcal)}</td><td>${fmt(t.protein)}</td><td>${fmt(totalFatGrams(t))}</td><td>${fmt(t.calcium)}</td><td>${fmt(t.sodium)}</td><td>${fmt(t.potassium)}</td></tr>`)};
-  (state.meals||[]).forEach(m=>{const ings=m.ingredients||[];if(ings.length)ings.filter(hasPortion).forEach(x=>pushFood(x,m.time,m.food));else if(normalizeIntakeType(m.intake_type)==='formula')pushFood(m,m.time,m.food)});fb.innerHTML=foodRows.join('')||'<tr><td colspan="10">No calculated food/formula items — resolve Needs review items above.</td></tr>';if(ff)ff.innerHTML=`<tr class="calc-total-row"><th colspan="4">Food + Formula subtotal</th><th>${fmt(foodTotal.kcal)}</th><th>${fmt(foodTotal.protein)}</th><th>${fmt(totalFatGrams(foodTotal))}</th><th>${fmt(foodTotal.calcium)}</th><th>${fmt(foodTotal.sodium)}</th><th>${fmt(foodTotal.potassium)}</th></tr>`;
+  const detailMeals=(reviewDraft&&Array.isArray(reviewDraft))?reviewDraft:(state.meals||[]);
+  detailMeals.forEach(m=>{const ings=m.ingredients||[];if(ings.length)ings.filter(hasPortion).forEach(x=>pushFood(x,m.time,m.food));else if(normalizeIntakeType(m.intake_type)==='formula')pushFood(m,m.time,m.food)});fb.innerHTML=foodRows.join('')||'<tr><td colspan="10">No calculated food/formula items — resolve Needs review items above.</td></tr>';if(ff)ff.innerHTML=`<tr class="calc-total-row"><th colspan="4">Food + Formula subtotal</th><th>${fmt(foodTotal.kcal)}</th><th>${fmt(foodTotal.protein)}</th><th>${fmt(totalFatGrams(foodTotal))}</th><th>${fmt(foodTotal.calcium)}</th><th>${fmt(foodTotal.sodium)}</th><th>${fmt(foodTotal.potassium)}</th></tr>`;
   const md=state.modular||{},mod=modularDailyCalculation(),modRows=[];(md.components||[]).forEach(x=>{const f=state.foodDB.find(z=>z.id===x.dbMatchId)||exactCustom(x.name);if(!f)return;const fac=factorFor({food:x.name,amount:x.amount,unit:x.unit,convertUnit:x.unit,dbMatchId:f.id,formulaKcalOz:x.formulaKcalOz||'',volume_ml:canonicalUnit(x.unit)==='ml'?x.amount:''},f);if(fac===null)return;const recipe=emptyNut();addNut(recipe,f,fac);const t=emptyNut();TOTAL_KEYS.forEach(k=>t[k]=recipe[k]*mod.factor);modRows.push(`<tr><td>${esc(x.name||f.name)}</td><td>${esc(f.name)}</td><td>${esc(x.amount||'—')} ${esc(x.unit||'')}</td><td>${mod.factor>0?`${round(mod.factor*100,1)}% of recipe`: '0'}</td><td>${fmt(t.kcal)}</td><td>${fmt(t.protein)}</td><td>${fmt(totalFatGrams(t))}</td><td>${fmt(t.calcium)}</td><td>${fmt(t.sodium)}</td><td>${fmt(t.potassium)}</td></tr>`)});mb.innerHTML=modRows.join('')||'<tr><td colspan="10">No modular components contributing to daily intake</td></tr>';if(mf)mf.innerHTML=`<tr class="calc-total-row"><th colspan="4">Modular daily subtotal</th><th>${fmt(mod.total.kcal)}</th><th>${fmt(mod.total.protein)}</th><th>${fmt(totalFatGrams(mod.total))}</th><th>${fmt(mod.total.calcium)}</th><th>${fmt(mod.total.sodium)}</th><th>${fmt(mod.total.potassium)}</th></tr>`;if(note)note.textContent=`Daily contribution uses ${mod.basis||'—'} intake ${mod.dailyMl||0} mL/day ÷ final recipe volume ${mod.finalVol||'—'} mL.`;if(warn)warn.innerHTML=[...missing,...mod.missing.map(x=>`${x.food}: ${x.reason}`)].length?`<div class="status warn"><strong>Calculation detail warnings</strong><br>${[...missing,...mod.missing.map(x=>`${x.food}: ${x.reason}`)].map(esc).join('<br>')}</div>`:'';
 }
 
@@ -993,6 +994,26 @@ function wholePrescriptionDeficitCorrection(d,t,includeMedication=false,maxPass=
   }
   return designCombined(d);
 }
+function strictFatTargetCorrection(d,t,maxPass=18){
+  if(!(t.fatKcal>0&&t.kcal>0))return designCombined(d);
+  const vars=optimizationVariables(d,{includeMedication:false});
+  const unit=v=>rowUnitNut(v.row,v.opts)||{};
+  const clip=(v,value)=>{let nv=applyRoundRuleValue(Math.max(0,value),v.row.roundRule||defaultRoundRule(v.row,v.kind)),mx=optimizationMaxAmount(v,d),g=thaiFoodGuideBoundsForVariable(v,d);if(Number.isFinite(mx))nv=Math.min(mx,nv);if(g)nv=Math.max(g.min,Math.min(g.max,nv));return nv};
+  // Fat-target pass: exchange a fat-dense source against a low-fat energy source while preserving
+  // total energy as closely as rounding allows. This runs AFTER the generic optimizer so a near-
+  // perfect energy result cannot hide a clinically large fat-% gap.
+  const fatVars=vars.filter(v=>{const u=unit(v),fk=num(u.fat)*9+num(u.mct)*8.3;return fk>0&&num(u.kcal)>0&&fk/num(u.kcal)>.45});
+  const leanVars=vars.filter(v=>{const u=unit(v),fk=num(u.fat)*9+num(u.mct)*8.3;return num(u.kcal)>0&&fk/num(u.kcal)<.35});
+  const objective=()=>{const c=designCombined(d),e=Math.abs(num(c.total.kcal)-t.kcal)/t.kcal,p=t.protein>0?Math.abs(num(c.total[t.proteinKey])-t.protein)/t.protein:0,f=Math.abs(fatEnergyKcal(c.total)-t.fatKcal)/t.fatKcal;return f*18+e*12+p*7};
+  let bestScore=objective();
+  for(let pass=0;pass<maxPass;pass++){
+    const c=designCombined(d),fatGap=t.fatKcal-fatEnergyKcal(c.total);if(Math.abs(fatGap)/t.fatKcal<=.02)break;
+    const up=fatGap>0?fatVars:leanVars,down=fatGap>0?leanVars:fatVars;let best=null,bs=bestScore;
+    for(const a of up)for(const b of down){if(a===b)continue;const oa=num(a.row.amount),ob=num(b.row.amount),ua=unit(a),ub=unit(b);for(const mult of [1,2,5,10,20,40]){const na=clip(a,oa+a.step*mult);if(Math.abs(na-oa)<1e-9)continue;const deltaK=(na-oa)*num(ua.kcal);const nb=clip(b,ob-(num(ub.kcal)>0?deltaK/num(ub.kcal):b.step*mult));if(Math.abs(nb-ob)<1e-9)continue;a.row.amount=na;b.row.amount=nb;const sc=objective();a.row.amount=oa;b.row.amount=ob;if(sc+1e-9<bs){bs=sc;best={a,b,na,nb}}}}
+    if(!best)break;best.a.row.amount=best.na;best.b.row.amount=best.nb;bestScore=bs;
+  }
+  applyDesignRounding(d);return designCombined(d);
+}
 function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
   const t=optimizationTargets();applyDesignRounding(d);
   // Stage 1 — food/formula first. Medication/mineral rows are excluded. The optimizer uses
@@ -1065,6 +1086,10 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
     if(previousFinalScore-sc<1e-7)break;previousFinalScore=sc;
   }
   wholePrescriptionDeficitCorrection(d,t,true,10);
+  strictFatTargetCorrection(d,t,24);
+  // One final combined correction rechecks energy/protein after the dedicated fat exchange.
+  wholePrescriptionDeficitCorrection(d,t,true,8);
+  strictFatTargetCorrection(d,t,12);
   let current=designCombined(d);syncAllocationToActual(d);
 
   const warnings=[],proteinLabel=(state.requirements.proteinMode||'total')==='counted'?'High biological value protein':'Total protein';
@@ -1105,7 +1130,13 @@ function renderDesignRecheck(){
     return ma-mb;
   });
   const preparationText=m.finalVol>0?`<div class="modular-preparation-summary"><strong>Preparation / feeding</strong><div>เติมน้ำจนครบ (add water q.s. to final volume): <strong>${fmt(m.finalVol)} mL</strong></div><div>แบ่งให้: <strong>${feedVol>0?fmt(feedVol):'—'} mL/feed × ${feedCount||'—'} feeds/day</strong>${feedVol>0&&feedCount>0?` = ${fmt(feedVol*feedCount)} mL/day`:''}</div><div class="muted">Route ${esc(dm.route||'oral')} • Whole recipe ${fmt(m.recipe.kcal)} kcal${m.dailyVol>0?` • Daily prescribed ${fmt(m.dailyVol)} mL (${fmt(m.ratio*100)}% of recipe)`:''}</div></div>`:'';
-  let html=recheckTable('A. Diet',c.diet.rows,c.diet.total)+recheckTable('B. Milk / Formula + Fortifiers',c.formula.rows,c.formula.total,`<p class="muted">Amount ระบุชัดเป็น per day หรือ per feed; ถ้าเป็น per feed จะแสดงจำนวน feeds/day ด้วย • Recorded formula/milk fluid: ${fmt(c.formula.fluid)} mL/day</p>`)+recheckTable('C. Modular Diet',modularRecheckRows,m.daily,`${preparationText}${fcw.length?`<div class="status warn"><strong>Formula concentration check</strong><br>${fcw.map(esc).join('<br>')}</div>`:''}${m.finalVol?`<p class="muted">Per 100 mL: ${fmt(m.recipe.kcal/m.finalVol*100)} kcal • Protein ${fmt(m.recipe.protein/m.finalVol*100)} g${feedVol>0?` • Per feed (${fmt(feedVol)} mL): ${fmt(m.recipe.kcal/m.finalVol*feedVol)} kcal`:''}</p>`:''}`);
+  // Keep component nutrient contribution tables in Recheck, but do not repeat a separate textual
+  // component list above them. Prescription already shows the component names/amounts for editing.
+  const modularDailyRows=m.rows.map(x=>{const nut=emptyNut();TOTAL_KEYS.forEach(k=>nut[k]=num(x.nut?.[k])*num(m.ratio));return {...x,nut,amountText:x.amountText||`${x.row?.amount??'—'} ${x.row?.unit||''} recipe`}});
+  let html=`${fcw.length?`<div class="status warn"><strong>Formula concentration check</strong><br>${fcw.map(esc).join('<br>')}</div>`:''}`;
+  if(ensureDesignDraft().dietEnabled)html+=recheckTable('A. Diet — nutrient contribution',c.diet.rows,c.diet.total);
+  if(ensureDesignDraft().formulaEnabled)html+=recheckTable('B. Milk / Formula + Fortifiers — nutrient contribution',c.formula.rows,c.formula.total);
+  if(ensureDesignDraft().modularEnabled)html+=recheckTable('C. Modular Diet — daily nutrient contribution',modularDailyRows,c.modular.daily,m.finalVol>0?`<p class="muted compact-recheck-note">Daily contribution uses ${fmt(m.dailyVol)} mL/day of a ${fmt(m.finalVol)} mL recipe (${fmt(m.ratio*100)}%).</p>`:'');
   const specsBeforeFat=[
     {label:'Total energy',k:'kcal',u:'kcal',target:r.energy},
     {label:'Total protein',k:'protein',u:'g',target:proteinKey==='protein'?r.protein:''},
@@ -1148,7 +1179,10 @@ function suggestedAllocation(d=ensureDesignDraft()){
 }
 function scaleRowsAmounts(rows,factor,whole=false){(rows||[]).forEach(r=>{if(rowIsConstrained(r))return;if(num(r.amount)>0)r.amount=num(r.amount)*factor})}
 function autoCalculateDesignFromRequirements(){
-  const d=ensureDesignDraft(),target=num(state.requirements.energy);if(!(target>0)){alert('กรุณากรอก Energy requirement (kcal/day) ใน Patient Profile ก่อน');return}
+  const d=ensureDesignDraft(),target=num(state.requirements.energy);
+  // Optimize Again must respect user intent: Manual and Locked rows stay exactly as entered.
+  // Only Auto rows are available to the optimizer; Calculate Intake also never changes amounts.
+  if(!(target>0)){alert('กรุณากรอก Energy requirement (kcal/day) ใน Patient Profile ก่อน');return}
   const enabled=[d.dietEnabled?'diet':null,d.formulaEnabled?'formula':null,d.modularEnabled?'modular':null].filter(Boolean);if(!enabled.length){alert('กรุณาเปิดอย่างน้อย 1 source: Diet, Milk/Formula หรือ Modular Diet');return}
   const a=suggestedAllocation(d),sumPct=enabled.reduce((z,k)=>z+num(a[k+'Pct']),0)||100,norm={};enabled.forEach(k=>norm[k]=num(a[k+'Pct'])/sumPct);
   // Allocation is only a starting point. The optimizer may change source proportions to hit Energy/Protein first.
@@ -1156,7 +1190,7 @@ function autoCalculateDesignFromRequirements(){
   if(d.formulaEnabled&&norm.formula>0){const cur=formulaDesignCalc(d).total.kcal,want=target*norm.formula;if(cur>0){const f=want/cur;(d.formulaPlans||[]).forEach(p=>{if(!rowIsConstrained(p)&&num(p.amount)>0)p.amount=num(p.amount)*f})}}
   if(d.modularEnabled)buildModularDraft(d,target);
   const optimized=optimizePrescriptionToRequirements(d);markDesignDirty();renderDietDesign();const c=designCombined(d),fatT=fatTargetKcal(),pk=proteinTargetKey();
-  alert(`Recalculate to targets แล้ว\n\nEnergy ${round(c.total.kcal,1)} / ${round(target,1)} kcal/day\nProtein ${round(c.total[pk],2)}${state.requirements.protein?' / '+round(num(state.requirements.protein),2):''} g/day\nFat energy ${round(fatEnergyKcal(c.total),1)}${fatT?' / '+round(fatT,1):''} kcal/day (LCT ${round(c.total.fat,2)} g + MCT ${round(c.total.mct,2)} g)\n\nModular Diet ใช้ลำดับ Ca-first formula/milk → remaining protein → MCT → LCT → CHO → Ca/Na/K → optional trace element; source อื่นยัง optimize ตาม target. สัดส่วนพลังงาน Diet / Milk-Formula / Modular ถูกปรับตามผลจริงและอัปเดตในช่อง % energy.${optimized.warnings.length?'\n\n'+optimized.warnings.join('\n'):''}`);
+  alert(`Optimize Again แล้ว\n\nEnergy ${round(c.total.kcal,1)} / ${round(target,1)} kcal/day\nProtein ${round(c.total[pk],2)}${state.requirements.protein?' / '+round(num(state.requirements.protein),2):''} g/day\nFat energy ${round(fatEnergyKcal(c.total),1)}${fatT?' / '+round(fatT,1):''} kcal/day (LCT ${round(c.total.fat,2)} g + MCT ${round(c.total.mct,2)} g)\n\nModular Diet ใช้ลำดับ Ca-first formula/milk → remaining protein → MCT → LCT → CHO → Ca/Na/K → optional trace element; source อื่นยัง optimize ตาม target. สัดส่วนพลังงาน Diet / Milk-Formula / Modular ถูกปรับตามผลจริงและอัปเดตในช่อง % energy.${optimized.warnings.length?'\n\n'+optimized.warnings.join('\n'):''}`);
 }
 function dbPick(names=[],filterFn=null){
   const db=(state.foodDB||[]).filter(f=>!filterFn||filterFn(f));
@@ -1379,7 +1413,7 @@ function autoBuildPrescriptionFromRequirements(){
   if(d.formulaEnabled)buildFormulaDraft(d,target*(norm.formula||0));else d.formulaPlans=[];
   const beforeMod=designCombined(d).total.kcal,modNeed=Math.max(0,target-beforeMod);if(d.modularEnabled)buildModularDraft(d,Math.max(modNeed,target*(norm.modular||0)));
   const optimized=optimizePrescriptionToRequirements(d);markDesignDirty();renderDietDesign();const c=designCombined(d),pk=proteinTargetKey(),fatT=fatTargetKcal(),formulaName=(d.formulaPlans||[]).map(x=>state.foodDB.find(f=>f.id===x.dbMatchId)?.name).filter(Boolean).join(', ');
-  alert(`สร้าง Optimized Draft แล้ว\n\nEnergy ${round(c.total.kcal,1)} / ${round(target,1)} kcal/day\nProtein ${round(c.total[pk],2)}${state.requirements.protein?' / '+round(num(state.requirements.protein),2):''} g/day\nFat energy ${round(fatEnergyKcal(c.total),1)}${fatT?' / '+round(fatT,1):''} kcal/day (LCT ${round(c.total.fat,2)} g + MCT ${round(c.total.mct,2)} g)\n${formulaName?'Milk/Formula selected: '+formulaName+'\n':''}\n% energy เดิมใช้เป็นจุดเริ่มต้นเท่านั้น; ระบบสามารถปรับสัดส่วน Diet / Milk-Formula / Modular เพื่อให้ Energy และ Protein ใกล้ target ที่สุด แล้วคุม Fat ภายใน ±5% เท่าที่ทำได้ จากนั้นจึงพิจารณา minerals.${optimized.warnings.length?'\n\n'+optimized.warnings.join('\n'):''}`);
+  alert(`สร้าง Optimized Draft แล้ว\n\nEnergy ${round(c.total.kcal,1)} / ${round(target,1)} kcal/day\nProtein ${round(c.total[pk],2)}${state.requirements.protein?' / '+round(num(state.requirements.protein),2):''} g/day\nFat energy ${round(fatEnergyKcal(c.total),1)}${fatT?' / '+round(fatT,1):''} kcal/day (LCT ${round(c.total.fat,2)} g + MCT ${round(c.total.mct,2)} g)\n${formulaName?'Milk/Formula selected: '+formulaName+'\n':''}\nManual/Locked จะคงค่าที่ผู้ใช้กำหนดไว้เมื่อกด Optimize Again; optimizer ปรับเฉพาะ Auto rows • % energy เดิมใช้เป็นจุดเริ่มต้นเท่านั้น; ระบบจะพยายามปรับ Auto rows เพื่อให้ Energy, Protein และ Fat ใกล้ target ที่สุด จากนั้นจึงพิจารณา minerals.${optimized.warnings.length?'\n\n'+optimized.warnings.join('\n'):''}`);
 }
 function clearDesignSection(kind){
   const d=ensureDesignDraft();
@@ -1877,7 +1911,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.124',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.127',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
