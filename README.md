@@ -1,6 +1,10 @@
-# Pediatric Nutrition PWA 0.4.111
+# Pediatric Nutrition PWA 0.4.113
 
 
+
+## 0.4.112
+- Fixed tab navigation so a draft autosave/render exception cannot freeze tab switching on Android.
+- Added Delete Case beside New Case and Save Case in the persistent active-case bar.
 
 ## 0.4.111
 - Custom Database updated from the user-provided 2026-09-15 full-backup JSON (`foodDB`: 134 entries).
@@ -345,3 +349,10 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Diet Design Nutrient Recheck moved directly below Generate/Optimize.
 - Added Quick adjust prescription table beside Recheck: edit component amounts in place, then Calculate Intake without re-optimizing.
 - Existing full Diet/Milk/Modular editors remain below for advanced changes, units, rounding, locks and component setup.
+
+
+## 0.4.113
+- Tab navigation now has an independent capture-phase fallback in index.html, so tapping a tab changes the visible panel even if the main app initialization/render fails.
+- Main showTab is exposed only after successful initial rendering; destination rendering remains available when the app is healthy.
+- Removed duplicate Export/Import backup controls from the header. Full JSON Export/Import remains in Settings & Backup.
+- Active Case bar retains New Case, Delete Case, Save Case.

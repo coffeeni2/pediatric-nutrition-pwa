@@ -228,7 +228,7 @@ if(!st.settings.genericFruitExchangeV0482){
       sodium:0,potassium:0,iron:0,zinc:0,source:'Custom',grams_per_scoop:'',
       standard_kcal_oz:'',min_kcal_oz:'',max_kcal_oz:'',protein_source:'other',
       protein_source_user_set:true,diet_group:'fruit',conversions:[],portions:[],
-      created_by:'template',user_modified:false,seed_version:'0.4.88',
+      created_by:'template',user_modified:false,seed_version:'0.4.113',
       updated_at:new Date().toISOString()
     });
   }
@@ -285,13 +285,25 @@ function renderActiveCaseBar(status=''){
 function showTab(name){
   const cur=document.querySelector('.tab.active')?.dataset.tab;
   if(cur==='foods'&&name!=='foods'&&foodDbDirty&&!confirm('Custom Database has unsaved changes. Leave without saving?'))return;
-  // Review Intake / Modular / Diet Design are auto-saved into the active case when changing tabs.
-  if(cur!=='pn'&&name!==cur&&(reviewDirty||modularDirty||designDirty||requirementsDirty)){commitCaseDrafts();saveState();resetReviewDraft();resetModularDraft();resetDesignDraft();}
   if(cur==='pn'&&name!=='pn'&&pnDirty){if(!confirm('Parenteral Nutrition has unsaved changes. Leave without saving?'))return;pnDirty=false;}
-  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.toggle('active',x.id===`tab-${name}`));
-  if(name==='patient')renderPatient();if(name==='design')renderDietDesign();if(name==='pn')renderPn();if(name==='review')renderMeals();if(name==='modular')renderModular();if(name==='foods')renderFoodDB();if(name==='summary'){renderSummary();renderCalculationDetail();}if(name==='data')$('defaultSource').value='Custom';renderActiveCaseBar();
+  // Never let a draft-save/render error freeze navigation on mobile. Preserve what can be saved,
+  // switch the visible panel first, then render only the destination tab.
+  if(cur!=='pn'&&name!==cur&&(reviewDirty||modularDirty||designDirty||requirementsDirty)){
+    try{commitCaseDrafts();saveState();resetReviewDraft();resetModularDraft();resetDesignDraft()}catch(err){console.error('Draft autosave before tab switch failed',err)}
+  }
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));
+  document.querySelectorAll('.tab-panel').forEach(x=>x.classList.toggle('active',x.id===`tab-${name}`));
+  try{
+    if(name==='patient')renderPatient();else if(name==='design')renderDietDesign();else if(name==='pn')renderPn();else if(name==='review')renderMeals();else if(name==='modular')renderModular();else if(name==='foods')renderFoodDB();else if(name==='summary'){renderSummary();renderCalculationDetail()}else if(name==='data'&&$('defaultSource'))$('defaultSource').value='Custom';
+  }catch(err){console.error(`Render failed for tab ${name}`,err)}
+  renderActiveCaseBar();
 }
-document.querySelectorAll('[data-tab]').forEach(x=>x.addEventListener('click',()=>showTab(x.dataset.tab)));$('globalSaveCaseBtn')?.addEventListener('click',saveActiveCaseFromAnywhere);$('globalNewCaseBtn')?.addEventListener('click',()=>{newCase();renderActiveCaseBar();});$('globalCaseSelector')?.addEventListener('change',e=>{commitCaseDrafts();saveState();loadCase(e.target.value);renderActiveCaseBar();});window.addEventListener('beforeunload',e=>{if(foodDbDirty||reviewDirty||modularDirty||designDirty||pnDirty){e.preventDefault();e.returnValue='';}});
+window.showTab=showTab;
+$('globalSaveCaseBtn')?.addEventListener('click',saveActiveCaseFromAnywhere);
+$('globalNewCaseBtn')?.addEventListener('click',()=>{newCase();renderActiveCaseBar()});
+$('globalDeleteCaseBtn')?.addEventListener('click',()=>{deleteCase();renderActiveCaseBar()});
+$('globalCaseSelector')?.addEventListener('change',e=>{try{commitCaseDrafts();saveState()}catch(err){console.error('Case-switch autosave failed',err)}loadCase(e.target.value);renderActiveCaseBar()});
+window.addEventListener('beforeunload',e=>{if(foodDbDirty||reviewDirty||modularDirty||designDirty||pnDirty){e.preventDefault();e.returnValue='';}});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').classList.remove('hidden')});$('installBtn').addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn').classList.add('hidden')});if('serviceWorker' in navigator) window.addEventListener('load', async()=>{
   try {
     // 0.4.17 cache recovery: preserve app data (localStorage/IndexedDB), remove only SW registrations and Cache Storage.
@@ -1807,7 +1819,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.88',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.113',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
@@ -1819,13 +1831,13 @@ async function importFullBackup(e){
     if(!Array.isArray(parsed.cases)&&!Array.isArray(parsed.foodDB))throw new Error('Missing backup data');
     const meta=parsed.backup_meta;delete parsed.backup_meta;
     state=merge(defaultState,parsed);saveState();foodDbDraft=null;foodDbDirty=false;resetReviewDraft();resetModularDraft();resetDesignDraft();renderPatient();renderMeals();renderFoodDB();renderModular();renderDietDesign();renderPn();
+window.__pedMainAppReady=true;
     alert(`Restore สำเร็จ — นำเข้าข้อมูล backup ทุก tab${meta?.version?' จาก v'+meta.version:''}`);
   }catch(err){console.error(err);alert('Backup ไม่ถูกต้องหรืออ่านไฟล์ไม่ได้')}finally{input.value=''}
 }
 $('exportBtn')?.addEventListener('click',exportFullBackup);
-$('globalExportBtn')?.addEventListener('click',exportFullBackup);
 $('importBackupInput')?.addEventListener('change',importFullBackup);
-$('globalImportBackupInput')?.addEventListener('change',importFullBackup);
 $('resetBtn').addEventListener('click',()=>{if(confirm('This will permanently delete local patient/case data and custom data on this device. Export a backup first. Continue?')){localStorage.removeItem('pedNutritionStateV4');localStorage.removeItem('pedNutritionStateV3');location.reload()}});
 
 resetDesignDraft();renderPatient();renderMeals();renderFoodDB();renderModular();renderDietDesign();renderPn();
+window.__pedMainAppReady=true;

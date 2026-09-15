@@ -15,8 +15,6 @@
 <header class="app-header">
   <div><div class="eyebrow">Pediatric Nutrition Toolkit</div><h1>Pediatric Nutrition Calculator</h1></div>
   <div class="header-actions">
-    <button id="globalExportBtn" class="secondary">Export backup JSON</button>
-    <label class="file-button secondary">Import backup JSON<input id="globalImportBackupInput" type="file" accept="application/json,.json" hidden /></label>
     <button id="installBtn" class="secondary hidden">Install App</button>
   </div>
 </header>
@@ -36,6 +34,7 @@
     <div id="activeCaseSummary" class="active-case-summary"></div>
     <select id="globalCaseSelector" aria-label="Active patient / case"></select>
     <button id="globalNewCaseBtn" class="secondary small-btn" type="button">+ New Case</button>
+    <button id="globalDeleteCaseBtn" class="danger small-btn" type="button">Delete Case</button>
     <button id="globalSaveCaseBtn" class="primary small-btn" type="button">Save Case</button>
     <span id="globalCaseSaveStatus" class="muted"></span>
   </div>
@@ -340,7 +339,26 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.111</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.111"></script>
+<footer><strong>PWA 0.4.113</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script>
+// Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
+(function(){
+  function switchVisibleTab(name){
+    document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===name)});
+    document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+name)});
+    var bar=document.getElementById('activeCaseBar'); if(bar) bar.classList.toggle('hidden',name==='pn');
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest && e.target.closest('.tab[data-tab]'); if(!b)return;
+    switchVisibleTab(b.dataset.tab);
+    // Main app may not have initialized yet. Visible navigation must never depend on it.
+    if(typeof window.showTab==='function' && window.__pedMainAppReady){
+      try{window.showTab(b.dataset.tab)}catch(err){console.error('Main tab render failed',err)}
+    }
+  },true);
+  window.__pedFallbackTab=switchVisibleTab;
+})();
+</script>
+<script src="app.js?v=0.4.113"></script>
 </body>
 </html>
