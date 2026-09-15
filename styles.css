@@ -308,7 +308,7 @@ label small.muted{display:block;margin:3px 0 5px;font-weight:400;line-height:1.2
 .nutrient-table{min-width:0!important;table-layout:fixed}.nutrient-table th,.nutrient-table td{padding:4px 6px;line-height:1.2}.nutrient-table th:nth-child(1){width:29%}.nutrient-table th:nth-child(2){width:35%}.nutrient-table th:nth-child(3){width:36%}.nutrient-table td{white-space:normal!important}.nutrient-table-wrap{overflow-x:hidden!important}
 @media(max-width:700px){#tab-review .card,#tab-modular .card,#tab-summary .card{padding:9px;margin-bottom:8px}#tab-review .time-card{margin:5px 0}.time-head{padding:6px 8px}.menu-row{padding:7px 8px}.ingredients-line{font-size:.78rem;line-height:1.25}.badge{font-size:.66rem}.nutrient-table th,.nutrient-table td{font-size:.68rem;padding:3px 4px}.nutrient-table td:nth-child(2){font-size:.7rem}.calc-detail-wrap{max-height:42vh;overflow:auto}.calc-detail-table{min-width:760px}.calc-detail-table th,.calc-detail-table td{padding:4px;font-size:.68rem}#unmatchedList .status{font-size:.72rem;line-height:1.25;max-height:28vh;overflow:auto}}
 
-/* 0.4.120 Android-first Review & Calculate */
+/* 0.4.121 Android-first Review & Calculate */
 @media(max-width:700px){
  #tab-summary .summary-box{padding:6px;overflow:hidden}
  #tab-summary .nutrient-table-wrap{overflow:visible}
@@ -333,4 +333,52 @@ label small.muted{display:block;margin:3px 0 5px;font-weight:400;line-height:1.2
  #tab-summary .calc-total-row{display:block!important;padding:6px!important;background:#e8f3f3!important}
  #tab-summary .calc-total-row th{display:block!important}
  #unmatchedList .status{max-height:20vh;overflow:auto}
+}
+
+/* 0.4.121 fast PNIF -> ingredient review -> calculate */
+.compact-review-row{padding:7px 10px}.compact-review-row .menu-main{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}.review-menu-identity{display:flex;gap:8px;min-width:0;align-items:center}.review-menu-identity span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.review-compact-status{font-size:12px;color:var(--muted)}.review-compact-status.has-review{color:#a85b00}.ingredient-only-panel{padding:8px;margin-top:6px}.menu-meta-only{grid-template-columns:100px minmax(160px,1fr)!important}.calc-detail-disclosure>summary{cursor:pointer;padding:2px 0;list-style-position:inside}.calc-detail-disclosure:not([open]){padding-top:14px;padding-bottom:14px}.compact-time-card{margin:6px 0}.compact-time-card .time-head{padding:6px 10px}
+@media(max-width:700px){#tab-review .card,#tab-summary .card,#tab-modular .card{padding:10px}.compact-review-row .menu-main{grid-template-columns:minmax(0,1fr) auto}.review-compact-status{grid-column:1/2}.compact-review-row .menu-actions{grid-column:2;grid-row:1/3}.ingredient-editor{grid-template-columns:1fr 1fr!important;gap:6px}.ingredient-editor label{min-width:0}.menu-meta-only{grid-template-columns:80px minmax(0,1fr)!important}.calc-detail-disclosure .calc-detail-wrap{max-height:55vh;overflow:auto}#reviewSummary{font-size:12px;margin:4px 0}.time-card{margin:5px 0}.edit-panel{margin:5px 0}}
+
+/* v0.4.122 mobile Diet Design recheck: preserve Remaining and source contribution without horizontal scroll */
+.mobile-source-breakdown{display:none}
+@media(max-width:700px){
+ .design-total-table th:nth-child(1),.design-total-table td:nth-child(1){width:24%}
+ .design-total-table th:nth-child(2),.design-total-table td:nth-child(2){width:25%}
+ .design-total-table th:nth-child(3),.design-total-table td:nth-child(3){width:19%}
+ .design-total-table th:nth-child(4),.design-total-table td:nth-child(4){width:20%}
+ .design-total-table th:nth-child(5),.design-total-table td:nth-child(5){width:12%}
+ .mobile-source-breakdown{display:block;margin-top:2px;font-size:.52rem;line-height:1.15;color:var(--muted);font-weight:500}
+}
+
+/* v0.4.124 Diet Design mobile-first workflow */
+.design-target-compact{margin:.55rem 0}.design-target-line{display:flex;gap:.45rem;flex-wrap:wrap}.design-target-line span{border:1px solid var(--border);border-radius:8px;padding:.35rem .5rem;background:var(--surface)}
+.design-advanced{margin-top:.65rem;border:1px solid var(--border);border-radius:10px;padding:.45rem}.design-advanced>summary{cursor:pointer;font-weight:700;padding:.35rem}.design-advanced-editor{margin:0 .75rem 1rem}.design-advanced-editor>summary{padding:.7rem}
+@media(max-width:700px){#tab-design .card{padding:.7rem;margin-bottom:.65rem}#tab-design .section-title-row{gap:.4rem}#tab-design .section-title-row h2,#tab-design .section-title-row h3{margin-bottom:.15rem}.design-target-line{display:grid;grid-template-columns:1fr 1fr;gap:.3rem}.design-target-line span{padding:.3rem .4rem;font-size:.86rem}.design-recheck-card{padding-bottom:4.5rem!important}.design-advanced-editor{margin:0 .35rem .75rem;padding:.25rem}.design-advanced-editor>summary{padding:.55rem;font-size:.92rem}.auto-design-box{padding:.55rem}.quick-editor-head .muted{display:block;font-size:.78rem}}
+
+/* v0.4.124 PN mobile compaction — preserve workflow, reduce vertical space */
+#tab-pn .card{padding:12px;margin-bottom:10px}
+#tab-pn .section-title-row{gap:6px;margin-bottom:6px}
+#tab-pn .section-title-row h2{margin-bottom:1px}
+#tab-pn .top-gap{margin-top:7px}
+#tab-pn .grid-3,#tab-pn .grid-4,#tab-pn .grid-5{gap:7px 8px}
+#tab-pn label{gap:2px}
+#tab-pn .metric{padding:7px 8px}
+#tab-pn .pn-compact-details{border:1px solid var(--line);border-radius:10px;padding:0 9px;background:#fff}
+#tab-pn .pn-compact-details>summary{cursor:pointer;padding:8px 0;font-weight:700}
+#tab-pn .pn-compact-details[open]>summary{border-bottom:1px solid var(--line);margin-bottom:7px}
+@media(max-width:600px){
+ #tab-pn .card{padding:8px;margin-bottom:7px;border-radius:10px}
+ #tab-pn .section-title-row{margin-bottom:4px}
+ #tab-pn .section-title-row h2{font-size:.95rem}
+ #tab-pn .section-title-row p.muted,#tab-pn> .card>p.muted{font-size:.68rem;line-height:1.2;margin:2px 0}
+ #tab-pn .grid-3,#tab-pn .grid-4,#tab-pn .grid-5{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 6px}
+ #tab-pn label{font-size:.72rem}
+ #tab-pn input,#tab-pn select{padding:5px 6px;font-size:.78rem;min-height:32px}
+ #tab-pn button{padding:6px 8px;font-size:.72rem}
+ #tab-pn .metric{padding:5px 6px;font-size:.68rem;min-height:0}
+ #tab-pn .metric b{font-size:.82rem;margin-top:1px}
+ #tab-pn .pn-case-actions{gap:4px}
+ #tab-pn .pn-compact-details{padding:0 7px;border-radius:8px}
+ #tab-pn .pn-compact-details>summary{padding:6px 0;font-size:.74rem}
+ #tab-pn .summary-box{padding:6px;font-size:.72rem}
 }

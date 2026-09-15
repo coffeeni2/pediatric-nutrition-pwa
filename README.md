@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.120
+# Pediatric Nutrition PWA 0.4.124
 
 
 
@@ -388,3 +388,25 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Nutrient Summary is compact/mobile-first and adds protein g/kg/day, MCT % total energy, and Na/K mg/day + mEq/100 kcal Holliday-Segar/day.
 - Calculation Detail now shows actual calculated food/formula rows and modular daily contribution; Refresh recalculates before rendering.
 - Reduced vertical spacing on Review Intake, Modular Diet, and Review & Calculate for Android/mobile.
+
+
+## v0.4.121
+- Simplified PNIF → Review Ingredients → Calculate workflow for mobile use.
+- Food menu names are labels only; nutrient calculation uses quantified ingredients. Standalone formula remains calculable.
+- Review autosaves to active case; removed mandatory Save/Cancel step.
+- Default Review view after PNIF import shows only items needing review.
+- Added direct Calculate Intake from Review and collapsible Calculation Detail.
+- Calculation Detail follows ingredient-only food calculation.
+
+
+## v0.4.124
+- Keep explicit Clear actions in Diet Design, Review Intake, and Modular Intake.
+- Diet Design Nutrient Recheck keeps Requirement − Total Remaining.
+- Recheck preserves Diet / Milk-Formula / Modular contribution for every nutrient; on mobile the source breakdown is shown compactly under Total while full source columns remain on larger screens.
+
+
+## v0.4.124
+- Diet Design mobile-first workflow: compact Daily Requirements target, Generate Diet Plan only before a prescription exists, then Calculate Intake / Optimize Again.
+- Quick adjust remains beside Nutrient Recheck; Calculate Intake never rebalances and now autosaves the current Diet Design.
+- Detailed Diet, Milk/Formula, Modular and Fluid editors plus source allocation/rounding controls are preserved under Advanced setup.
+- Nutrient Recheck retains Diet / Milk-Formula / Modular / Total / Target / Remaining.
