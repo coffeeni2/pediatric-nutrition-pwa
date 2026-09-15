@@ -1,6 +1,19 @@
-# Pediatric Nutrition PWA 0.4.105
+# Pediatric Nutrition PWA 0.4.108
 
 
+
+## 0.4.108
+- Diet Design now separates **Calculate Intake** from **Optimize Again**.
+- Calculate Intake recalculates Nutrient Recheck from the current manual prescription without changing component amounts, rounding, locks, or source allocation.
+- Optimize Again is the only main action that rebalances the prescription toward requirements.
+- Added a compact sticky Android action bar so Calculate Intake / Optimize Again stay reachable while editing without scrolling to the top or bottom.
+- Target Gap remains sticky while editing, so manual changes can be checked against requirements without navigating away from the component editor.
+
+
+## 0.4.107
+- Compact Patient / Case and Daily Requirements layout on Android/mobile.
+- Patient Note field removed from UI.
+- Patient and requirement summaries become compact horizontal strips on phones.
 
 ## 0.4.105
 
@@ -318,8 +331,8 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Mixed orders can rebalance across sections (e.g. milk/formula up + meat/CHO down; oil up + CHO down) before mineral medication correction.
 
 
-## v0.4.105 OPD fast review
-- PNIF import opens exception-only Review when unresolved items exist; otherwise goes directly to Review & Calculate.
-- Menu name is retained for display/grouping only. Menu-level DB matching, amount, unit, weight and volume editing were removed when ingredients are present.
-- Ingredient-based review/calculation is the primary workflow.
-- Review defaults to Needs-review-only after PNIF import and reports ready vs unresolved counts.
+## 0.4.105
+- Added persistent Active Patient / Case bar on every tab except Parenteral Nutrition.
+- Save Case is available globally and commits Review Intake, Modular Diet, Diet Design, Patient/Requirements into the active case.
+- Switching between non-PN tabs auto-saves case drafts instead of forcing a return to Patient.
+- Replaced bundled Custom Database with the exact foodDB snapshot from ped-nutrition-full-backup-2026-09-15 (1).json; one-time migration updates existing browser data.

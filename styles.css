@@ -150,16 +150,113 @@ label small.muted{display:block;margin:3px 0 5px;font-weight:400;line-height:1.2
   #tab-modular .feed-row{display:grid;grid-template-columns:.8fr 1fr 1fr auto;gap:5px}.feed-row label:nth-of-type(4),.feed-row label:nth-of-type(5){display:none}
   #tab-summary .calc-detail-wrap{max-height:52vh}.tabs{position:sticky;top:0;z-index:30}
 }
-/* v0.4.105 OPD fast review */
-.menu-display-only{display:flex;gap:.65rem;align-items:baseline;flex-wrap:wrap;padding:.45rem .55rem;background:#f7faf9;border:1px solid #dbe6e4;border-radius:10px}
-.menu-display-only .muted{font-size:.82rem}
+
+/* v0.4.105: persistent active patient/case workflow bar */
+.active-case-bar{position:sticky;top:0;z-index:45;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 18px;background:rgba(255,255,255,.96);border-bottom:1px solid #d7e2e5;box-shadow:0 2px 8px rgba(20,55,60,.06);backdrop-filter:blur(8px)}
+.active-case-bar.hidden{display:none}.active-case-summary{display:flex;align-items:center;gap:10px;min-width:220px}.active-case-summary span{color:#60747a;font-size:.9rem}.active-case-bar select{width:auto;min-width:180px;max-width:320px;margin:0}.active-case-bar button{margin:0}.active-case-bar #globalCaseSaveStatus{font-weight:700;color:#28784a}
+@media(max-width:700px){.active-case-bar{padding:7px 10px;gap:6px}.active-case-summary{width:100%;min-width:0}.active-case-bar select{flex:1;min-width:140px}.active-case-bar .small-btn{padding:8px 10px}}
+
+
+/* v0.4.107 compact Patient + Daily Requirements, especially Android */
+.patient-anthro-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-width:66.2%}
+.requirements-grid{align-items:end}
+.requirements-card .check-card{min-height:0}
 @media(max-width:700px){
-  #tab-review .card{padding:.65rem}
-  #tab-review .time-card{margin-bottom:.55rem}
-  #tab-review .menu-main{gap:.35rem}
-  #tab-review .menu-actions .insert{display:none}
-  #tab-review .ingredient-editor{grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr) .65fr .85fr;gap:.35rem}
-  #tab-review .ingredient-editor label:nth-of-type(5),#tab-review .ingredient-editor label:nth-of-type(6),#tab-review .ingredient-editor label:nth-of-type(7){grid-column:span 2}
-  #tab-review .ingredient-status{grid-column:1/-1}
-  #tab-review .menu-display-only{padding:.35rem .45rem}
+  #tab-patient .card{padding:9px;margin-bottom:8px}
+  #tab-patient .section-title-row{align-items:flex-start}
+  #tab-patient .section-title-row h2{margin-bottom:1px}
+  #tab-patient .section-title-row p{margin:0;line-height:1.2}
+  #tab-patient .section-title-row .inline-actions{width:100%;display:grid;grid-template-columns:1fr auto auto auto auto;gap:4px}
+  #tab-patient .section-title-row .inline-actions select{min-width:0}
+  #tab-patient .patient-main-grid{grid-template-columns:1.25fr 1fr .85fr;gap:5px}
+  #tab-patient .patient-age-grid{grid-template-columns:.72fr .72fr .72fr 1.15fr;gap:5px;margin-top:6px}
+  #tab-patient .patient-ga-grid{grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+  #tab-patient .patient-ga-grid .check-card{display:none}
+  #tab-patient .patient-anthro-grid{grid-template-columns:1fr 1fr;gap:5px;max-width:none;margin-top:6px}
+  #tab-patient .compact-note{display:none}
+  #tab-patient label{font-size:.7rem;gap:2px}
+  #tab-patient input,#tab-patient select{padding:5px 6px;font-size:.78rem;min-height:31px}
+  #patientSummary,#requirementSummary{padding:5px;margin-top:6px;overflow-x:auto;scrollbar-width:none}
+  #patientSummary::-webkit-scrollbar,#requirementSummary::-webkit-scrollbar{display:none}
+  #patientSummary .summary-grid,#requirementSummary .summary-grid{display:flex;gap:4px;width:max-content}
+  #patientSummary .metric,#requirementSummary .metric{min-width:100px;max-width:145px;padding:5px 7px;border-radius:7px;font-size:.63rem}
+  #patientSummary .metric b,#requirementSummary .metric b{font-size:.76rem;margin-top:1px;white-space:normal}
+  #patientSummary .metric span,#requirementSummary .metric span{font-size:.61rem}
+  .requirements-card .section-title-row .inline-actions{display:flex!important;width:auto!important;margin-left:auto}
+  .requirements-card .section-title-row p{display:none}
+  .requirements-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px 6px}
+  .requirements-grid label{font-size:.7rem;gap:2px}
+  .requirements-grid input,.requirements-grid select{padding:5px 6px;font-size:.77rem;min-height:31px}
+  .requirements-grid .fluid-track-card{padding:5px 7px;justify-content:center;min-height:31px}
+  .requirements-grid .fluid-track-card small{display:none}
+  .requirements-grid .muted{font-size:.62rem}
+}
+@media(max-width:480px){
+  #tab-patient .patient-main-grid{grid-template-columns:1.2fr 1fr}
+  #tab-patient .patient-main-grid label:last-child{grid-column:auto}
+  #tab-patient .patient-age-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  #tab-patient .patient-ga-grid,#tab-patient .patient-anthro-grid,.requirements-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #tab-patient .section-title-row .inline-actions{grid-template-columns:1fr auto auto}
+  #tab-patient #deleteCaseBtn,#tab-patient #clearPatientBtn{padding-left:6px;padding-right:6px}
+  .requirements-card .section-title-row{gap:4px}
+  .requirements-card .section-title-row .inline-actions{width:100%!important;justify-content:flex-start}
+}
+
+
+/* v0.4.107 compact Diet Design for Android / small screens */
+@media(max-width:700px){
+  #tab-design .card{padding:8px;margin-bottom:7px;border-radius:10px}
+  #tab-design .section-title-row{gap:5px;margin-bottom:4px;align-items:flex-start}
+  #tab-design .section-title-row h2{font-size:1rem;margin:0;line-height:1.15}
+  #tab-design .section-title-row h3{font-size:.9rem;margin:0;line-height:1.15}
+  #tab-design .section-title-row p{display:none}
+  #tab-design .section-title-row .inline-actions{gap:4px;flex-wrap:wrap}
+  #tab-design button{padding:6px 8px;font-size:.72rem;min-height:30px}
+  #tab-design label{font-size:.68rem;gap:2px}
+  #tab-design input,#tab-design select{padding:5px 6px;font-size:.76rem;min-height:30px}
+  #tab-design .top-gap{margin-top:5px!important}
+  #tab-design .auto-design-box{padding:7px;margin-top:5px;border-radius:8px}
+  #tab-design .auto-source-picker{display:grid;grid-template-columns:auto repeat(3,1fr);gap:4px;align-items:center;padding:4px 0}
+  #tab-design .auto-source-picker>strong{width:auto;font-size:.7rem}
+  #tab-design .auto-source-picker .switch-line{font-size:.68rem;gap:3px;white-space:nowrap}
+  #tab-design .auto-design-box>.grid-3{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+  #tab-design .auto-design-box>.grid-3.top-gap{grid-template-columns:1fr 1fr;gap:4px}
+  #tab-design .auto-design-box>p.muted{display:none}
+  #tab-design .design-row{grid-template-columns:1.35fr .7fr .9fr .72fr;gap:4px;margin:4px 0;padding:5px;border-radius:7px}
+  #tab-design .formula-plan-card{padding:6px;margin:5px 0;border-radius:8px}
+  #tab-design .formula-plan-grid{grid-template-columns:1.3fr .7fr .8fr .8fr;gap:4px}
+  #tab-design .fortifier-row{grid-template-columns:1.3fr .65fr .8fr .8fr;gap:4px;padding:5px;margin:4px 0}
+  #tab-design .component-kind{padding:4px 2px;font-size:.66rem}
+  #tab-design .summary-box{padding:5px;margin-top:4px;overflow-x:auto;scrollbar-width:none}
+  #tab-design .summary-box::-webkit-scrollbar{display:none}
+  #tab-design .summary-box .summary-grid{display:flex;gap:4px;width:max-content}
+  #tab-design .summary-box .metric{min-width:88px;padding:4px 6px;border-radius:6px;font-size:.61rem}
+  #tab-design .summary-box .metric b{font-size:.72rem}
+  #tab-design #designModComponents .mod-row{grid-template-columns:1.25fr 1.25fr .62fr .7fr auto;gap:4px;margin:4px 0;padding:5px}
+  #tab-design #designModComponents .mod-row label{font-size:.64rem}
+  #tab-design #designModComponents .mod-row input,#tab-design #designModComponents .mod-row select{font-size:.72rem;padding:4px}
+  #tab-design .grid-3{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+  #tab-design #modularDesignSummary .calc-trace{display:none}
+  #tab-design .actions{margin:5px 0}
+  #tab-design #designRecheck{margin-top:4px}
+  #tab-design .target-gap-bar{padding:5px;top:52px;margin-bottom:5px}
+}
+@media(max-width:430px){
+  #tab-design .auto-source-picker{grid-template-columns:repeat(3,1fr)}
+  #tab-design .auto-source-picker>strong{grid-column:1/-1}
+  #tab-design .design-row,#tab-design .formula-plan-grid,#tab-design .fortifier-row{grid-template-columns:1fr 1fr}
+  #tab-design #designModComponents .mod-row{grid-template-columns:1fr 1fr .62fr .72fr auto}
+}
+
+
+/* v0.4.108 Diet Design: separate manual intake calculation from optimization */
+.design-mobile-actionbar{display:none}
+@media(max-width:700px){
+  #tab-design{padding-bottom:72px}
+  #tab-design .design-mobile-actionbar{position:fixed;left:8px;right:8px;bottom:8px;z-index:70;display:grid;grid-template-columns:1.2fr 1fr auto;gap:5px;align-items:center;padding:6px;background:rgba(255,255,255,.97);border:1px solid #d7e2e5;border-radius:11px;box-shadow:0 5px 18px rgba(20,55,60,.18);backdrop-filter:blur(8px)}
+  #tab-design .design-mobile-actionbar button{min-height:36px;font-size:.76rem;font-weight:700}
+  #tab-design #mobileDesignCalcStatus{font-size:.62rem;white-space:nowrap}
+  #tab-design #calculateCurrentDesignBtn{font-weight:700}
+  #tab-design .design-recheck-card .section-title-row button{min-width:118px}
+  #tab-design #designTargetGapBar{position:sticky;top:45px;z-index:35}
 }
