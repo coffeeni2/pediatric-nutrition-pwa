@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.119
+# Pediatric Nutrition PWA 0.4.120
 
 
 
@@ -382,7 +382,7 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Saved Patient IDs remain listed in the global case dropdown after creating subsequent cases.
 - Case dropdown is rebuilt immediately after New Case.
 
-## v0.4.119
+## v0.4.120
 - Review Intake unit aliases are normalized automatically (ชต./ช้อนโต๊ะ, ชช./ช้อนชา, cc/mL, กรัม/g, ลูก/ผล).
 - Review & Calculate now includes Daily Modular Diet scaled by actual intake (fallback prescribed) over final recipe volume.
 - Nutrient Summary is compact/mobile-first and adds protein g/kg/day, MCT % total energy, and Na/K mg/day + mEq/100 kcal Holliday-Segar/day.

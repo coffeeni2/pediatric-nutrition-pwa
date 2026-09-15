@@ -326,11 +326,11 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
       await Promise.all(regs.map(r=>r.unregister()));
       if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
       sessionStorage.setItem(marker,'1');
-      const u=new URL(location.href); u.searchParams.set('appv','0.4.117');
+      const u=new URL(location.href); u.searchParams.set('appv','0.4.120');
       location.replace(u.toString());
       return;
     }
-    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.117',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.120',{updateViaCache:'none'});
     await reg.update();
   } catch(e){ console.warn('Service worker recovery/update failed',e); }
 });
@@ -489,7 +489,7 @@ function normAmt(v){if(v===null||v===undefined||v==='')return{value:'',original:
 function isMeatOrEgg(name=''){return /(ไก่|หมู|เนื้อ|ปลา|กุ้ง|ปู|หอย|เป็ด|ไข่|ตับ|กึ๋น|แฮม|แหนม|ไส้กรอก|ลูกชิ้น)/i.test(name)}function defaultFoodState(name,stateValue){return stateValue&&stateValue!=='unknown'?stateValue:(isMeatOrEgg(name)?'cooked':'unknown')}
 function normIng(i={}){const a=normAmt(i.amount),food=i.food||i.item||i.name||'';return{id:i.id||uid(),food,amount:a.value,original_amount:a.original,unit:normalizeUnit(i.unit||''),weight_g:i.weight_g??'',volume_ml:i.volume_ml??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',note:i.note||'',dbMatchId:i.dbMatchId||autoMatchId(food),convertFood:i.convertFood||'',convertUnit:i.convertUnit||'',formulaKcalOz:i.formulaKcalOz??''}}
 function normalizeIntakeType(v){const x=String(v||'').trim().toLowerCase();return ['food','formula','modular_diet','unknown'].includes(x)?x:'unknown'}
-const UNIT_ALIASES={'ชต.':'ช้อนโต๊ะ','ชต':'ช้อนโต๊ะ','tbsp':'ช้อนโต๊ะ','ช้อนโต๊ะ':'ช้อนโต๊ะ','ชช.':'ช้อนชา','ชช':'ช้อนชา','tsp':'ช้อนชา','ช้อนชา':'ช้อนชา','ml':'mL','มล.':'mL','มล':'mL','cc':'mL','ซีซี':'mL','g':'g','gm':'g','กรัม':'g'};
+const UNIT_ALIASES={'ชต.':'ช้อนโต๊ะ','ชต':'ช้อนโต๊ะ','tbsp':'ช้อนโต๊ะ','tablespoon':'ช้อนโต๊ะ','ช้อนโต๊ะ':'ช้อนโต๊ะ','ชช.':'ช้อนชา','ชช':'ช้อนชา','tsp':'ช้อนชา','teaspoon':'ช้อนชา','ช้อนชา':'ช้อนชา','ml':'mL','มล.':'mL','มล':'mL','cc':'mL','ซีซี':'mL','g':'g','gm':'g','กรัม':'g','ลูก':'ผล','ลูกกลาง':'ผลกลาง','ลูกเล็ก':'ผลเล็ก','ลูกใหญ่':'ผลใหญ่'};
 function normalizeUnit(v){const raw=String(v||'').trim();return UNIT_ALIASES[raw.toLowerCase()]||UNIT_ALIASES[raw]||raw}
 function autoMatchId(name){const f=exactCustom(name);return f?.id||''}
 function normItem(i={}){const a=normAmt(i.amount),food=i.food||i.item||i.name||'';return{id:i.id||uid(),time:i.time||'',intake_type:normalizeIntakeType(i.intake_type||i.intakeType||(i.type==='formula'?'formula':'food')),food,amount:a.value,original_amount:a.original,unit:normalizeUnit(i.unit||''),weight_g:i.weight_g??'',volume_ml:i.volume_ml??i.volume??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',needs_review:Boolean(i.needs_review||i.confidence==='low'||normalizeIntakeType(i.intake_type||i.intakeType)==='unknown'),note:i.note||'',ingredients:[...(i.ingredients||[]),...(i.additions||[]),...(i.modular_components||[]),...(i.supplements||[])].map(normIng),calcMethod:i.calcMethod||'auto',dbMatchId:i.dbMatchId||autoMatchId(food),sourcePreference:'Custom',formulaKcalOz:i.formulaKcalOz??i.kcal_per_oz??'',editOpen:false}}
@@ -600,7 +600,7 @@ function nutGrid(t,prefix=''){const w=num(state.patient.weight),mctPct=t.kcal?mc
 
 function renderSummary(){
   const box=$('nutrientSummary'), miss=$('unmatchedList'); if(!box)return;
-  const sm=state.lastSummary||calculateIntake(), total=sm?.total||emptyNut();
+  const sm=calculateIntake(), total=sm?.total||emptyNut();
   box.innerHTML=nutGrid(total)+requirementCompare(total);
   if(miss) miss.innerHTML=(sm?.missing||[]).length?`<div class="status warn top-gap"><strong>Items needing review</strong><br>${sm.missing.map(x=>`${esc(x.time||'')} ${esc(x.food||'')}: ${esc(x.reason||'')}`).join('<br>')}</div>`:'<div class="status ok top-gap">All reported calculated items have usable Custom Database matches/amounts.</div>';
 }
@@ -1870,7 +1870,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.114',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.120',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
