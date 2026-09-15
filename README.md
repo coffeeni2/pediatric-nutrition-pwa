@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.113
+# Pediatric Nutrition PWA 0.4.114
 
 
 
@@ -356,3 +356,12 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Main showTab is exposed only after successful initial rendering; destination rendering remains available when the app is healthy.
 - Removed duplicate Export/Import backup controls from the header. Full JSON Export/Import remains in Settings & Backup.
 - Active Case bar retains New Case, Delete Case, Save Case.
+
+
+## 0.4.114
+- Functional-control audit pass: all 62 named buttons in index.html have JavaScript references; all buttons are explicitly `type=button`.
+- Patient/Case now has one visible authoritative case manager in the global bar. Duplicate New/Save/Delete controls inside Patient are hidden while legacy IDs remain for compatibility.
+- Active-case switching commits current drafts before loading the selected saved case.
+- Modular Diet `+ Add time` is always available; pressing it automatically switches Entry mode to `By time` and creates a schedule row.
+- Rechecked Diet Design handlers for Add food, Add milk/formula, Prepare component template, Add other, Calculate Intake, Optimize Again, Copy/Clear actions, and Nutrient Recheck.
+- Added a startup DOM button audit in the console and bumped service-worker cache version to prevent stale mobile UI.

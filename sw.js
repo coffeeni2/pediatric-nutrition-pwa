@@ -1,5 +1,5 @@
-const CACHE='ped-nutrition-pwa-0.4.113-20260916b';
-const OFFLINE='./index.html?offline=067';
+const CACHE='ped-nutrition-pwa-0.4.114-20260916a';
+const OFFLINE='./index.html?offline=068';
 self.addEventListener('install',e=>e.waitUntil(self.skipWaiting()));
 self.addEventListener('activate',e=>e.waitUntil((async()=>{
   const keys=await caches.keys();
