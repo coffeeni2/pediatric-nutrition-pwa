@@ -389,5 +389,11 @@ label small.muted{display:block;margin:3px 0 5px;font-weight:400;line-height:1.2
   #designRecheck h3.top-gap{margin:.65rem 0 .3rem;font-size:1rem}
   #designRecheck .design-recheck-table{font-size:.78rem}
   #designRecheck .design-recheck-table th,#designRecheck .design-recheck-table td{padding:.28rem .34rem;white-space:nowrap}
-  #designRecheck .design-recheck-table th:nth-child(1),#designRecheck .design-recheck-table td:nth-child(1){display:none}
+}
+
+/* v0.4.131 — aligned nutrient-contribution tables on mobile */
+@media (max-width:700px){
+  #designRecheck .design-recheck-table{min-width:1120px}
+  #designRecheck .design-recheck-table th:first-child,#designRecheck .design-recheck-table td:first-child{position:sticky;left:0;z-index:2;background:#fff;min-width:150px;max-width:150px;white-space:normal}
+  #designRecheck .design-recheck-table thead th:first-child,#designRecheck .design-recheck-table tfoot th:first-child{background:#eef5f5;z-index:3}
 }

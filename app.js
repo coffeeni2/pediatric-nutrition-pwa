@@ -326,11 +326,11 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
       await Promise.all(regs.map(r=>r.unregister()));
       if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
       sessionStorage.setItem(marker,'1');
-      const u=new URL(location.href); u.searchParams.set('appv','0.4.129');
+      const u=new URL(location.href); u.searchParams.set('appv','0.4.131');
       location.replace(u.toString());
       return;
     }
-    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.129',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.131',{updateViaCache:'none'});
     await reg.update();
   } catch(e){ console.warn('Service worker recovery/update failed',e); }
 });
@@ -615,6 +615,7 @@ function nutGrid(t,prefix=''){const w=num(state.patient.weight),mctPct=t.kcal?mc
 
 function renderSummaryFromSnapshot(sm){const box=$('nutrientSummary'),miss=$('unmatchedList');if(!box)return;const total=sm?.total||emptyNut();box.innerHTML=nutGrid(total)+requirementCompare(total);if(miss)miss.innerHTML=(sm?.missing||[]).length?`<div class="status warn top-gap"><strong>Items needing review</strong><br>${sm.missing.map(x=>`${esc(x.time||'')} ${esc(x.food||'')}: ${esc(x.reason||'')}`).join('<br>')}</div>`:'<div class="status ok top-gap">All reported calculated items have usable Custom Database matches/amounts.</div>'}function renderSummary(){renderSummaryFromSnapshot(calculateIntake())}
 function renderCalculationDetail(){
+  const fmt=v=>round(num(v),1);
   const fb=$('foodCalcDetailBody'),ff=$('foodCalcDetailFoot'),mb=$('modCalcDetailBody'),mf=$('modCalcDetailFoot'),note=$('modCalcBasisNote'),warn=$('calcDetailWarnings');if(!fb||!mb)return;
   // Render the exact rows produced during calculateIntake(). Summary and detail therefore cannot
   // diverge because of a draft/persisted-state mismatch.
@@ -844,8 +845,11 @@ function renderDesignModComponents(d){
 
 function recheckTable(title,calcRows,total,extra=''){
   const fmt=x=>round(num(x),1),na=x=>`${fmt(x)} mg / ${fmt(num(x)/23)} mEq`,ka=x=>`${fmt(x)} mg / ${fmt(num(x)/39)} mEq`;
-  const rows=calcRows.map(x=>`<tr><td>${esc(x.section)}</td><td>${esc(x.food?.name||x.row?.name||'—')}</td><td>${esc(x.amountText||`${x.row?.amount??'—'} ${x.row?.unit||''}`)}</td><td>${x.ok?fmt(x.nut.kcal):'—'}</td><td>${x.ok?fmt(x.nut.protein):'—'}</td><td>${x.ok?fmt(x.nut.protein_excl_cho):'—'}</td><td>${x.ok?fmt(fatEnergyKcal(x.nut)):'—'}</td><td>${x.ok?fmt(num(x.nut.mct)*8.3):'—'}</td><td>${x.ok?fmt(x.nut.fat):'—'}</td><td>${x.ok?fmt(x.nut.mct):'—'}</td><td>${x.ok?fmt(x.nut.cho):'—'}</td><td>${x.ok?na(x.nut.sodium):'—'}</td><td>${x.ok?ka(x.nut.potassium):'—'}</td><td>${x.ok?fmt(x.nut.calcium):'—'}</td><td>${x.ok?fmt(x.nut.iron):'—'}</td><td>${x.ok?fmt(x.nut.zinc):'—'}</td></tr>`).join('');
-  return `<h3 class="top-gap">${title}</h3>${extra}<div class="table-wrap"><table class="design-recheck-table"><thead><tr><th>Source</th><th>DB item</th><th>Amount</th><th>Energy (kcal)</th><th>Protein (g)</th><th>HBV protein (g)</th><th>Total fat (kcal)</th><th>MCT (kcal)</th><th>LCT (g)</th><th>MCT (g)</th><th>CHO (g)</th><th>Na (mg/mEq)</th><th>K (mg/mEq)</th><th>Ca (mg)</th><th>Iron (mg)</th><th>Zn (mg)</th></tr></thead><tbody>${rows||'<tr><td colspan="16">No items</td></tr>'}</tbody><tfoot><tr class="calc-total-row"><th colspan="3">Total</th><th>${fmt(total.kcal)}</th><th>${fmt(total.protein)}</th><th>${fmt(total.protein_excl_cho)}</th><th>${fmt(fatEnergyKcal(total))}</th><th>${fmt(num(total.mct)*8.3)}</th><th>${fmt(total.fat)}</th><th>${fmt(total.mct)}</th><th>${fmt(total.cho)}</th><th>${na(total.sodium)}</th><th>${ka(total.potassium)}</th><th>${fmt(total.calcium)}</th><th>${fmt(total.iron)}</th><th>${fmt(total.zinc)}</th></tr></tfoot></table></div>`
+  // Source is already identified by the A/B/C section heading. Removing that redundant column
+  // keeps every footer value aligned with its header on Android (the old CSS-hidden Source column
+  // still counted inside colspan and shifted Total/Energy/Protein cells).
+  const rows=calcRows.map(x=>`<tr><td>${esc(x.food?.name||x.row?.name||'—')}</td><td>${esc(x.amountText||`${x.row?.amount??'—'} ${x.row?.unit||''}`)}</td><td>${x.ok?fmt(x.nut.kcal):'—'}</td><td>${x.ok?fmt(x.nut.protein):'—'}</td><td>${x.ok?fmt(x.nut.protein_excl_cho):'—'}</td><td>${x.ok?fmt(fatEnergyKcal(x.nut)):'—'}</td><td>${x.ok?fmt(num(x.nut.mct)*8.3):'—'}</td><td>${x.ok?fmt(x.nut.fat):'—'}</td><td>${x.ok?fmt(x.nut.mct):'—'}</td><td>${x.ok?fmt(x.nut.cho):'—'}</td><td>${x.ok?na(x.nut.sodium):'—'}</td><td>${x.ok?ka(x.nut.potassium):'—'}</td><td>${x.ok?fmt(x.nut.calcium):'—'}</td><td>${x.ok?fmt(x.nut.iron):'—'}</td><td>${x.ok?fmt(x.nut.zinc):'—'}</td></tr>`).join('');
+  return `<h3 class="top-gap">${title}</h3>${extra}<div class="table-wrap design-recheck-wrap"><table class="design-recheck-table"><thead><tr><th>DB item</th><th>Amount</th><th>Energy (kcal)</th><th>Protein (g)</th><th>HBV protein (g)</th><th>Total fat (kcal)</th><th>MCT (kcal)</th><th>LCT (g)</th><th>MCT (g)</th><th>CHO (g)</th><th>Na (mg/mEq)</th><th>K (mg/mEq)</th><th>Ca (mg)</th><th>Iron (mg)</th><th>Zn (mg)</th></tr></thead><tbody>${rows||'<tr><td colspan="15">No items</td></tr>'}</tbody><tfoot><tr class="calc-total-row"><th colspan="2">Total</th><th>${fmt(total.kcal)}</th><th>${fmt(total.protein)}</th><th>${fmt(total.protein_excl_cho)}</th><th>${fmt(fatEnergyKcal(total))}</th><th>${fmt(num(total.mct)*8.3)}</th><th>${fmt(total.fat)}</th><th>${fmt(total.mct)}</th><th>${fmt(total.cho)}</th><th>${na(total.sodium)}</th><th>${ka(total.potassium)}</th><th>${fmt(total.calcium)}</th><th>${fmt(total.iron)}</th><th>${fmt(total.zinc)}</th></tr></tfoot></table></div>`
 }
 
 function modularFormulaConstraintWarnings(d=ensureDesignDraft()){
@@ -1032,6 +1036,26 @@ function strictFatTargetCorrection(d,t,maxPass=18){
   }
   applyDesignRounding(d);return designCombined(d);
 }
+function precisionMacroTargetCorrection(d,t,maxPass=28){
+  if(!(t.kcal>0))return designCombined(d);
+  const vars=optimizationVariables(d,{includeMedication:false});
+  if(!vars.length)return designCombined(d);
+  const clip=(v,value)=>{let nv=applyRoundRuleValue(Math.max(0,value),v.row.roundRule||defaultRoundRule(v.row,v.kind)),mx=optimizationMaxAmount(v,d),g=thaiFoodGuideBoundsForVariable(v,d);if(Number.isFinite(mx))nv=Math.min(mx,nv);if(g)nv=Math.max(g.min,Math.min(g.max,nv));return nv};
+  // Final bedside objective: minimize the WORST macro target miss first, then the combined miss.
+  // This prevents a mathematically exact protein result from being accepted while energy/fat remain
+  // several percent away. Manual/Locked rows never enter vars and therefore remain untouched.
+  const objective=()=>{const c=designCombined(d),errs=[];const e=Math.abs(num(c.total.kcal)-t.kcal)/t.kcal;errs.push(e);let p=0,f=0;if(t.protein>0){p=Math.abs(num(c.total[t.proteinKey])-t.protein)/t.protein;errs.push(p)}if(t.fatKcal>0){f=Math.abs(fatEnergyKcal(c.total)-t.fatKcal)/t.fatKcal;errs.push(f)}const worst=Math.max(...errs);return worst*1000+(e*e+p*p+f*f)*100};
+  let bestScore=objective();const mults=[-40,-20,-10,-5,-3,-2,-1,1,2,3,5,10,20,40];
+  for(let pass=0;pass<maxPass;pass++){
+    let best=null,bs=bestScore;
+    for(const a of vars){const oa=num(a.row.amount);for(const m of mults){const na=clip(a,oa+a.step*m);if(Math.abs(na-oa)<1e-9)continue;a.row.amount=na;const sc=objective();a.row.amount=oa;if(sc+1e-9<bs){bs=sc;best={a,na,b:null}}}}
+    // Pair exchange lets milk/protein and oil/CHO move together while preserving the third target.
+    for(let i=0;i<vars.length;i++)for(let j=i+1;j<vars.length;j++){const a=vars[i],b=vars[j],oa=num(a.row.amount),ob=num(b.row.amount);for(const ma of [-10,-5,-2,-1,1,2,5,10])for(const mb of [-10,-5,-2,-1,1,2,5,10]){const na=clip(a,oa+a.step*ma),nb=clip(b,ob+b.step*mb);if(Math.abs(na-oa)<1e-9&&Math.abs(nb-ob)<1e-9)continue;a.row.amount=na;b.row.amount=nb;const sc=objective();a.row.amount=oa;b.row.amount=ob;if(sc+1e-9<bs){bs=sc;best={a,na,b,nb}}}}
+    if(!best)break;best.a.row.amount=best.na;if(best.b)best.b.row.amount=best.nb;bestScore=bs;
+    const c=designCombined(d),e=Math.abs(num(c.total.kcal)/t.kcal-1),p=t.protein>0?Math.abs(num(c.total[t.proteinKey])/t.protein-1):0,f=t.fatKcal>0?Math.abs(fatEnergyKcal(c.total)/t.fatKcal-1):0;if(e<=.01&&p<=.02&&f<=.02)break;
+  }
+  applyDesignRounding(d);return designCombined(d);
+}
 function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
   const t=optimizationTargets();applyDesignRounding(d);
   // Stage 1 — food/formula first. Medication/mineral rows are excluded. The optimizer uses
@@ -1108,6 +1132,11 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
   // One final combined correction rechecks energy/protein after the dedicated fat exchange.
   wholePrescriptionDeficitCorrection(d,t,true,8);
   strictFatTargetCorrection(d,t,12);
+  precisionMacroTargetCorrection(d,t,32);
+  // Recheck fat once after precision balancing; precision is then run once more so all three macro
+  // targets settle together rather than the last correction undoing the previous one.
+  strictFatTargetCorrection(d,t,8);
+  precisionMacroTargetCorrection(d,t,16);
   let current=designCombined(d);syncAllocationToActual(d);
 
   const warnings=[],proteinLabel=(state.requirements.proteinMode||'total')==='counted'?'High biological value protein':'Total protein';
@@ -1122,7 +1151,7 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
 }
 function balancePrescriptionToRequirements(d=ensureDesignDraft()){return optimizePrescriptionToRequirements(d)}
 
-function renderDesignQuickEditor(){/* v0.4.129: Quick-adjust component list removed; prescription and nutrient contribution tables remain. */}
+function renderDesignQuickEditor(){/* v0.4.131: Quick-adjust component list removed; prescription and nutrient contribution tables remain. */}
 function renderDesignRecheck(){
   const c=designCombined(),r=state.requirements,m=c.modular,fcw=modularFormulaConstraintWarnings(),w=num(state.patient.weight),proteinKey=proteinTargetKey(),naReqMg=requirementElectrolyteMg('na',r),kReqMg=requirementElectrolyteMg('k',r);
   const fmt=x=>round(num(x),1),pct=(v,t)=>num(t)>0?`${fmt(num(v)/num(t)*100)}%`:'—';
@@ -1919,7 +1948,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.129',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.131',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
