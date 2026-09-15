@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.131
+# Pediatric Nutrition PWA 0.4.132
 
 
 
@@ -412,6 +412,6 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Nutrient Recheck retains Diet / Milk-Formula / Modular / Total / Target / Remaining.
 
 
-## v0.4.131
+## v0.4.132
 - Removed the duplicate Quick adjust prescription/component list from Diet Design Nutrient Recheck; nutrient contribution tables A-D remain.
 - Fixed Review & Calculate Calculation Detail to render from the same persisted `state.meals` snapshot used by `calculateIntake()`, preventing stale `reviewDraft` from producing an empty detail table while the summary contained calculated food.
