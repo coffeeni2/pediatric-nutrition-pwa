@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.115
+# Pediatric Nutrition PWA 0.4.117
 
 
 
@@ -365,7 +365,19 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Rechecked Add food, Add milk/formula, Prepare component template, Modular Add time and Add component wiring.
 
 
-## v0.4.115
+## v0.4.116
 - Save Case now commits the currently visible Patient/Case ID before snapshotting the case.
 - Active Patient/Case dropdown is rebuilt immediately after Save Case and always lists every saved case.
 - Switching a dropdown entry refreshes the active-case bar before and after loading the selected case.
+
+
+## v0.4.116 functional QA fix
+- Fixed a startup JavaScript ReferenceError caused by missing `renderCalculationDetail()`. This error stopped execution before later button handlers were attached, which explained why many tabs/buttons appeared but did nothing.
+- Restored Nutrient Summary and Calculation Detail rendering.
+- Rechecked Case, Modular Diet, and Diet Design action wiring after the startup fix.
+
+
+## v0.4.117
+- New Case now force-saves the current Patient form/case snapshot before creating a blank case.
+- Saved Patient IDs remain listed in the global case dropdown after creating subsequent cases.
+- Case dropdown is rebuilt immediately after New Case.

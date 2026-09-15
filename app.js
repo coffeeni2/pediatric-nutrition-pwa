@@ -318,11 +318,11 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
       await Promise.all(regs.map(r=>r.unregister()));
       if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
       sessionStorage.setItem(marker,'1');
-      const u=new URL(location.href); u.searchParams.set('appv','0.4.115');
+      const u=new URL(location.href); u.searchParams.set('appv','0.4.117');
       location.replace(u.toString());
       return;
     }
-    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.115',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.117',{updateViaCache:'none'});
     await reg.update();
   } catch(e){ console.warn('Service worker recovery/update failed',e); }
 });
@@ -423,7 +423,20 @@ function applyDobAgeToForm(){
   return true;
 }
 function renderCaseSelector(){const el=$('caseSelector');if(!el)return;el.innerHTML=state.cases.map(c=>`<option value="${c.id}">${esc(c.patient.alias||'Untitled case')} ${c.patient.visitDate?'• '+esc(c.patient.visitDate):''}</option>`).join('');el.value=state.activeCaseId;renderActiveCaseBar()}
-function newCase(){requirementsDirty=false;pnDirty=false;syncActiveCase();const c=blankCase();state.cases.push(c);state.activeCaseId=c.id;state.patient=clone(c.patient);state.requirements=clone(c.requirements);state.dietDesign=clone(c.dietDesign||blankDietDesign());state.pn=clone(c.pn||blankPn());state.pnif={};state.meals=[];state.modular=clone(c.modular);state.lastSummary=null;saveState();resetReviewDraft();resetModularDraft();resetDesignDraft();renderPatient();renderMeals();renderModular();renderDietDesign();renderPn();showTab('patient')}
+function newCase(){
+  // Persist the current case BEFORE switching state to the new blank case.
+  // This guarantees a saved Patient ID (e.g. 001) remains in the case dropdown after creating 002.
+  try{
+    if($('patientAlias')) savePatientForm();
+    if(requirementsDirty) saveRequirementsForm();
+    commitCaseDrafts();
+    syncActiveCase();
+    localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
+  }catch(err){console.error('Save current case before New Case failed',err)}
+  requirementsDirty=false;pnDirty=false;
+  const c=blankCase();state.cases.push(c);state.activeCaseId=c.id;state.patient=clone(c.patient);state.requirements=clone(c.requirements);state.dietDesign=clone(c.dietDesign||blankDietDesign());state.pn=clone(c.pn||blankPn());state.pnif={};state.meals=[];state.modular=clone(c.modular);state.lastSummary=null;
+  saveState();resetReviewDraft();resetModularDraft();resetDesignDraft();renderPatient();renderMeals();renderModular();renderDietDesign();renderPn();showTab('patient');renderCaseSelector();renderActiveCaseBar();
+}
 function clearPatientTab(){
  if(!confirm('Clear Patient / Case fields for the current case? Daily Requirements and data in other tabs will be kept.'))return;
  state.patient=clone(blankCase().patient);
@@ -565,6 +578,27 @@ function macroRatio(t){
 }
 function proteinDisplay(g,w,prefix=''){const bw=w?` <span class="protein-perkg">(${prefix}${round(g/w,2)} g/kg/day)</span>`:' <span class="protein-perkg">(BW required)</span>';return `${prefix}${round(g)} g/day${bw}`}
 function nutGrid(t,prefix=''){const w=num(state.patient.weight),rows=[['Energy',`${round(t.kcal)} kcal/day`,w?`${round(t.kcal/w,1)} kcal/kg/day`:''],['Total protein',`${round(t.protein,1)} g/day`,w?`${round(t.protein/w,2)} g/kg/day`:''],['High biological value protein',`${round(t.protein_excl_cho,1)} g/day`,w?`${round(t.protein_excl_cho/w,2)} g/kg/day`:''],['P : CHO : Fat',macroRatio(t),'% macronutrient energy'],['Total fat',`${round(totalFatGrams(t),1)} g/day`,`${round(fatEnergyPct(t),1)}% energy`],['LCT',`${round(t.fat,1)} g/day`,`${round(lctKcal(t),1)} kcal`],['MCT',`${round(t.mct,1)} g/day`,`${round(mctKcal(t),1)} kcal`],['CHO',`${round(t.cho,1)} g/day`,''],['Calcium',`${round(t.calcium)} mg`,''],['Magnesium',`${round(t.magnesium)} mg`,''],['Phosphorus',`${round(t.phosphorus)} mg`,''],['Sodium',`${round(t.sodium)} mg`,`${round(t.sodium/23,2)} mEq`],['Potassium',`${round(t.potassium)} mg`,`${round(t.potassium/39,2)} mEq`],['Iron',`${round(t.iron,1)} mg`,''],['Zinc',`${round(t.zinc,1)} mg`,'']];return `<div class="table-wrap nutrient-table-wrap"><table class="compact-summary-table nutrient-table"><thead><tr><th>Nutrient</th><th>Daily intake</th><th>Additional</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td><strong>${r[1]}</strong></td><td>${r[2]||'—'}</td></tr>`).join('')}</tbody></table></div>`}
+function renderSummary(){
+  const box=$('nutrientSummary'), miss=$('unmatchedList'); if(!box)return;
+  const sm=state.lastSummary||calculateIntake(), total=sm?.total||emptyNut();
+  box.innerHTML=nutGrid(total)+requirementCompare(total);
+  if(miss) miss.innerHTML=(sm?.missing||[]).length?`<div class="status warn top-gap"><strong>Items needing review</strong><br>${sm.missing.map(x=>`${esc(x.time||'')} ${esc(x.food||'')}: ${esc(x.reason||'')}`).join('<br>')}</div>`:'<div class="status ok top-gap">All reported calculated items have usable Custom Database matches/amounts.</div>';
+}
+function renderCalculationDetail(){
+  const fb=$('foodCalcDetailBody'), ff=$('foodCalcDetailFoot'), mb=$('modCalcDetailBody'), mf=$('modCalcDetailFoot'), note=$('modCalcBasisNote'), warn=$('calcDetailWarnings');
+  if(!fb||!mb)return;
+  const foodRows=[]; let foodTotal=emptyNut(); const missing=[];
+  const pushFood=(x,time,menu)=>{const f=matchedFood(x);if(!f){missing.push(`${time||''} ${x.food||menu||''}: no DB match`);return}const fac=factorFor(x,f);if(fac===null){missing.push(`${time||''} ${x.food||menu||''}: amount/unit not convertible`);return}const t=emptyNut();addNut(t,f,fac);TOTAL_KEYS.forEach(k=>foodTotal[k]+=t[k]);foodRows.push(`<tr><td>${esc(time||'—')} / ${esc(menu||x.food||'—')}</td><td>${esc(x.food||f.name)}</td><td>${esc(f.name)}</td><td>${esc(x.amount||x.volume_ml||'—')} ${esc(x.convertUnit||x.unit||((x.volume_ml!=='')?'mL':''))}</td><td>${fmt(t.kcal)}</td><td>${fmt(t.protein)}</td><td>${fmt(totalFatGrams(t))}</td><td>${fmt(t.calcium)}</td><td>${fmt(t.sodium)}</td><td>${fmt(t.potassium)}</td></tr>`)};
+  (state.meals||[]).forEach(m=>{let method=m.calcMethod==='auto'?autoCalcRule(m).method:m.calcMethod;if(method==='whole')pushFood(m,m.time,m.food);else if(method==='ingredients'||method==='hybrid')(m.ingredients||[]).filter(hasPortion).forEach(x=>pushFood(x,m.time,m.food))});
+  fb.innerHTML=foodRows.join('')||'<tr><td colspan="10">No calculated food/formula items</td></tr>';
+  if(ff)ff.innerHTML=`<tr class="calc-total-row"><th colspan="4">Total</th><th>${fmt(foodTotal.kcal)}</th><th>${fmt(foodTotal.protein)}</th><th>${fmt(totalFatGrams(foodTotal))}</th><th>${fmt(foodTotal.calcium)}</th><th>${fmt(foodTotal.sodium)}</th><th>${fmt(foodTotal.potassium)}</th></tr>`;
+  const md=state.modular||{}, modRows=[]; let modRecipe=emptyNut();
+  (md.components||[]).forEach(x=>{const f=state.foodDB.find(z=>z.id===x.dbMatchId)||exactCustom(x.name);if(!f)return;const fac=factorFor({food:x.name,amount:x.amount,unit:x.unit,convertUnit:x.unit,dbMatchId:f.id,formulaKcalOz:x.formulaKcalOz||''},f);if(fac===null)return;const t=emptyNut();addNut(t,f,fac);TOTAL_KEYS.forEach(k=>modRecipe[k]+=t[k]);modRows.push(`<tr><td>${esc(x.name||f.name)}</td><td>${esc(f.name)}</td><td>${esc(x.amount||'—')} ${esc(x.unit||'')}</td><td>recipe</td><td>${fmt(t.kcal)}</td><td>${fmt(t.protein)}</td><td>${fmt(totalFatGrams(t))}</td><td>${fmt(t.calcium)}</td><td>${fmt(t.sodium)}</td><td>${fmt(t.potassium)}</td></tr>`)});
+  mb.innerHTML=modRows.join('')||'<tr><td colspan="10">No modular components</td></tr>';
+  if(mf)mf.innerHTML=`<tr class="calc-total-row"><th colspan="4">Recipe total</th><th>${fmt(modRecipe.kcal)}</th><th>${fmt(modRecipe.protein)}</th><th>${fmt(totalFatGrams(modRecipe))}</th><th>${fmt(modRecipe.calcium)}</th><th>${fmt(modRecipe.sodium)}</th><th>${fmt(modRecipe.potassium)}</th></tr>`;
+  if(note)note.textContent=md.feedMode==='daily'?`Daily intake mode: prescribed ${md.dailyPrescribed||'—'} mL/day; actual ${md.dailyActual||'—'} mL/day.`:`By-time intake mode: ${(md.feeds||[]).length} feed(s).`;
+  if(warn)warn.innerHTML=missing.length?`<div class="status warn"><strong>Calculation detail warnings</strong><br>${missing.map(esc).join('<br>')}</div>`:'';
+}
 function requirementCompare(t){const r=state.requirements,w=num(state.patient.weight),a=[];if(r.trackFluid&&r.fluid)a.push(`Fluid target ${esc(r.fluid)} mL/day`);if(r.energy)a.push(`Energy ${round(t.kcal/num(r.energy)*100,1)}% target`);if(r.protein)a.push(`Protein ${round(t.protein/num(r.protein)*100,1)}% target`);if(r.calcium)a.push(`Calcium ${round(t.calcium/num(r.calcium)*100,1)}% target`);const naT=requirementElectrolyteMg('na',r),kT=requirementElectrolyteMg('k',r);if(naT)a.push(`Na ${round(t.sodium/naT*100,1)}% target`);if(kT)a.push(`K ${round(t.potassium/kT*100,1)}% target`);if(w)a.push(`${round(t.kcal/w,1)} kcal/kg/day • ${round(t.protein/w,2)} g protein/kg/day`);return a.length?`<p class="muted top-gap"><strong>Requirement comparison:</strong> ${a.join(' • ')}</p>`:''}$('calculateBtn')?.addEventListener('click',()=>{calculateIntake();renderSummary();renderCalculationDetail()});
 $('refreshCalcDetailBtn')?.addEventListener('click',renderCalculationDetail);
 
