@@ -112,6 +112,13 @@
       </div>
     </div>
 
+    <div class="card design-recheck-card">
+      <div class="section-title-row"><div><h2>Nutrient Recheck</h2><p class="muted">Calculate Intake = ตรวจ nutrient จาก prescription ปัจจุบันเท่านั้น ไม่เปลี่ยน amount, rounding หรือสูตร • Optimize Again เท่านั้นที่อนุญาตให้ระบบปรับสูตร</p></div><button id="refreshDesignRecheckBtn" class="primary">Calculate Intake</button></div>
+      <div id="designQuickEditor" class="design-quick-editor"></div>
+      <div id="designRecheck"></div>
+    </div>
+    <div class="design-mobile-actionbar" aria-label="Diet Design actions"><button id="mobileCalculateIntakeBtn" class="primary">Calculate Intake</button><button id="mobileOptimizeAgainBtn" class="secondary">Optimize Again</button><span id="mobileDesignCalcStatus" class="muted"></span></div>
+
     <div class="card">
       <div class="section-title-row"><div><h2>1. Diet</h2><p class="muted">Amount คือปริมาณจริง • Rounding เลือกทีละ 1 / ทีละ 5 / ทศนิยม 1 ตำแหน่ง • Lock = ห้าม Auto เปลี่ยน • Maximum เป็นเพดาน optional</p></div><div class="inline-actions"><button id="copyDietOrderBtn" class="secondary">Copy Diet Order</button><button id="addDesignDietBtn" class="secondary">+ Add food</button><button id="clearDesignDietBtn" class="secondary">Clear Diet</button></div></div>
       <div id="designDietRows"></div>
@@ -147,11 +154,7 @@
       <div class="grid-3"><label>Free water / flush (mL/day)<input id="designFreeWater" type="number" min="0" step="1" /></label><label>Other recorded fluid (mL/day)<input id="designOtherFluid" type="number" min="0" step="1" /></label></div>
     </div>
 
-    <div class="card design-recheck-card">
-      <div class="section-title-row"><div><h2>Nutrient Recheck</h2><p class="muted">Calculate Intake = ตรวจ nutrient จาก prescription ปัจจุบันเท่านั้น ไม่เปลี่ยน amount, rounding หรือสูตร • Optimize Again เท่านั้นที่อนุญาตให้ระบบปรับสูตร</p></div><button id="refreshDesignRecheckBtn" class="primary">Calculate Intake</button></div>
-      <div id="designRecheck"></div>
-    </div>
-    <div class="design-mobile-actionbar" aria-label="Diet Design actions"><button id="mobileCalculateIntakeBtn" class="primary">Calculate Intake</button><button id="mobileOptimizeAgainBtn" class="secondary">Optimize Again</button><span id="mobileDesignCalcStatus" class="muted"></span></div>
+
   </section>
 
 
@@ -257,7 +260,7 @@
 
   <section id="tab-pnif" class="tab-panel">
     <div class="card">
-      <div class="section-title-row"><div><h2>Paste PNIF from ChatGPT</h2><p class="muted">รองรับ PNIF intake_type: food / formula / modular_diet / unknown • modular_diet จะส่งเข้า Daily Modular Diet อัตโนมัติ</p></div><button id="loadExampleBtn" class="secondary">Load example</button></div>
+      <div class="section-title-row"><div><h2>Paste PNIF from ChatGPT</h2><p class="muted">แยก import ระหว่าง 24-hour recall และ modular recipe</p></div><button id="loadExampleBtn" class="secondary">Load example</button></div><div class="pnif-mode-switch"><label><input type="radio" name="pnifMode" value="24hr" checked> 24-hour Recall</label><label><input type="radio" name="pnifMode" value="modular"> PNIF for Modular Diet</label></div>
       <textarea id="pnifInput" rows="14" placeholder="วาง PNIF JSON ที่นี่"></textarea>
       <div class="actions"><button id="importPnifBtn" class="primary">Import</button><button id="clearPnifBtn" class="secondary">Clear</button></div>
       <div id="pnifStatus" class="status"></div>
@@ -279,16 +282,11 @@
   <section id="tab-modular" class="tab-panel">
     <div class="card">
       <div class="section-title-row"><div><h2>Daily Modular Recipe</h2><p class="muted">PNIF modular components จะเข้าหน้านี้อัตโนมัติ • แสดง compact บนมือถือ และเปิดแก้เฉพาะที่จำเป็น</p></div><div class="inline-actions"><button id="clearModularOnlyBtn" class="danger">Clear modular</button><button id="cancelModularBtn" class="secondary">Cancel changes</button><button id="saveModularBtn" class="primary">Save Modular Diet</button><span id="modularSaveStatus" class="muted"></span></div></div>
-      <div class="grid-3">
-        <label>Recipe name<input id="modName" /></label>
-        <label>Final volume (mL)<input id="modFinalVolume" type="number" min="0" step="1" /></label>
-        <label>Notes<input id="modNotes" /></label>
-      </div>
+      <div class="grid-2 modular-head-grid"><label>Recipe name<input id="modName" /></label><label>Final volume (mL)<input id="modFinalVolume" type="number" min="0" step="1" /></label></div>
       <div class="section-title-row top-gap"><h3>Components</h3><button id="addModComponentBtn" class="secondary">+ Add component</button></div>
       <div id="modComponents"></div>
       <div id="modRecipeSummary" class="summary-box top-gap"></div>
-      <div class="section-title-row top-gap"><div><h3>Feeding schedule</h3><p class="muted">Actual nutrient intake ใช้ actual mL ของแต่ละ feed</p></div><button id="addFeedBtn" class="secondary">+ Add feed</button></div>
-      <div id="feedSchedule"></div>
+      <div class="section-title-row top-gap"><div><h3>Intake volume</h3><p class="muted">กรอกยอดรวมทั้งวัน หรือแยกตามเวลาได้</p></div><button id="addFeedBtn" class="secondary">+ Add time</button></div><div class="grid-3 modular-intake-mode"><label>Entry mode<select id="modFeedMode"><option value="daily">Total per day</option><option value="schedule">By time</option></select></label><label id="modDailyPresWrap">Prescribed total (mL/day)<input id="modDailyPrescribed" type="number" min="0" step="1"></label><label id="modDailyActualWrap">Actual consumed (mL/day)<input id="modDailyActual" type="number" min="0" step="1"></label></div><div id="feedSchedule"></div>
       <div id="feedSummary" class="summary-box top-gap"></div>
     </div>
   </section>
@@ -342,7 +340,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.108</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
-<script src="app.js?v=0.4.108"></script>
+<footer><strong>PWA 0.4.111</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<script src="app.js?v=0.4.111"></script>
 </body>
 </html>

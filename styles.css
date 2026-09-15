@@ -260,3 +260,47 @@ label small.muted{display:block;margin:3px 0 5px;font-weight:400;line-height:1.2
   #tab-design .design-recheck-card .section-title-row button{min-width:118px}
   #tab-design #designTargetGapBar{position:sticky;top:45px;z-index:35}
 }
+/* v0.4.109 */
+.pnif-mode-switch{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.pnif-mode-switch label{display:flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid #d7e2e5;border-radius:8px;background:#fff}.pnif-mode-switch input{width:auto;margin:0}.compact-summary-table{width:100%;border-collapse:collapse}.compact-summary-table th,.compact-summary-table td{padding:6px 8px;border-bottom:1px solid #e2e9eb;text-align:left;white-space:nowrap}.compact-summary-table th{font-size:.72rem}.compact-summary-table td{font-size:.78rem}.nutrient-table td:first-child{font-weight:600}.nutrient-table-wrap{margin-top:6px}
+@media(max-width:700px){#tab-modular .card{padding:9px}.modular-head-grid{grid-template-columns:1.2fr .8fr;gap:5px}.modular-intake-mode{grid-template-columns:1fr 1fr 1fr!important;gap:5px}.compact-summary-table th,.compact-summary-table td{padding:5px 6px;font-size:.7rem}.pnif-mode-switch{gap:5px}.pnif-mode-switch label{padding:5px 7px;font-size:.75rem}#nutrientSummary h3{margin:8px 0 2px}#nutrientSummary p.muted{margin:0 0 4px}}
+
+/* v0.4.111 OPD compact patient/requirements + Diet Design quick adjust */
+.design-quick-editor{margin:6px 0 10px}.quick-editor-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:5px}.quick-editor-table{width:100%;border-collapse:collapse}.quick-editor-table th,.quick-editor-table td{padding:5px 7px;border-bottom:1px solid #e2e9eb;text-align:left}.quick-editor-table th{font-size:.72rem}.quick-editor-table td{font-size:.78rem}.quick-editor-table td:nth-child(2){width:105px}.quick-editor-table input{padding:5px 6px;min-height:30px}.quick-editor-table small{display:block;color:#687b80;font-weight:400;font-size:.65rem}.quick-editor-table-wrap{overflow-x:auto}
+@media(max-width:700px){
+  #tab-patient .patient-card,#tab-patient .requirements-card{padding:7px 8px;margin-bottom:6px}
+  #tab-patient .patient-card .section-title-row p,#tab-patient .requirements-card .section-title-row p,#tab-patient .compact-note{display:none}
+  #tab-patient .patient-ga-grid{display:none}
+  #tab-patient #patientSummary,#tab-patient #requirementSummary{display:none}
+  #tab-patient .patient-main-grid{grid-template-columns:1.25fr 1fr .7fr;gap:4px}
+  #tab-patient .patient-age-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:4px}
+  #tab-patient .patient-anthro-grid{grid-template-columns:1fr 1fr;gap:4px;margin-top:4px}
+  #tab-patient .requirements-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px}
+  #tab-patient .requirements-grid label{min-width:0}
+  #tab-patient .requirements-grid .fluid-track-card{grid-column:auto}
+  #tab-patient label{font-size:.64rem}
+  #tab-patient input,#tab-patient select{min-height:28px;padding:4px 5px;font-size:.72rem}
+  #tab-patient .section-title-row .inline-actions{gap:3px}
+  #tab-patient #deleteCaseBtn,#tab-patient #clearPatientBtn,#tab-patient #clearRequirementsBtn{display:none}
+  #tab-design>.card{padding:8px;margin-bottom:6px}
+  #tab-design>.card:first-child .section-title-row>div>p,.design-recheck-card .section-title-row p{display:none}
+  #tab-design .auto-design-box{padding:7px;margin-top:5px}
+  #tab-design .auto-design-box>.section-title-row p,#tab-design .auto-design-box>p.muted{display:none}
+  #tab-design .auto-source-picker{padding:5px 6px;gap:5px}
+  #tab-design .auto-design-box .grid-3{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+  #tab-design .auto-design-box .grid-3.top-gap{display:none}
+  #tab-design .auto-design-box label{font-size:.65rem}
+  #tab-design .auto-design-box input{min-height:28px;padding:4px}
+  #tab-design #setAllDesignAutoBtn,#tab-design #calculateCurrentDesignBtn{display:none}
+  .design-recheck-card{position:relative}
+  .design-recheck-card .section-title-row{margin-bottom:3px}
+  .quick-editor-head .muted{font-size:.67rem}
+  .quick-editor-table th,.quick-editor-table td{padding:4px 5px;font-size:.7rem}
+  .quick-editor-table td:nth-child(2){width:82px}.quick-editor-table input{min-height:28px;padding:3px 5px;font-size:.75rem}
+  #tab-design #designRecheck>h3:not(:last-of-type),#tab-design #designRecheck>.recheck-section{font-size:.72rem}
+  #tab-design #dietDesignSummary,#tab-design #formulaDesignSummary,#tab-design #modularDesignSummary{display:none}
+  #tab-design>.card:not(:first-child):not(.design-recheck-card) .section-title-row p{display:none}
+}
+@media(max-width:480px){
+  #tab-patient .patient-main-grid{grid-template-columns:1.25fr .9fr .65fr}
+  #tab-patient .requirements-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}

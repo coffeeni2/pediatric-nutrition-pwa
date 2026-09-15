@@ -1,8 +1,10 @@
-# Pediatric Nutrition PWA 0.4.108
+# Pediatric Nutrition PWA 0.4.111
 
 
 
-## 0.4.108
+## 0.4.111
+- Custom Database updated from the user-provided 2026-09-15 full-backup JSON (`foodDB`: 134 entries).
+- Added one-time migration `customDbSnapshotV04110` so existing browser installs receive the updated database while patient/case, PNIF, Review Intake, Modular Diet, Diet Design and PN data remain unchanged.
 - Diet Design now separates **Calculate Intake** from **Optimize Again**.
 - Calculate Intake recalculates Nutrient Recheck from the current manual prescription without changing component amounts, rounding, locks, or source allocation.
 - Optimize Again is the only main action that rebalances the prescription toward requirements.
@@ -336,3 +338,10 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Save Case is available globally and commits Review Intake, Modular Diet, Diet Design, Patient/Requirements into the active case.
 - Switching between non-PN tabs auto-saves case drafts instead of forcing a return to Patient.
 - Replaced bundled Custom Database with the exact foodDB snapshot from ped-nutrition-full-backup-2026-09-15 (1).json; one-time migration updates existing browser data.
+
+
+## v0.4.111
+- Compact Android Patient Profile and Daily Requirements; hides nonessential summaries and GA block on phone to reduce scrolling.
+- Diet Design Nutrient Recheck moved directly below Generate/Optimize.
+- Added Quick adjust prescription table beside Recheck: edit component amounts in place, then Calculate Intake without re-optimizing.
+- Existing full Diet/Milk/Modular editors remain below for advanced changes, units, rounding, locks and component setup.
