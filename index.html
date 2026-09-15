@@ -15,20 +15,20 @@
 <header class="app-header">
   <div><div class="eyebrow">Pediatric Nutrition Toolkit</div><h1>Pediatric Nutrition Calculator</h1></div>
   <div class="header-actions">
-    <button type="button" id="installBtn" class="secondary hidden">Install App</button>
+    <button id="installBtn" class="secondary hidden">Install App</button>
   </div>
 </header>
 <main>
   <nav class="tabs">
-    <button type="button" class="tab active" data-tab="patient">Patient</button>
-    <button type="button" class="tab" data-tab="design">Diet Design</button>
-    <button type="button" class="tab" data-tab="pn">Parenteral Nutrition</button>
-    <button type="button" class="tab" data-tab="pnif">PNIF</button>
-    <button type="button" class="tab" data-tab="review">Review Intake</button>
-    <button type="button" class="tab" data-tab="modular">Modular Diet</button>
-    <button type="button" class="tab" data-tab="foods">Custom Database</button>
-    <button type="button" class="tab" data-tab="summary">Review & Calculate</button>
-    <button type="button" class="tab" data-tab="data">Settings & Backup</button>
+    <button class="tab active" data-tab="patient">Patient</button>
+    <button class="tab" data-tab="design">Diet Design</button>
+    <button class="tab" data-tab="pn">Parenteral Nutrition</button>
+    <button class="tab" data-tab="pnif">PNIF</button>
+    <button class="tab" data-tab="review">Review Intake</button>
+    <button class="tab" data-tab="modular">Modular Diet</button>
+    <button class="tab" data-tab="foods">Custom Database</button>
+    <button class="tab" data-tab="summary">Review & Calculate</button>
+    <button class="tab" data-tab="data">Settings & Backup</button>
   </nav>
   <div id="activeCaseBar" class="active-case-bar">
     <div id="activeCaseSummary" class="active-case-summary"></div>
@@ -41,7 +41,7 @@
 
   <section id="tab-patient" class="tab-panel active">
     <div class="card patient-card">
-      <div class="section-title-row"><div><h2>Patient / Case</h2><p class="muted">ข้อมูลของ active case ด้านบน • ใช้ Save Case ด้านบนเพื่อบันทึกทุก tab</p></div><div class="inline-actions"><button id="clearPatientBtn" class="secondary" type="button">Clear Patient fields</button></div></div><div class="legacy-case-controls" aria-hidden="true"><select id="caseSelector" tabindex="-1"></select><button id="newCaseBtn" type="button" tabindex="-1">New</button><button id="deleteCaseBtn" type="button" tabindex="-1">Delete</button><button id="savePatientBtn" type="button" tabindex="-1">Save</button></div>
+      <div class="section-title-row"><div><h2>Patient Profile</h2><p class="muted">เลือก / New / Delete / Save Case จากแถบด้านบน</p></div><div class="inline-actions"><button id="clearPatientBtn" class="secondary">Clear fields</button></div></div>
       <div class="grid-3 patient-main-grid">
         <label>Anonymous name / Case ID<input id="patientAlias" autocomplete="off" placeholder="Case A / P001" /></label>
         <label>Date of birth (optional)<input id="patientDob" type="date" /></label>
@@ -67,7 +67,7 @@
     </div>
 
     <div class="card requirements-card">
-      <div class="section-title-row"><div><h2>Daily Requirements</h2><p class="muted">ใส่ requirement ที่ต้องการใช้เอง แอปไม่เดา requirement อัตโนมัติ</p></div><div class="inline-actions"><button type="button" id="clearRequirementsBtn" class="secondary">Clear Daily Requirements</button><button type="button" id="saveRequirementsBtn" class="primary">Save Requirements</button><span id="requirementsSaveStatus" class="muted"></span></div></div>
+      <div class="section-title-row"><div><h2>Daily Requirements</h2><p class="muted">ใส่ requirement ที่ต้องการใช้เอง แอปไม่เดา requirement อัตโนมัติ</p></div><div class="inline-actions"><button id="clearRequirementsBtn" class="secondary">Clear Daily Requirements</button><button id="saveRequirementsBtn" class="primary">Save Requirements</button><span id="requirementsSaveStatus" class="muted"></span></div></div>
       <div class="grid-3 requirements-grid">
         <label class="check-card fluid-track-card"><span><input id="trackFluid" type="checkbox" style="width:auto;margin-right:6px" /> Track total fluid</span><small class="muted">เหมาะกับ tube feed / formula-only / modular-only</small></label>
         <label>Fluid target (mL/day)<input id="reqFluid" type="number" min="0" step="1" /></label>
@@ -86,10 +86,10 @@
 
   <section id="tab-design" class="tab-panel">
     <div class="card">
-      <div class="section-title-row"><div><h2>Diet Design / Nutrition Prescription</h2><p class="muted">ออกแบบสิ่งที่สั่งให้รับประทาน แยกจาก actual intake • ทุกค่าปรับเองได้ • คำนวณจาก Custom Database เท่านั้น</p></div><div class="inline-actions"><button type="button" id="copyFullDietOrderBtn" class="secondary">Copy Full Diet Order</button><button type="button" id="cancelDesignBtn" class="secondary">Cancel changes</button><button type="button" id="clearDesignBtn" class="secondary">Clear Diet Design</button><button type="button" id="saveDesignBtn" class="primary">Save Diet Design</button><span id="designCopyStatus" class="muted"></span><span id="designSaveStatus" class="muted"></span></div></div>
+      <div class="section-title-row"><div><h2>Diet Design / Nutrition Prescription</h2><p class="muted">ออกแบบสิ่งที่สั่งให้รับประทาน แยกจาก actual intake • ทุกค่าปรับเองได้ • คำนวณจาก Custom Database เท่านั้น</p></div><div class="inline-actions"><button id="copyFullDietOrderBtn" class="secondary">Copy Full Diet Order</button><button id="cancelDesignBtn" class="secondary">Cancel changes</button><button id="clearDesignBtn" class="secondary">Clear Diet Design</button><button id="saveDesignBtn" class="primary">Save Diet Design</button><span id="designCopyStatus" class="muted"></span><span id="designSaveStatus" class="muted"></span></div></div>
       <div id="designTargetGapBar" class="target-gap-bar" aria-live="polite"></div>
       <div class="auto-design-box top-gap">
-        <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">เลือก source ที่ต้องการใช้จากตรงนี้ก่อน Generate/Recalculate • ลำดับ Modular Diet: formula/milk โดยดู Ca ก่อน (ไม่เกิน protein/concentration) → protein ที่เหลือ → MCT → LCT → CHO → Ca/Na/K → ± trace element • % energy เป็นค่าเริ่มต้นและระบบปรับสัดส่วน source ได้ • Auto = ระบบปรับได้ • แก้ Amount เอง → Manual • Manual/Locked จะไม่ถูก Recalculate • Maximum / Rounding ยังมีผล</p></div><div class="inline-actions"><button type="button" id="autoBuildPrescriptionBtn" class="primary">Generate optimized draft</button><button type="button" id="autoCalculateDesignBtn" class="secondary">Optimize Again</button><button type="button" id="calculateCurrentDesignBtn" class="secondary">Calculate Intake</button><button type="button" id="setAllDesignAutoBtn" class="secondary">Set all to Auto</button></div></div>
+        <div class="section-title-row"><div><h3>Auto Prescription Draft</h3><p class="muted">เลือก source ที่ต้องการใช้จากตรงนี้ก่อน Generate/Recalculate • ลำดับ Modular Diet: formula/milk โดยดู Ca ก่อน (ไม่เกิน protein/concentration) → protein ที่เหลือ → MCT → LCT → CHO → Ca/Na/K → ± trace element • % energy เป็นค่าเริ่มต้นและระบบปรับสัดส่วน source ได้ • Auto = ระบบปรับได้ • แก้ Amount เอง → Manual • Manual/Locked จะไม่ถูก Recalculate • Maximum / Rounding ยังมีผล</p></div><div class="inline-actions"><button id="autoBuildPrescriptionBtn" class="primary">Generate Draft</button><button id="calculateCurrentDesignBtn" class="secondary">Calculate Intake</button><button id="setAllDesignAutoBtn" class="secondary">Set all to Auto</button></div></div>
         <div class="auto-source-picker">
           <strong>Use in prescription draft</strong>
           <label class="switch-line"><input id="designDietEnabled" type="checkbox" /> Diet</label>
@@ -112,26 +112,26 @@
     </div>
 
     <div class="card design-recheck-card">
-      <div class="section-title-row"><div><h2>Nutrient Recheck</h2><p class="muted">Calculate Intake = ตรวจ nutrient จาก prescription ปัจจุบันเท่านั้น ไม่เปลี่ยน amount, rounding หรือสูตร • Optimize Again เท่านั้นที่อนุญาตให้ระบบปรับสูตร</p></div><button type="button" id="refreshDesignRecheckBtn" class="primary">Calculate Intake</button></div>
+      <div class="section-title-row"><div><h2>Nutrient Recheck</h2><p class="muted">Calculate Intake = ตรวจ nutrient จาก prescription ปัจจุบันเท่านั้น ไม่เปลี่ยน amount, rounding หรือสูตร • Optimize Again เท่านั้นที่อนุญาตให้ระบบปรับสูตร</p></div><div class="inline-actions"><button id="refreshDesignRecheckBtn" class="primary">Calculate Intake</button><button id="recheckOptimizeAgainBtn" class="secondary">Optimize Again</button></div></div>
       <div id="designQuickEditor" class="design-quick-editor"></div>
       <div id="designRecheck"></div>
     </div>
-    <div class="design-mobile-actionbar" aria-label="Diet Design actions"><button type="button" id="mobileCalculateIntakeBtn" class="primary">Calculate Intake</button><button type="button" id="mobileOptimizeAgainBtn" class="secondary">Optimize Again</button><span id="mobileDesignCalcStatus" class="muted"></span></div>
+    <div class="design-mobile-actionbar" aria-label="Diet Design actions"><button id="mobileCalculateIntakeBtn" class="primary">Calculate Intake</button><button id="mobileOptimizeAgainBtn" class="secondary">Optimize Again</button><span id="mobileDesignCalcStatus" class="muted"></span></div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>1. Diet</h2><p class="muted">Amount คือปริมาณจริง • Rounding เลือกทีละ 1 / ทีละ 5 / ทศนิยม 1 ตำแหน่ง • Lock = ห้าม Auto เปลี่ยน • Maximum เป็นเพดาน optional</p></div><div class="inline-actions"><button type="button" id="copyDietOrderBtn" class="secondary">Copy Diet Order</button><button type="button" id="addDesignDietBtn" class="secondary">+ Add food</button><button type="button" id="clearDesignDietBtn" class="secondary">Clear Diet</button></div></div>
+      <div class="section-title-row"><div><h2>1. Diet</h2><p class="muted">Amount คือปริมาณจริง • Rounding เลือกทีละ 1 / ทีละ 5 / ทศนิยม 1 ตำแหน่ง • Lock = ห้าม Auto เปลี่ยน • Maximum เป็นเพดาน optional</p></div><div class="inline-actions"><button id="copyDietOrderBtn" class="secondary">Copy Diet Order</button><button id="addDesignDietBtn" class="secondary">+ Add food</button><button id="clearDesignDietBtn" class="secondary">Clear Diet</button></div></div>
       <div id="designDietRows"></div>
       <div id="dietDesignSummary" class="summary-box top-gap"></div>
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>2. Milk / Formula</h2><p class="muted">ใช้ mL หรือกล่อง 180/200/225 mL • รองรับ fortified milk/formula ด้วย maltodextrin, oil, whey, casein หรือรายการอื่นจาก Custom DB</p></div><div class="inline-actions"><button type="button" id="copyFormulaOrderBtn" class="secondary">Copy Milk/Formula Order</button><button type="button" id="addFormulaPlanBtn" class="secondary">+ Add milk/formula</button><button type="button" id="clearDesignFormulaBtn" class="secondary">Clear Milk/Formula</button></div></div>
+      <div class="section-title-row"><div><h2>2. Milk / Formula</h2><p class="muted">ใช้ mL หรือกล่อง 180/200/225 mL • รองรับ fortified milk/formula ด้วย maltodextrin, oil, whey, casein หรือรายการอื่นจาก Custom DB</p></div><div class="inline-actions"><button id="copyFormulaOrderBtn" class="secondary">Copy Milk/Formula Order</button><button id="addFormulaPlanBtn" class="secondary">+ Add milk/formula</button><button id="clearDesignFormulaBtn" class="secondary">Clear Milk/Formula</button></div></div>
       <div id="formulaPlanRows"></div>
       <div id="formulaDesignSummary" class="summary-box top-gap"></div>
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>3. Modular Diet Builder</h2><p class="muted">เลือกส่วนประกอบและจำนวนจริง • เติมน้ำจนครบ final volume • กำหนด mL/feed × feeds/day</p></div><div class="inline-actions"><button type="button" id="copyModularOrderBtn" class="secondary">Copy Modular Order</button><button type="button" id="clearDesignModularBtn" class="secondary">Clear Modular</button></div></div>
+      <div class="section-title-row"><div><h2>3. Modular Diet Builder</h2><p class="muted">เลือกส่วนประกอบและจำนวนจริง • เติมน้ำจนครบ final volume • กำหนด mL/feed × feeds/day</p></div><div class="inline-actions"><button id="copyModularOrderBtn" class="secondary">Copy Modular Order</button><button id="clearDesignModularBtn" class="secondary">Clear Modular</button></div></div>
       <div class="grid-3">
         <label>Recipe name<input id="designModName" /></label>
         <label>เติมน้ำจนครบ / Final volume (mL)<input id="designModFinalVolume" type="number" min="0" step="1" /></label>
@@ -141,9 +141,9 @@
         <label>Route<select id="designModRoute"><option value="oral">Oral</option><option value="tube">Tube feeding</option></select></label>
         <label>Daily prescribed volume<input id="designModDailyVolume" disabled /></label>
       </div>
-      <div class="section-title-row top-gap"><div><h3>Components by nutrient role</h3><p class="muted">เลือก source ในแต่ละ role ก่อน แล้วใช้ Calculate modular sequence: formula/milk → remaining protein → MCT → LCT → CHO → Ca/Na/K. Tube feeding จะเตือน rice concentration >8 g/100 mL และ Auto rice จำกัดไม่เกิน 9 g/100 mL</p></div><div class="inline-actions"><button type="button" id="calculateModularSequenceBtn" class="primary">Calculate modular sequence</button><button type="button" id="prepareModularTemplateBtn" class="secondary">Prepare component template</button><button type="button" id="addDesignModCompBtn" class="secondary">+ Add other</button></div></div>
+      <div class="section-title-row top-gap"><div><h3>Components by nutrient role</h3><p class="muted">เลือก source ในแต่ละ role ก่อน แล้วใช้ Calculate modular sequence: formula/milk → remaining protein → MCT → LCT → CHO → Ca/Na/K. Tube feeding จะเตือน rice concentration >8 g/100 mL และ Auto rice จำกัดไม่เกิน 9 g/100 mL</p></div><div class="inline-actions"><button id="calculateModularSequenceBtn" class="primary">Calculate modular sequence</button><button id="prepareModularTemplateBtn" class="secondary">Prepare component template</button><button id="addDesignModCompBtn" class="secondary">+ Add other</button></div></div>
       <div id="designModComponents"></div>
-      <div class="actions"><button type="button" id="sendDesignToDailyModularBtn" class="secondary">Send to Daily Modular Diet</button></div>
+      <div class="actions"><button id="sendDesignToDailyModularBtn" class="secondary">Send to Daily Modular Diet</button></div>
       <div id="modularDesignSummary" class="summary-box top-gap"></div>
     </div>
 
@@ -158,7 +158,7 @@
 
 
   <section id="tab-pn" class="tab-panel">
-    <div class="card"><div class="section-title-row"><div><h2>Parenteral Nutrition</h2><p class="muted">PN patient data are independent from the Patient tab • guideline-assisted calculator • clinician-entered targets • pharmacy/order recheck</p></div><div class="inline-actions"><button type="button" id="pnSaveBtn" class="primary">Save PN</button><span id="pnSaveStatus" class="muted"></span></div></div>
+    <div class="card"><div class="section-title-row"><div><h2>Parenteral Nutrition</h2><p class="muted">PN patient data are independent from the Patient tab • guideline-assisted calculator • clinician-entered targets • pharmacy/order recheck</p></div><div class="inline-actions"><button id="pnSaveBtn" class="primary">Save PN</button><span id="pnSaveStatus" class="muted"></span></div></div>
       <div class="grid-4 top-gap">
         <label>PN case<select id="pnCaseSelector"></select></label>
         <label>Anonymous name / ID<input id="pnCaseId" autocomplete="off" placeholder="e.g. NICU-012" /></label>
@@ -218,7 +218,7 @@
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>3. Main TPN Volume & Factor</h2><p class="muted">Available main TPN fluid = total fluid target − ILE+vitamin volume. Enter prescribed main TPN rate and the total volume pharmacy will mix; the app calculates the TPN factor.</p></div><div class="inline-actions"><button type="button" id="pnCalculateBtn" class="primary">Recalculate pharmacy order</button></div></div>
+      <div class="section-title-row"><div><h2>3. Main TPN Volume & Factor</h2><p class="muted">Available main TPN fluid = total fluid target − ILE+vitamin volume. Enter prescribed main TPN rate and the total volume pharmacy will mix; the app calculates the TPN factor.</p></div><div class="inline-actions"><button id="pnCalculateBtn" class="primary">Recalculate pharmacy order</button></div></div>
       <div class="grid-4">
         <div class="metric">Fluid available for main TPN<b id="pnMainAvailable">—</b></div>
         <div class="metric">Calculated TPN rate<b id="pnCalculatedRate">—</b></div>
@@ -249,7 +249,7 @@
     </div>
 
     <div class="card">
-      <div class="section-title-row"><div><h2>5. PN Recheck</h2><p class="muted">Recalculate actual nutrients delivered to the patient from the final mixed TPN order and TPN factor.</p></div><div class="inline-actions"><button type="button" id="pnRefreshBtn" class="secondary">Refresh recheck</button></div></div>
+      <div class="section-title-row"><div><h2>5. PN Recheck</h2><p class="muted">Recalculate actual nutrients delivered to the patient from the final mixed TPN order and TPN factor.</p></div><div class="inline-actions"><button id="pnRefreshBtn" class="secondary">Refresh recheck</button></div></div>
       <div class="grid-3"><label>TPN osmolarity (mOsm/L)<input id="pnOsmolarity" type="number" min="0" step="1" placeholder="Calculated automatically" /></label></div>
       <label id="pnPeripheralOverrideWrap" class="check-card top-gap"><span><input id="pnPeripheralOverride" type="checkbox" style="width:auto;margin-right:6px" /> Reviewed and accepted for peripheral administration above 900 mOsm/L</span><small class="muted">900 mOsm/L is a soft review threshold, not a hard stop.</small></label>
       <div id="pnRecheck" class="top-gap"></div>
@@ -259,9 +259,9 @@
 
   <section id="tab-pnif" class="tab-panel">
     <div class="card">
-      <div class="section-title-row"><div><h2>Paste PNIF from ChatGPT</h2><p class="muted">แยก import ระหว่าง 24-hour recall และ modular recipe</p></div><button type="button" id="loadExampleBtn" class="secondary">Load example</button></div><div class="pnif-mode-switch"><label><input type="radio" name="pnifMode" value="24hr" checked> 24-hour Recall</label><label><input type="radio" name="pnifMode" value="modular"> PNIF for Modular Diet</label></div>
+      <div class="section-title-row"><div><h2>Paste PNIF from ChatGPT</h2><p class="muted">แยก import ระหว่าง 24-hour recall และ modular recipe</p></div><button id="loadExampleBtn" class="secondary">Load example</button></div><div class="pnif-mode-switch"><label><input type="radio" name="pnifMode" value="24hr" checked> 24-hour Recall</label><label><input type="radio" name="pnifMode" value="modular"> PNIF for Modular Diet</label></div>
       <textarea id="pnifInput" rows="14" placeholder="วาง PNIF JSON ที่นี่"></textarea>
-      <div class="actions"><button type="button" id="importPnifBtn" class="primary">Import</button><button type="button" id="clearPnifBtn" class="secondary">Clear</button></div>
+      <div class="actions"><button id="importPnifBtn" class="primary">Import</button><button id="clearPnifBtn" class="secondary">Clear</button></div>
       <div id="pnifStatus" class="status"></div>
     </div>
   </section>
@@ -269,8 +269,8 @@
   <section id="tab-review" class="tab-panel">
     <div class="card">
       <div class="section-title-row">
-        <div><h2>Review Intake</h2><p class="muted">คำนวณจาก ingredient เป็นหลัก • รายการที่ match ได้จะไม่ต้องเปิดแก้ • กด Edit เฉพาะ Needs review</p></div><div class="inline-actions"><button type="button" id="clearEncounterIntakeBtn" class="danger">Clear intake</button><button type="button" id="cancelReviewBtn" class="secondary">Cancel changes</button><button type="button" id="saveReviewBtn" class="primary">Save Review Intake</button><span id="reviewSaveStatus" class="muted"></span></div>
-        <div class="inline-actions"><button type="button" id="needsReviewBtn" class="secondary">Needs review only: Off</button><button type="button" id="addMealBtn" class="primary">+ Add food</button></div>
+        <div><h2>Review Intake</h2><p class="muted">คำนวณจาก ingredient เป็นหลัก • รายการที่ match ได้จะไม่ต้องเปิดแก้ • กด Edit เฉพาะ Needs review</p></div><div class="inline-actions"><button id="clearEncounterIntakeBtn" class="danger">Clear intake</button><button id="cancelReviewBtn" class="secondary">Cancel changes</button><button id="saveReviewBtn" class="primary">Save Review Intake</button><span id="reviewSaveStatus" class="muted"></span></div>
+        <div class="inline-actions"><button id="needsReviewBtn" class="secondary">Needs review only: Off</button><button id="addMealBtn" class="primary">+ Add food</button></div>
       </div>
       <div id="reviewSummary" class="review-summary"></div>
       <div id="reviewWarnings"></div>
@@ -280,12 +280,12 @@
 
   <section id="tab-modular" class="tab-panel">
     <div class="card">
-      <div class="section-title-row"><div><h2>Daily Modular Recipe</h2><p class="muted">PNIF modular components จะเข้าหน้านี้อัตโนมัติ • แสดง compact บนมือถือ และเปิดแก้เฉพาะที่จำเป็น</p></div><div class="inline-actions"><button type="button" id="clearModularOnlyBtn" class="danger">Clear modular</button><button type="button" id="cancelModularBtn" class="secondary">Cancel changes</button><button type="button" id="saveModularBtn" class="primary">Save Modular Diet</button><span id="modularSaveStatus" class="muted"></span></div></div>
+      <div class="section-title-row"><div><h2>Daily Modular Recipe</h2><p class="muted">PNIF modular components จะเข้าหน้านี้อัตโนมัติ • แสดง compact บนมือถือ และเปิดแก้เฉพาะที่จำเป็น</p></div><div class="inline-actions"><button id="clearModularOnlyBtn" class="danger">Clear modular</button><button id="cancelModularBtn" class="secondary">Cancel changes</button><button id="saveModularBtn" class="primary">Save Modular Diet</button><span id="modularSaveStatus" class="muted"></span></div></div>
       <div class="grid-2 modular-head-grid"><label>Recipe name<input id="modName" /></label><label>Final volume (mL)<input id="modFinalVolume" type="number" min="0" step="1" /></label></div>
-      <div class="section-title-row top-gap"><h3>Components</h3><button type="button" id="addModComponentBtn" class="secondary">+ Add component</button></div>
+      <div class="section-title-row top-gap"><h3>Components</h3><button id="addModComponentBtn" class="secondary">+ Add component</button></div>
       <div id="modComponents"></div>
       <div id="modRecipeSummary" class="summary-box top-gap"></div>
-      <div class="section-title-row top-gap"><div><h3>Intake volume</h3><p class="muted">กรอกยอดรวมทั้งวัน หรือแยกตามเวลาได้</p></div><button type="button" id="addFeedBtn" class="secondary">+ Add time</button></div><div class="grid-3 modular-intake-mode"><label>Entry mode<select id="modFeedMode"><option value="daily">Total per day</option><option value="schedule">By time</option></select></label><label id="modDailyPresWrap">Prescribed total (mL/day)<input id="modDailyPrescribed" type="number" min="0" step="1"></label><label id="modDailyActualWrap">Actual consumed (mL/day)<input id="modDailyActual" type="number" min="0" step="1"></label></div><div id="feedSchedule"></div>
+      <div class="section-title-row top-gap"><div><h3>Intake volume</h3><p class="muted">กรอกยอดรวมทั้งวัน หรือแยกตามเวลาได้</p></div><button id="addFeedBtn" class="secondary">+ Add time</button></div><div class="grid-3 modular-intake-mode"><label>Entry mode<select id="modFeedMode"><option value="daily">Total per day</option><option value="schedule">By time</option></select></label><label id="modDailyPresWrap">Prescribed total (mL/day)<input id="modDailyPrescribed" type="number" min="0" step="1"></label><label id="modDailyActualWrap">Actual consumed (mL/day)<input id="modDailyActual" type="number" min="0" step="1"></label></div><div id="feedSchedule"></div>
       <div id="feedSummary" class="summary-box top-gap"></div>
     </div>
   </section>
@@ -294,7 +294,7 @@
     <div class="card">
       <div class="section-title-row">
         <div><h2>Custom Database</h2><p class="muted">กด + Add item ที่มุมขวาบนเพื่อเพิ่มรายการใหม่ • เพิ่ม/แก้ Food, Formula, Modular และ Medication/Mineral ได้ • Unit aliases: ชต.=ช้อนโต๊ะ, ชช.=ช้อนชา, cc=mL, กรัม=g • Formula เพิ่ม standard/min/max kcal/oz เพื่อใช้เป็น concentration constraint • Na, K, Ca, Mg, P เก็บเป็น mg ต่อ basis ที่กำหนด • Food ใช้ Food group คอลัมน์เดียวสำหรับ counted protein + age-based Diet Generate</p></div>
-        <div class="inline-actions"><button type="button" id="addFoodDbBtn" class="primary">+ Add item</button><button type="button" id="cancelFoodDbBtn" class="secondary">Cancel changes</button><button type="button" id="saveFoodDbBtn" class="primary">Save Custom Database</button><span id="foodDbSaveStatus" class="muted"></span></div>
+        <div class="inline-actions"><button id="addFoodDbBtn" class="primary">+ Add item</button><button id="cancelFoodDbBtn" class="secondary">Cancel changes</button><button id="saveFoodDbBtn" class="primary">Save Custom Database</button><span id="foodDbSaveStatus" class="muted"></span></div>
       </div>
       <div class="db-toolbar">
         <label>Filter<select id="dbTypeFilter"><option value="all">All</option><option value="food">Food</option><option value="formula">Medical formula</option><option value="modular">Modular component</option><option value="medication">Medication / mineral</option></select></label>
@@ -307,14 +307,14 @@
 
   <section id="tab-summary" class="tab-panel">
     <div class="card">
-      <div class="section-title-row"><div><h2>Nutrient Summary</h2><p class="muted">คำนวณเฉพาะข้อมูลที่มีเพียงพอ ไม่สมมติ portion ที่ไม่ได้รายงาน</p></div><button type="button" id="calculateBtn" class="primary">Calculate</button></div>
+      <div class="section-title-row"><div><h2>Nutrient Summary</h2><p class="muted">คำนวณเฉพาะข้อมูลที่มีเพียงพอ ไม่สมมติ portion ที่ไม่ได้รายงาน</p></div><button id="calculateBtn" class="primary">Calculate</button></div>
       <div id="nutrientSummary" class="summary-box"></div>
       <div id="unmatchedList"></div>
     </div>
 <div class="card">
       <div class="section-title-row">
         <div><h2>Calculation Detail</h2><p class="muted">แสดงรายการที่ถูกนำไปคำนวณจริง พร้อม Custom Database item ที่อ้างอิง เพื่อให้ตรวจคำนวณซ้ำด้วยมือได้</p></div>
-        <button type="button" id="refreshCalcDetailBtn" class="primary">Refresh detail</button>
+        <button id="refreshCalcDetailBtn" class="primary">Refresh detail</button>
       </div>
       <h3 class="top-gap">1. Food + Formula / Review Intake</h3>
       <p class="muted">รวม food, formula และ Custom modular-component ที่ถูกใช้ใน Review Intake; ถ้าเมนูคำนวณจาก ingredients จะแสดงแต่ละ ingredient เป็นคนละแถว และ formula จะแสดง derived powder g เมื่อมี kcal/oz + volume.</p>
@@ -335,11 +335,11 @@
         <label>Food source<select id="defaultSource" disabled><option value="Custom">Custom Database only</option></select></label>
       </div>
       <p class="muted">เวอร์ชันนี้คำนวณจาก Custom Database เท่านั้น เพื่อให้ผลลัพธ์ deterministic และไม่แสดง source ที่ยังไม่มี connector ใช้งานจริง.</p><hr><h2>Backup & Restore</h2><p class="muted">Backup เป็นไฟล์เดียวรวมข้อมูลจากทุก tab: Patient/Cases, Diet Design, PN, PNIF/Intake, Review Intake ที่บันทึกแล้ว, Modular Diet, Custom Database, Summary/Calculation data และ Settings. ข้อมูลทำงานใน browser ของอุปกรณ์นี้; Google Drive sync เตรียมไว้สำหรับระยะถัดไป.</p>
-      <div class="actions"><button type="button" id="exportBtn" class="primary">Export full backup (.json)</button><label class="file-button secondary">Import full backup (.json)<input id="importBackupInput" type="file" accept="application/json" hidden /></label><button type="button" id="resetBtn" class="danger">Reset all local data...</button></div>
+      <div class="actions"><button id="exportBtn" class="primary">Export full backup (.json)</button><label class="file-button secondary">Import full backup (.json)<input id="importBackupInput" type="file" accept="application/json" hidden /></label><button id="resetBtn" class="danger">Reset all local data...</button></div>
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.114</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<footer><strong>PWA 0.4.115</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
 <script>
 // Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
 (function(){
@@ -359,6 +359,6 @@
   window.__pedFallbackTab=switchVisibleTab;
 })();
 </script>
-<script src="app.js?v=0.4.114"></script>
+<script src="app.js?v=0.4.115"></script>
 </body>
 </html>
