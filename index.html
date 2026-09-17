@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.124" />
+  <link rel="stylesheet" href="styles.css?v=0.4.121" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -269,7 +269,7 @@
   <section id="tab-review" class="tab-panel">
     <div class="card">
       <div class="section-title-row">
-        <div><h2>Review Intake</h2><p class="muted">Review เร็ว: Exact match ผ่านอัตโนมัติ • Menu ใช้ตรงเมื่อมี • รายการที่ไม่ตรงมีปุ่ม Use suggestion ครั้งเดียว • แตก Components เฉพาะเมื่อจำเป็น</p></div><div class="inline-actions"><button id="clearEncounterIntakeBtn" class="danger">Clear intake</button><button id="cancelReviewBtn" class="secondary">Cancel changes</button><button id="saveReviewBtn" class="primary">Save Review Intake</button><span id="reviewSaveStatus" class="muted"></span></div>
+        <div><h2>Review Intake</h2><p class="muted">คำนวณจาก ingredient เป็นหลัก • รายการที่ match ได้จะไม่ต้องเปิดแก้ • กด Edit เฉพาะ Needs review</p></div><div class="inline-actions"><button id="clearEncounterIntakeBtn" class="danger">Clear intake</button><button id="cancelReviewBtn" class="secondary">Cancel changes</button><button id="saveReviewBtn" class="primary">Save Review Intake</button><span id="reviewSaveStatus" class="muted"></span></div>
         <div class="inline-actions"><button id="needsReviewBtn" class="secondary">Needs review only: Off</button><button id="addMealBtn" class="primary">+ Add food</button></div>
       </div>
       <div id="reviewSummary" class="review-summary"></div>
@@ -293,17 +293,12 @@
   <section id="tab-foods" class="tab-panel">
     <div class="card">
       <div class="section-title-row">
-        <div><h2>Custom Database</h2><p class="muted">กด + Add item ที่มุมขวาบนเพื่อเพิ่มรายการใหม่ • เพิ่ม/แก้ Food, Menu, Formula, Modular และ Medication/Mineral ได้ • Unit aliases: ชต.=ช้อนโต๊ะ, ชช.=ช้อนชา, cc=mL, กรัม=g • Formula เพิ่ม standard/min/max kcal/oz เพื่อใช้เป็น concentration constraint • Na, K, Ca, Mg, P เก็บเป็น mg ต่อ basis ที่กำหนด • Food ใช้ Food group คอลัมน์เดียวสำหรับ counted protein + age-based Diet Generate</p></div>
+        <div><h2>Custom Database</h2><p class="muted">กด + Add item ที่มุมขวาบนเพื่อเพิ่มรายการใหม่ • เพิ่ม/แก้ Food, Formula, Modular และ Medication/Mineral ได้ • Unit aliases: ชต.=ช้อนโต๊ะ, ชช.=ช้อนชา, cc=mL, กรัม=g • Formula เพิ่ม standard/min/max kcal/oz เพื่อใช้เป็น concentration constraint • Na, K, Ca, Mg, P เก็บเป็น mg ต่อ basis ที่กำหนด • Food ใช้ Food group คอลัมน์เดียวสำหรับ counted protein + age-based Diet Generate</p></div>
         <div class="inline-actions"><button id="addFoodDbBtn" class="primary">+ Add item</button><button id="cancelFoodDbBtn" class="secondary">Cancel changes</button><button id="saveFoodDbBtn" class="primary">Save Custom Database</button><span id="foodDbSaveStatus" class="muted"></span></div>
       </div>
       <div class="db-toolbar">
-        <label>Filter<select id="dbTypeFilter"><option value="all">All</option><option value="food">Food</option><option value="menu">Menu / prepared dish</option><option value="formula">Medical formula</option><option value="modular">Modular component</option><option value="medication">Medication / mineral</option></select></label>
+        <label>Filter<select id="dbTypeFilter"><option value="all">All</option><option value="food">Food</option><option value="formula">Medical formula</option><option value="modular">Modular component</option><option value="medication">Medication / mineral</option></select></label>
         <label>Search<input id="dbSearch" placeholder="ชื่ออาหาร/สูตร" /></label>
-      </div>
-      <div class="inmucal-import card-subtle top-gap">
-        <div class="section-title-row"><div><strong>Import INMUCAL Excel</strong><div class="muted">เลือกไฟล์ Export_Nutrient per Code (.xlsx) → Preview → Import. ระบบรวมตาม INMUCAL Code, ไม่ทับ Custom/Exchange เดิม และไม่เดา portion→g เมื่อหลักฐานไม่พอ.</div></div><label class="file-button secondary">Choose Excel<input id="inmucalExcelInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden /></label></div>
-        <div id="inmucalPreview" class="top-gap muted">ยังไม่ได้เลือกไฟล์</div>
-        <div class="inline-actions top-gap"><button id="importInmucalBtn" class="primary" disabled>Import / Enrich INMUCAL</button><button id="clearInmucalPreviewBtn" class="secondary" disabled>Clear preview</button></div>
       </div>
       <datalist id="dbUnitOptions"><option value="g"><option value="mL"><option value="cc"><option value="portion"><option value="ทัพพี"><option value="ถ้วยตวง"><option value="ช้อนโต๊ะ"><option value="ชต."><option value="ช้อนชา"><option value="ชช."><option value="ฟอง"><option value="ชิ้น"><option value="ผล"><option value="แผ่น"><option value="scoop"><option value="เม็ด"><option value="ซอง"><option value="ขวด"><option value="ampule"><option value="mL"><option value="g"></datalist>
       <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Standard kcal/oz</th><th>Min kcal/oz</th><th>Max kcal/oz</th><th>Food group</th><th>kcal</th><th>Protein</th><th>LCT / %total fat</th><th>MCT</th><th>CHO</th><th>Ca (mg)</th><th>Mg (mg)</th><th>P (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
@@ -344,7 +339,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.124</strong> • persistent Custom DB • Custom-only calculation • food/menu/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<footer><strong>PWA 0.4.121</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
 <script>
 // Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
 (function(){
@@ -365,7 +360,7 @@
 })();
 </script>
 <script>
-// v0.4.124: INMUCAL Excel importer + fast matching. Never fail silently. A startup/runtime error is shown without blocking controls.
+// v0.4.121: never fail silently. A startup/runtime error is shown without blocking controls.
 window.addEventListener('error',function(e){
   console.error('PWA runtime error',e.error||e.message);
   var old=document.getElementById('runtimeErrorNotice'); if(old)return;
@@ -375,6 +370,6 @@ window.addEventListener('error',function(e){
   var main=document.querySelector('main'); if(main) main.insertBefore(n,main.firstChild); else document.body.prepend(n);
 });
 </script>
-<script src="app.js?v=0.4.124"></script>
+<script src="app.js?v=0.4.121"></script>
 </body>
 </html>
