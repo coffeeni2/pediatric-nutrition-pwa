@@ -1,6 +1,4 @@
-Version 0.4.116
-
-# Pediatric Nutrition PWA 0.4.114
+# Pediatric Nutrition PWA 0.4.113
 
 
 
@@ -358,9 +356,3 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Main showTab is exposed only after successful initial rendering; destination rendering remains available when the app is healthy.
 - Removed duplicate Export/Import backup controls from the header. Full JSON Export/Import remains in Settings & Backup.
 - Active Case bar retains New Case, Delete Case, Save Case.
-
-
-## 0.4.114
-- Fix Diet Design Optimize Again: when Diet is selected but diet rows are empty, initialize the age-guided Diet draft before optimization instead of silently optimizing only Milk/Formula.
-- Preserve Manual/Locked Milk/Formula amounts; optimizer can use the newly initialized Diet rows to cover the remaining target.
-- Actual energy allocation is synchronized only after a real Diet prescription exists.

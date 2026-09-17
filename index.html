@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.116" />
+  <link rel="stylesheet" href="styles.css?v=0.4.103" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -339,7 +339,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.115</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<footer><strong>PWA 0.4.113</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
 <script>
 // Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
 (function(){
@@ -359,17 +359,6 @@
   window.__pedFallbackTab=switchVisibleTab;
 })();
 </script>
-<script>
-// v0.4.116: never fail silently. A startup/runtime error is shown without blocking controls.
-window.addEventListener('error',function(e){
-  console.error('PWA runtime error',e.error||e.message);
-  var old=document.getElementById('runtimeErrorNotice'); if(old)return;
-  var n=document.createElement('div'); n.id='runtimeErrorNotice'; n.setAttribute('role','alert');
-  n.style.cssText='margin:8px 16px;padding:9px 11px;border:1px solid #e7b4b4;border-radius:10px;background:#fff4f4;color:#8b2525;font-size:.82rem';
-  n.textContent='App error detected: '+(e.message||'unknown error')+'. Other tabs and saved data remain available.';
-  var main=document.querySelector('main'); if(main) main.insertBefore(n,main.firstChild); else document.body.prepend(n);
-});
-</script>
-<script src="app.js?v=0.4.116"></script>
+<script src="app.js?v=0.4.113"></script>
 </body>
 </html>
