@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.117" />
+  <link rel="stylesheet" href="styles.css?v=0.4.119" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -318,10 +318,10 @@
       </div>
       <h3 class="top-gap">1. Food + Formula / Review Intake</h3>
       <p class="muted">รวม food, formula และ Custom modular-component ที่ถูกใช้ใน Review Intake; ถ้าเมนูคำนวณจาก ingredients จะแสดงแต่ละ ingredient เป็นคนละแถว และ formula จะแสดง derived powder g เมื่อมี kcal/oz + volume.</p>
-      <div class="table-wrap calc-detail-wrap"><table class="calc-detail-table"><thead><tr><th>Time / Menu</th><th>Calculated item</th><th>Custom DB reference</th><th>Amount used</th><th>Energy (kcal)</th><th>Total protein (g)</th><th>Fat (g)</th><th>Ca (mg)</th><th>Na (mg)</th><th>K (mg)</th></tr></thead><tbody id="foodCalcDetailBody"></tbody><tfoot id="foodCalcDetailFoot"></tfoot></table></div>
+      <div class="table-wrap calc-detail-wrap"><table class="calc-detail-table"><thead><tr><th>Time / Menu</th><th>Calculated item</th><th>Custom DB reference</th><th>Amount used</th><th>Energy (kcal)</th><th>Total protein (g)</th><th>Fat (g)</th><th>Ca (mg)</th><th>Na (mg / mEq)</th><th>K (mg / mEq)</th><th>Iron (mg)</th><th>Zinc (mg)</th></tr></thead><tbody id="foodCalcDetailBody"></tbody><tfoot id="foodCalcDetailFoot"></tfoot></table></div>
       <h3 class="top-gap">2. From Daily Modular Diet</h3>
       <p id="modCalcBasisNote" class="muted"></p>
-      <div class="table-wrap calc-detail-wrap"><table class="calc-detail-table"><thead><tr><th>Component</th><th>Custom DB reference</th><th>Recipe amount</th><th>Amount contributing to daily intake</th><th>Energy (kcal)</th><th>Total protein (g)</th><th>Fat (g)</th><th>Ca (mg)</th><th>Na (mg)</th><th>K (mg)</th></tr></thead><tbody id="modCalcDetailBody"></tbody><tfoot id="modCalcDetailFoot"></tfoot></table></div>
+      <div class="table-wrap calc-detail-wrap"><table class="calc-detail-table"><thead><tr><th>Component</th><th>Custom DB reference</th><th>Recipe amount</th><th>Amount contributing to daily intake</th><th>Energy (kcal)</th><th>Total protein (g)</th><th>Fat (g)</th><th>Ca (mg)</th><th>Na (mg / mEq)</th><th>K (mg / mEq)</th><th>Iron (mg)</th><th>Zinc (mg)</th></tr></thead><tbody id="modCalcDetailBody"></tbody><tfoot id="modCalcDetailFoot"></tfoot></table></div>
       <div id="calcDetailWarnings" class="top-gap"></div>
     </div>
   
@@ -339,7 +339,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.118</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<footer><strong>PWA 0.4.119</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
 <script>
 // Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
 (function(){
@@ -360,7 +360,7 @@
 })();
 </script>
 <script>
-// v0.4.118: never fail silently. A startup/runtime error is shown without blocking controls.
+// v0.4.119: never fail silently. A startup/runtime error is shown without blocking controls.
 window.addEventListener('error',function(e){
   console.error('PWA runtime error',e.error||e.message);
   var old=document.getElementById('runtimeErrorNotice'); if(old)return;
@@ -370,6 +370,6 @@ window.addEventListener('error',function(e){
   var main=document.querySelector('main'); if(main) main.insertBefore(n,main.firstChild); else document.body.prepend(n);
 });
 </script>
-<script src="app.js?v=0.4.118"></script>
+<script src="app.js?v=0.4.119"></script>
 </body>
 </html>

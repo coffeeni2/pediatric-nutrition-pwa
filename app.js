@@ -582,7 +582,10 @@ function dailyModularContribution(mod=state.modular){
   const recipe=modularTotals(mod),vol=num(mod?.finalVolume),daily=(mod?.feedMode||'daily')==='daily';
   const prescribed=daily?num(mod?.dailyPrescribed):(mod?.feeds||[]).reduce((s,x)=>s+num(x.prescribed),0);
   const actual=daily?num(mod?.dailyActual):(mod?.feeds||[]).reduce((s,x)=>s+num(x.actual),0);
-  const used=actual||prescribed,ratio=vol>0?used/vol:0,total=emptyNut();
+  // Daily Modular Recipe is a prescribed daily recipe. If no separate prescribed/actual volume
+  // has been entered, count the whole final recipe by default. An entered actual volume still
+  // overrides prescribed volume, and prescribed volume overrides the full-recipe default.
+  const used=actual||prescribed||(vol>0?vol:0),ratio=vol>0?used/vol:0,total=emptyNut();
   TOTAL_KEYS.forEach(k=>total[k]=num(recipe[k])*ratio);
   return {recipe,total,finalVolume:vol,prescribed,actual,used,ratio};
 }
@@ -596,8 +599,10 @@ function calculateIntake(){
 }
 function renderSummary(){
   const box=$('summaryContent')||$('nutrientSummary')||$('summaryResult'); if(!box)return;
-  const s=state.lastSummary||calculateIntake(),t=s.total||emptyNut();
-  box.innerHTML=nutGrid(t)+`<div class="calc-grand-total top-gap"><strong>Source totals</strong><br>Food / Formula: ${round(num(s.foodFormulaTotal?.kcal),1)} kcal • Modular Diet: ${round(num(s.modularTotal?.kcal),1)} kcal • <strong>Grand total: ${round(num(t.kcal),1)} kcal</strong></div>`+requirementCompare(t)+(s.missing?.length?`<div class="warning-box top-gap"><strong>Items needing review</strong><br>${s.missing.map(x=>esc(`${x.time||''} ${x.food||''}: ${x.reason}`.trim())).join('<br>')}</div>`:'');
+  // Always rebuild from current Review Intake + current Daily Modular Diet. This prevents a saved
+  // summary from becoming stale after either source is edited.
+  const s=calculateIntake(),t=s.total||emptyNut();
+  box.innerHTML=nutGrid(t)+`<div class="calc-grand-total top-gap"><strong>Source totals</strong><br>Food / Formula: ${round(num(s.foodFormulaTotal?.kcal),1)} kcal • Modular Diet: ${round(num(s.modularTotal?.kcal),1)} kcal • <strong>Grand total: ${round(num(t.kcal),1)} kcal</strong></div>`+(s.missing?.length?`<div class="warning-box top-gap"><strong>Items needing review</strong><br>${s.missing.map(x=>esc(`${x.time||''} ${x.food||''}: ${x.reason}`.trim())).join('<br>')}</div>`:'');
 }
 function lctKcal(t){return num(t?.fat)*9}
 function mctKcal(t){return num(t?.mct)*8.3}
@@ -612,23 +617,47 @@ function macroRatio(t){
   return `P ${pct[0]}% : CHO ${pct[1]}% : Fat ${pct[2]}%`;
 }
 function proteinDisplay(g,w,prefix=''){const bw=w?` <span class="protein-perkg">(${prefix}${round(g/w,2)} g/kg/day)</span>`:' <span class="protein-perkg">(BW required)</span>';return `${prefix}${round(g)} g/day${bw}`}
-function nutGrid(t,prefix=''){const w=num(state.patient.weight),rows=[['Energy',`${round(t.kcal)} kcal/day`,w?`${round(t.kcal/w,1)} kcal/kg/day`:''],['Total protein',`${round(t.protein,1)} g/day`,w?`${round(t.protein/w,2)} g/kg/day`:''],['High biological value protein',`${round(t.protein_excl_cho,1)} g/day`,w?`${round(t.protein_excl_cho/w,2)} g/kg/day`:''],['P : CHO : Fat',macroRatio(t),'% macronutrient energy'],['Total fat',`${round(totalFatGrams(t),1)} g/day`,`${round(fatEnergyPct(t),1)}% energy`],['LCT',`${round(t.fat,1)} g/day`,`${round(lctKcal(t),1)} kcal`],['MCT',`${round(t.mct,1)} g/day`,`${round(mctKcal(t),1)} kcal`],['CHO',`${round(t.cho,1)} g/day`,''],['Calcium',`${round(t.calcium)} mg`,''],['Magnesium',`${round(t.magnesium)} mg`,''],['Phosphorus',`${round(t.phosphorus)} mg`,''],['Sodium',`${round(t.sodium)} mg`,`${round(t.sodium/23,2)} mEq`],['Potassium',`${round(t.potassium)} mg`,`${round(t.potassium/39,2)} mEq`],['Iron',`${round(t.iron,1)} mg`,''],['Zinc',`${round(t.zinc,1)} mg`,'']];return `<div class="table-wrap nutrient-table-wrap"><table class="compact-summary-table nutrient-table"><thead><tr><th>Nutrient</th><th>Daily intake</th><th>Additional</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td><strong>${r[1]}</strong></td><td>${r[2]||'—'}</td></tr>`).join('')}</tbody></table></div>`}
+function nutGrid(t,prefix=''){
+  const w=num(state.patient.weight),r=state.requirements||{},energyReq=num(r.energy),energyPct=energyReq>0?num(t.kcal)/energyReq*100:null;
+  const mctPct=num(t.kcal)>0?mctKcal(t)/num(t.kcal)*100:0;
+  const naMeq=num(t.sodium)/23,kMeq=num(t.potassium)/39;
+  const naPerKg=w?num(t.sodium)/w:null,kPerKg=w?num(t.potassium)/w:null;
+  const naPer100=num(t.kcal)>0?naMeq/num(t.kcal)*100:null,kPer100=num(t.kcal)>0?kMeq/num(t.kcal)*100:null;
+  const rows=[
+    ['Energy',`${round(t.kcal,1)} kcal/day`,[w?`${round(t.kcal/w,1)} kcal/kg/day`:'',energyPct!==null?`${round(energyPct,1)}% requirement`:''].filter(Boolean).join(' • ')],
+    ['Total protein',`${round(t.protein,1)} g/day`,w?`${round(t.protein/w,2)} g/kg/day`:''],
+    ['High biological value protein',`${round(t.protein_excl_cho,1)} g/day`,w?`${round(t.protein_excl_cho/w,2)} g/kg/day`:''],
+    ['P : CHO : Fat',macroRatio(t),'% macronutrient energy'],
+    ['Total fat',`${round(totalFatGrams(t),1)} g/day`,`${round(fatEnergyPct(t),1)}% total energy`],
+    ['LCT',`${round(t.fat,1)} g/day`,`${round(lctKcal(t),1)} kcal`],
+    ['MCT',`${round(t.mct,1)} g/day`,`${round(mctKcal(t),1)} kcal • ${round(mctPct,1)}% total energy`],
+    ['CHO',`${round(t.cho,1)} g/day`,''],
+    ['Calcium',`${round(t.calcium,1)} mg/day`,''],['Magnesium',`${round(t.magnesium,1)} mg/day`,''],['Phosphorus',`${round(t.phosphorus,1)} mg/day`,''],
+    ['Sodium',`${round(t.sodium,1)} mg/day • ${round(naMeq,2)} mEq/day`,[naPerKg!==null?`${round(naPerKg,1)} mg/kg/day`:'',naPer100!==null?`${round(naPer100,2)} mEq/100 kcal`:''].filter(Boolean).join(' • ')],
+    ['Potassium',`${round(t.potassium,1)} mg/day • ${round(kMeq,2)} mEq/day`,[kPerKg!==null?`${round(kPerKg,1)} mg/kg/day`:'',kPer100!==null?`${round(kPer100,2)} mEq/100 kcal`:''].filter(Boolean).join(' • ')],
+    ['Iron',`${round(t.iron,1)} mg/day`,''],['Zinc',`${round(t.zinc,1)} mg/day`,'']
+  ];
+  return `<div class="table-wrap nutrient-table-wrap"><table class="compact-summary-table nutrient-table"><thead><tr><th>Nutrient</th><th>Daily intake</th><th>Additional</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td><strong>${r[1]}</strong></td><td>${r[2]||'—'}</td></tr>`).join('')}</tbody></table></div>`
+}
 function renderCalculationDetail(){
-  // v0.4.117 restored calculation-detail renderer. It must never prevent the rest of the app
-  // from initializing, even when an intake row is incomplete.
   const fb=$('foodCalcDetailBody'),ff=$('foodCalcDetailFoot'),mb=$('modCalcDetailBody'),mf=$('modCalcDetailFoot'),wn=$('calcDetailWarnings'),note=$('modCalcBasisNote');
   if(!fb||!ff||!mb||!mf)return;
-  const foodTotal=emptyNut(),modTotal=emptyNut(),warnings=[]; fb.innerHTML=''; mb.innerHTML='';
-  const addFoodRow=(label,x)=>{try{const f=matchedFood(x);if(!f){warnings.push(`${label}: no Custom Database match`);return}const fac=factorFor(x,f);if(fac===null){warnings.push(`${label}: amount/unit cannot be converted to ${f.basis_unit}`);return}const t=emptyNut();addNut(t,f,fac);TOTAL_KEYS.forEach(k=>foodTotal[k]+=t[k]);const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(label)}</td><td>${esc(x.food||x.name||'—')}</td><td>${esc(f.name||'—')}</td><td>${esc(x.amount||x.volume_ml||'—')} ${esc(x.convertUnit||x.unit||'')}</td><td>${round(t.kcal,1)}</td><td>${round(t.protein,2)}</td><td>${round(totalFatGrams(t),2)}</td><td>${round(t.calcium,1)}</td><td>${round(t.sodium,1)}</td><td>${round(t.potassium,1)}</td>`;fb.appendChild(tr)}catch(err){console.error('Calculation detail row failed',err);warnings.push(`${label}: calculation detail unavailable`)}};
+  const foodTotal=emptyNut(),warnings=[]; fb.innerHTML=''; mb.innerHTML='';
+  const cells=t=>`<td>${round(t.kcal,1)}</td><td>${round(t.protein,2)}</td><td>${round(totalFatGrams(t),2)}</td><td>${round(t.calcium,1)}</td><td>${round(t.sodium,1)} mg / ${round(num(t.sodium)/23,2)} mEq</td><td>${round(t.potassium,1)} mg / ${round(num(t.potassium)/39,2)} mEq</td><td>${round(t.iron,2)}</td><td>${round(t.zinc,2)}</td>`;
+  const foot=t=>`<tr class="calc-total-row"><th>Total</th><th></th><th></th><th></th><th>${round(t.kcal,1)}</th><th>${round(t.protein,2)}</th><th>${round(totalFatGrams(t),2)}</th><th>${round(t.calcium,1)}</th><th>${round(t.sodium,1)} mg / ${round(num(t.sodium)/23,2)} mEq</th><th>${round(t.potassium,1)} mg / ${round(num(t.potassium)/39,2)} mEq</th><th>${round(t.iron,2)}</th><th>${round(t.zinc,2)}</th></tr>`;
+  const addFoodRow=(label,x)=>{try{const f=matchedFood(x);if(!f){warnings.push(`${label}: no Custom Database match`);return}const fac=factorFor(x,f);if(fac===null){warnings.push(`${label}: amount/unit cannot be converted to ${f.basis_unit}`);return}const t=emptyNut();addNut(t,f,fac);TOTAL_KEYS.forEach(k=>foodTotal[k]+=t[k]);const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(label)}</td><td>${esc(x.food||x.name||'—')}</td><td>${esc(f.name||'—')}</td><td>${esc(x.amount||x.volume_ml||'—')} ${esc(x.convertUnit||x.unit||'')}</td>${cells(t)}`;fb.appendChild(tr)}catch(err){console.error('Calculation detail row failed',err);warnings.push(`${label}: calculation detail unavailable`)}};
   (state.meals||[]).forEach(m=>{let method=m.calcMethod==='auto'?autoCalcRule(m).method:m.calcMethod;if(method==='whole')addFoodRow(m.time||m.food||'Intake',m);else if(method==='ingredients'||method==='hybrid')(m.ingredients||[]).filter(hasPortion).forEach(i=>addFoodRow(`${m.time||''} ${m.food||''}`.trim(),i))});
-  if(!fb.children.length)fb.innerHTML='<tr><td colspan="10" class="muted">No calculated Review Intake items</td></tr>';
-  ff.innerHTML=`<tr class="calc-total-row"><th>Total</th><th></th><th></th><th></th><th>${round(foodTotal.kcal,1)}</th><th>${round(foodTotal.protein,2)}</th><th>${round(totalFatGrams(foodTotal),2)}</th><th>${round(foodTotal.calcium,1)}</th><th>${round(foodTotal.sodium,1)}</th><th>${round(foodTotal.potassium,1)}</th></tr>`;
-  try{const md=state.modular||{},recipe=modularTotals(md),vol=num(md.finalVolume),daily=(md.feedMode||'daily')==='daily',pres=daily?num(md.dailyPrescribed):(md.feeds||[]).reduce((a,x)=>a+num(x.prescribed),0),act=daily?num(md.dailyActual):(md.feeds||[]).reduce((a,x)=>a+num(x.actual),0),used=act||pres,ratio=vol?used/vol:0;if(note)note.textContent=vol?`Daily contributing volume ${round(used,1)} mL of ${round(vol,1)} mL recipe.`:'Enter final recipe volume to calculate daily modular contribution.';(md.components||[]).forEach(c=>{const f=c.dbMatchId?state.foodDB.find(x=>x.id===c.dbMatchId):exactCustom(c.name);if(!f)return;const whole=componentCalc(c),t=emptyNut();TOTAL_KEYS.forEach(k=>t[k]=num(whole[k])*ratio);TOTAL_KEYS.forEach(k=>modTotal[k]+=t[k]);const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(c.name||'—')}</td><td>${esc(f.name||'—')}</td><td>${esc(c.amount||'—')} ${esc(c.unit||'')}</td><td>${round(num(c.amount)*ratio,2)} ${esc(c.unit||'')}</td><td>${round(t.kcal,1)}</td><td>${round(t.protein,2)}</td><td>${round(totalFatGrams(t),2)}</td><td>${round(t.calcium,1)}</td><td>${round(t.sodium,1)}</td><td>${round(t.potassium,1)}</td>`;mb.appendChild(tr)});}catch(err){console.error('Modular calculation detail failed',err);warnings.push('Modular calculation detail unavailable')}
-  if(!mb.children.length)mb.innerHTML='<tr><td colspan="10" class="muted">No calculated Modular Diet items</td></tr>';
-  mf.innerHTML=`<tr class="calc-total-row"><th>Total</th><th></th><th></th><th></th><th>${round(modTotal.kcal,1)}</th><th>${round(modTotal.protein,2)}</th><th>${round(totalFatGrams(modTotal),2)}</th><th>${round(modTotal.calcium,1)}</th><th>${round(modTotal.sodium,1)}</th><th>${round(modTotal.potassium,1)}</th></tr>`;
+  if(!fb.children.length)fb.innerHTML='<tr><td colspan="12" class="muted">No calculated Review Intake items</td></tr>'; ff.innerHTML=foot(foodTotal);
+  try{
+    const md=state.modular||{},contrib=dailyModularContribution(md),ratio=contrib.ratio;
+    if(note)note.textContent=contrib.finalVolume?`Daily contributing volume ${round(contrib.used,1)} mL of ${round(contrib.finalVolume,1)} mL recipe.`:'Enter final recipe volume to calculate daily modular contribution.';
+    (md.components||[]).forEach(c=>{const f=c.dbMatchId?state.foodDB.find(x=>x.id===c.dbMatchId):exactCustom(c.name);if(!f)return;const whole=componentCalc(c),t=emptyNut();TOTAL_KEYS.forEach(k=>t[k]=num(whole[k])*ratio);const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(c.name||'—')}</td><td>${esc(f.name||'—')}</td><td>${esc(c.amount||'—')} ${esc(c.unit||'')}</td><td>${round(num(c.amount)*ratio,2)} ${esc(c.unit||'')}</td>${cells(t)}`;mb.appendChild(tr)});
+    mf.innerHTML=foot(contrib.total);
+  }catch(err){console.error('Modular calculation detail failed',err);warnings.push('Modular calculation detail unavailable');mf.innerHTML=foot(emptyNut())}
+  if(!mb.children.length)mb.innerHTML='<tr><td colspan="12" class="muted">No calculated Modular Diet items</td></tr>';
   if(wn)wn.innerHTML=warnings.length?`<div class="warning-box"><strong>Calculation detail warnings</strong><br>${warnings.map(esc).join('<br>')}</div>`:'';
 }
-function requirementCompare(t){const r=state.requirements,w=num(state.patient.weight),a=[];if(r.trackFluid&&r.fluid)a.push(`Fluid target ${esc(r.fluid)} mL/day`);if(r.energy)a.push(`Energy ${round(t.kcal/num(r.energy)*100,1)}% target`);if(r.protein)a.push(`Protein ${round(t.protein/num(r.protein)*100,1)}% target`);if(r.calcium)a.push(`Calcium ${round(t.calcium/num(r.calcium)*100,1)}% target`);const naT=requirementElectrolyteMg('na',r),kT=requirementElectrolyteMg('k',r);if(naT)a.push(`Na ${round(t.sodium/naT*100,1)}% target`);if(kT)a.push(`K ${round(t.potassium/kT*100,1)}% target`);if(w)a.push(`${round(t.kcal/w,1)} kcal/kg/day • ${round(t.protein/w,2)} g protein/kg/day`);return a.length?`<p class="muted top-gap"><strong>Requirement comparison:</strong> ${a.join(' • ')}</p>`:''}$('calculateBtn').addEventListener('click',()=>{calculateIntake();renderSummary();renderCalculationDetail()});
+$('calculateBtn').addEventListener('click',()=>{calculateIntake();renderSummary();renderCalculationDetail()});
 $('refreshCalcDetailBtn').addEventListener('click',renderCalculationDetail);
 
 function ensureFoodDbDraft(){if(!foodDbDraft)foodDbDraft=clone(state.foodDB);normalizeDbConversions(foodDbDraft)}
@@ -923,6 +952,24 @@ function thaiFoodGuideSummary(){
   if(g.oilTsp)parts.push(`${g.oilMax?'Oil/fat no more than':'Oil/fat'} ${g.oilTsp} tsp/day`);
   return `<strong>Thai food-guide age anchor: ${esc(g.label)}</strong><p>${parts.map(esc).join(' • ')}</p><p class="muted">${g.infant?'For age 6–11 months, 1 ช้อนโต๊ะ (tbsp) = 15 mL; gram conversion still follows the selected food-specific conversion in the database. ':''}Auto-generated Diet amounts are kept near these age-based proportions (generally within ±25%) unless you set a row to Manual/Locked. Energy, protein and clinical requirements are still rechecked separately.${g.note?' '+esc(g.note):''}</p>`;
 }
+function thaiMilkGuideTargetMl(){
+  const g=thaiFoodGuideAgeBand(); if(!g||!g.milkGlasses)return 0;
+  if(Array.isArray(g.milkMlRange))return g.milkGlasses*((num(g.milkMlRange[0])+num(g.milkMlRange[1]))/2);
+  return g.milkGlasses*num(g.milkMlPerGlass||200);
+}
+function thaiMilkGuidePenalty(d=ensureDesignDraft()){
+  if(!d.formulaEnabled)return 0;const target=thaiMilkGuideTargetMl();if(!(target>0))return 0;
+  const plans=(d.formulaPlans||[]).filter(p=>p.dbMatchId&&!rowIsConstrained(p));if(!plans.length)return 0;
+  const fluid=num(formulaDesignCalc(d).fluid),rel=(fluid-target)/target,excess=Math.max(0,Math.abs(rel)-0.20);
+  return excess*excess*4e5;
+}
+function thaiMilkGuideBoundsForVariable(v,d=ensureDesignDraft()){
+  if(v.kind!=='formula'||rowIsConstrained(v.row))return null;const target=thaiMilkGuideTargetMl();if(!(target>0))return null;
+  const unit=String(v.row.unit||'').toLowerCase(),mode=v.row.mode||'per_day',feeds=mode==='per_feed'?Math.max(1,num(v.row.feeds)):1;
+  let targetAmount=null;if(unit==='ml')targetAmount=target/feeds;else if(['oz','fl oz','ounce'].includes(unit))targetAmount=target/30/feeds;
+  if(!(targetAmount>0))return null;return {min:targetAmount*0.75,max:targetAmount*1.25,target:targetAmount};
+}
+function optimizerBounds(v,d=ensureDesignDraft()){return thaiFoodGuideBoundsForVariable(v,d)||thaiMilkGuideBoundsForVariable(v,d)}
 function optimizationTargets(){const r=state.requirements,d=ensureDesignDraft(),a=d.allocation||{};return {kcal:num(r.energy),protein:num(r.protein),proteinKey:proteinTargetKey(),fatKcal:fatTargetKcal(),dietFatPct:num(a.dietFatPct),modularFatPct:num(a.modularFatPct),calcium:num(r.calcium),sodium:requirementElectrolyteMg('na',r),potassium:requirementElectrolyteMg('k',r)}}
 function optimizationScore(c,t,d=ensureDesignDraft(),phase='food'){
   const rel=(v,target)=>target>0?(num(v)-target)/target:0;
@@ -940,7 +987,7 @@ function optimizationScore(c,t,d=ensureDesignDraft(),phase='food'){
   // Protein remain the strongest constraints. All candidate scores use the rounded amounts.
   const caWeight=phase==='food'?8e4:2e4;
   const fatWeight=phase==='food'?6e5:5e5;
-  return primary*8e5+fatErr*fatWeight+sourceFat*4e3+caErr*caWeight+otherMineral*250+thaiFoodGuidePenalty(d);
+  return primary*8e5+fatErr*fatWeight+sourceFat*4e3+caErr*caWeight+otherMineral*250+thaiFoodGuidePenalty(d)+thaiMilkGuidePenalty(d);
 }
 function optimizationStep(row,kind){const rule=String(row?.roundRule||defaultRoundRule(row,kind));return rule==='0.1'?0.1:rule==='0.5'?0.5:rule==='5'?5:1}
 function optimizationVariables(d,opts={}){const vars=[];const includeMedication=opts.includeMedication!==false;const add=(row,kind,opts={})=>{if(!row||rowIsConstrained(row)||!row.dbMatchId)return;const u=rowUnitNut(row,opts);if(!u||TOTAL_KEYS.every(k=>Math.abs(num(u[k]))<1e-12))return;vars.push({row,kind,opts,step:optimizationStep(row,kind)});};
@@ -972,7 +1019,7 @@ function wholePrescriptionDeficitCorrection(d,t,includeMedication=false,maxPass=
   // source-agnostic: if an order mixes regular foods with modular ingredients, every Auto/unlocked
   // row is eligible. Each candidate is rounded first, then the complete nutrient profile is rebuilt.
   const vars=optimizationVariables(d,{includeMedication});
-  const clip=(v,value)=>{let nv=applyRoundRuleValue(Math.max(0,value),v.row.roundRule||defaultRoundRule(v.row,v.kind)),mx=optimizationMaxAmount(v,d),g=thaiFoodGuideBoundsForVariable(v,d);if(Number.isFinite(mx))nv=Math.min(mx,nv);if(g)nv=Math.max(g.min,Math.min(g.max,nv));return nv};
+  const clip=(v,value)=>{let nv=applyRoundRuleValue(Math.max(0,value),v.row.roundRule||defaultRoundRule(v.row,v.kind)),mx=optimizationMaxAmount(v,d),g=optimizerBounds(v,d);if(Number.isFinite(mx))nv=Math.min(mx,nv);if(g)nv=Math.max(g.min,Math.min(g.max,nv));return nv};
   const unit=(v)=>rowUnitNut(v.row,v.opts)||{};
   const score=()=>optimizationScore(designCombined(d),t,d,includeMedication?'final':'food');
   let bestScore=score();
@@ -1021,14 +1068,14 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
   const runOptimize=(vars,phase,maxGuard=220)=>{
     let current=designCombined(d),bestScore=optimizationScore(current,t,d,phase),guard=0;
     const multipliers=[-20,-10,-5,-2,-1,1,2,5,10,20];
-    while(guard++<maxGuard){let best=null,bestCandidateScore=bestScore;for(const v of vars){const old=num(v.row.amount),mx=optimizationMaxAmount(v,d),gb=thaiFoodGuideBoundsForVariable(v,d);for(const m of multipliers){let nv=applyRoundRuleValue(Math.max(0,old+v.step*m),v.row.roundRule||defaultRoundRule(v.row,v.kind));if(Number.isFinite(mx))nv=Math.min(mx,nv);if(gb)nv=Math.max(gb.min,Math.min(gb.max,nv));if(Math.abs(nv-old)<1e-9)continue;v.row.amount=nv;const score=optimizationScore(designCombined(d),t,d,phase);v.row.amount=old;if(score+1e-9<bestCandidateScore){bestCandidateScore=score;best={v,nv}}}}if(!best)break;best.v.row.amount=best.nv;bestScore=bestCandidateScore;}
+    while(guard++<maxGuard){let best=null,bestCandidateScore=bestScore;for(const v of vars){const old=num(v.row.amount),mx=optimizationMaxAmount(v,d),gb=optimizerBounds(v,d);for(const m of multipliers){let nv=applyRoundRuleValue(Math.max(0,old+v.step*m),v.row.roundRule||defaultRoundRule(v.row,v.kind));if(Number.isFinite(mx))nv=Math.min(mx,nv);if(gb)nv=Math.max(gb.min,Math.min(gb.max,nv));if(Math.abs(nv-old)<1e-9)continue;v.row.amount=nv;const score=optimizationScore(designCombined(d),t,d,phase);v.row.amount=old;if(score+1e-9<bestCandidateScore){bestCandidateScore=score;best={v,nv}}}}if(!best)break;best.v.row.amount=best.nv;bestScore=bestCandidateScore;}
     // Coordinated pair search is essential for real rebalancing. A tiny +1/-1 step can get
     // trapped because milk/formula must often rise substantially while an energy/protein source
     // falls at the same time. For each proposed rounded change we calculate a second rounded
     // amount that approximately offsets either ENERGY or PROTEIN, then recheck the full nutrient
     // profile. This permits milk/formula ↑ + meat/CHO ↓ without accepting a bad intermediate state.
     const pairScale=[1,2,5,10,20,50];
-    const clipAmount=(v,value)=>{let nv=applyRoundRuleValue(Math.max(0,value),v.row.roundRule||defaultRoundRule(v.row,v.kind)),mx=optimizationMaxAmount(v,d),g=thaiFoodGuideBoundsForVariable(v,d);if(Number.isFinite(mx))nv=Math.min(mx,nv);if(g)nv=Math.max(g.min,Math.min(g.max,nv));return nv};
+    const clipAmount=(v,value)=>{let nv=applyRoundRuleValue(Math.max(0,value),v.row.roundRule||defaultRoundRule(v.row,v.kind)),mx=optimizationMaxAmount(v,d),g=optimizerBounds(v,d);if(Number.isFinite(mx))nv=Math.min(mx,nv);if(g)nv=Math.max(g.min,Math.min(g.max,nv));return nv};
     for(let pass=0;pass<10;pass++){
       let bestPair=null,bestPairScore=bestScore;
       for(let i=0;i<vars.length;i++)for(let j=0;j<vars.length;j++){
@@ -1093,6 +1140,8 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
   if(t.dietFatPct>0&&current.diet.total.kcal>0&&Math.abs(fatEnergyPct(current.diet.total)-t.dietFatPct)>2)warnings.push(`Diet fat ${round(fatEnergyPct(current.diet.total),1)}% / target ${round(t.dietFatPct,1)}% of Diet energy — closest result with current items and constraints`);
   if(t.modularFatPct>0&&current.modular.daily.kcal>0&&Math.abs(fatEnergyPct(current.modular.daily)-t.modularFatPct)>2)warnings.push(`Modular fat ${round(fatEnergyPct(current.modular.daily),1)}% / target ${round(t.modularFatPct,1)}% of Modular energy — closest result with current items and constraints`);
   if(t.calcium>0&&Math.abs(current.total.calcium/t.calcium-1)>0.02)warnings.push(`Calcium ${round(current.total.calcium,1)} / ${round(t.calcium,1)} mg — food/formula was rebalanced first using the selected product's actual Custom DB Ca/fat/protein/energy profile; remaining deficit uses a selected Ca source when available${!d.modularEnabled?' (Modular Diet is Off, so medication/mineral components are not included)':''}`);
+  const milkGuide=thaiMilkGuideTargetMl();if(d.formulaEnabled&&milkGuide>0){const milkFluid=num(current.formula.fluid);if(milkFluid<milkGuide*.75||milkFluid>milkGuide*1.25)warnings.push(`Milk/formula volume ${round(milkFluid,1)} mL/day is outside the Thai age-guide anchor around ${round(milkGuide,0)} mL/day; Manual/Locked items or product constraints may limit rebalancing`)}
+  warnings.push(...thaiFoodGuideWarnings(d));
   warnings.push(...thaiFoodGuideWarnings(d));
   return {combined:current,warnings,score:optimizationScore(current,t,d,'final')};
 }
@@ -1897,7 +1946,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.117',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.119',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
