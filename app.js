@@ -541,10 +541,18 @@ function modularItemToRecipe(items,root={}){
 function importPnif(){try{
   const o=extractJson($('pnifInput').value),selectedMode=document.querySelector('input[name="pnifMode"]:checked')?.value||'24hr',type=o.type||'24hr_recall';state.pnif={format:o.format||'PNIF',version:o.version||'',type,warnings:[...(state.pnif?.warnings||[]),...(o.warnings||[])]};
   if(selectedMode==='modular'){if(!['daily_modular_recipe','modular_recipe'].includes(type)){const its=Array.isArray(o.items)?o.items:(Array.isArray(o.meals)?o.meals:[]);const mods=[...its.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet'),...(Array.isArray(o.modular_diets)?o.modular_diets:[])];if(!mods.length)throw new Error('ไม่พบ modular_diet ใน PNIF นี้');modularItemToRecipe(mods,o);saveState();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent='เพิ่ม PNIF for Modular Diet แล้ว';showTab('modular');return;}importModular(o,true);saveState();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent='เพิ่ม Modular Diet เข้า encounter นี้แล้ว (ข้อมูล intake เดิมยังอยู่)';showTab('modular');return}
-  const intakeItems=Array.isArray(o.items)?o.items:(Array.isArray(o.meals)?o.meals:[]);const separateMods=Array.isArray(o.modular_diets)?o.modular_diets:[];
+  const baseIntake=Array.isArray(o.items)?o.items:(Array.isArray(o.meals)?o.meals:[]);const topFormula=Array.isArray(o.formula)?o.formula:[];const intakeItems=[...baseIntake,...topFormula.map(x=>({...x,intake_type:'formula'}))];const separateMods=Array.isArray(o.modular_diets)?o.modular_diets:[];
   const isRecipe=x=>!!(x.recipe_name||x.final_volume_ml||x.preparation||Array.isArray(x.components));const inlineMods=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet'&&isRecipe(x));const allMods=[...inlineMods,...separateMods.filter(isRecipe).map(x=>({...x,intake_type:'modular_diet'}))];
-  const modularCount=allMods.length?modularItemToRecipe(allMods,o):0;const added=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)!=='modular_diet'||!isRecipe(x)).map(x=>normItem(normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet'?{...x,intake_type:'food'}:x));
-  state.meals=[...(state.meals||[]),...added];sortMeals();saveState();resetReviewDraft();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent=`เพิ่มเข้า encounter แล้ว: Intake +${added.length}${modularCount?` • Modular +${modularCount}`:''} (ไม่ลบข้อมูลเดิม)`;showTab(added.length?'review':'modular')
+  const modularCount=allMods.length?modularItemToRecipe(allMods,o):0;
+  const added=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)!=='modular_diet'||!isRecipe(x)).map(x=>normItem(x));
+  // v0.4.120: a timed PNIF modular_diets entry is an ACTUAL intake component, not a Daily Modular Recipe.
+  // Attach it to the food/formula entry at the same time so Review Intake shows dextrin/Milnutri Sure
+  // with that feeding and the nutrient engine counts it once. If no same-time intake exists, keep it
+  // as a standalone modular_diet row in Review Intake. Recipe-shaped modular data still goes to the
+  // dedicated Daily Modular Diet tab above.
+  const timedMods=separateMods.filter(x=>!isRecipe(x));let timedModCount=0;
+  timedMods.forEach(x=>{const ing=normIng({food:x.food||x.item||x.name||'',amount:x.amount,unit:x.unit,weight_g:x.weight_g,volume_ml:x.volume_ml??x.volume,note:x.note||'',dbMatchId:x.dbMatchId||autoMatchId(x.food||x.item||x.name||'')});const same=added.find(m=>String(m.time||'')===String(x.time||''));if(same){same.ingredients=same.ingredients||[];same.ingredients.push(ing)}else added.push(normItem({...x,intake_type:'modular_diet'}));timedModCount++});
+  state.meals=[...(state.meals||[]),...added];sortMeals();saveState();resetReviewDraft();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent=`เพิ่มเข้า encounter แล้ว: Intake +${added.length}${timedModCount?` • Timed modular +${timedModCount}`:''}${modularCount?` • Modular recipe +${modularCount}`:''} (ไม่ลบข้อมูลเดิม)`;showTab(added.length?'review':'modular')
 }catch(e){$('pnifStatus').className='status error';$('pnifStatus').textContent='Import ไม่สำเร็จ: '+e.message}}
 function importModular(o,additive=false){const comps=(o.ingredients||[]).map(x=>{const a=normAmt(x.amount);return{id:uid(),name:x.food||x.name||'',amount:a.value,unit:x.unit||'',dbMatchId:'',source:'Custom',kcalOverride:'',proteinOverride:'',fatOverride:'',mctOverride:'',choOverride:'',calciumOverride:'',sodiumOverride:'',potassiumOverride:'',note:x.note||''}});const fp=o.feeding_plan||{},actual=o.actual_intake?.feeds||[];let feeds=[];if(actual.length)feeds=actual.map((x,i)=>({id:uid(),time:x.time||'',prescribed:x.prescribed_ml??fp.volume_per_feed_ml??'',actual:x.actual_ml??'',note:x.note||''}));else if(fp.feeds_per_day){for(let i=0;i<num(fp.feeds_per_day);i++)feeds.push({id:uid(),time:'',prescribed:fp.volume_per_feed_ml??'',actual:'',note:''})}const prev=additive?(state.modular||{}):{};state.modular={name:o.recipe_name||prev.name||'Daily modular recipe',finalVolume:o.preparation?.final_volume_ml??o.final_volume_ml??prev.finalVolume??'',notes:[prev.notes,(o.warnings||[]).join(' | ')].filter(Boolean).join(' | '),components:[...(prev.components||[]),...comps],feeds:[...(prev.feeds||[]),...feeds],route:fp.route||prev.route||'',durationHr:fp.duration_hr_per_feed??prev.durationHr??''}}
 $('importPnifBtn').addEventListener('click',importPnif);$('clearPnifBtn').addEventListener('click',()=>{$('pnifInput').value='';$('pnifStatus').textContent=''});$('loadExampleBtn').addEventListener('click',()=>{$('pnifInput').value=JSON.stringify({format:'PNIF',version:'0.4',type:'24hr_recall',items:[{time:'07:00',intake_type:'food',food:'ข้าวไก่ย่าง',ingredients:[{food:'ข้าว',amount:2,unit:'ทัพพี'},{food:'ไก่ย่าง',amount:3,unit:'ชิ้น'}],confidence:'high'},{time:'10:00',intake_type:'formula',food:'Panenteral',volume_ml:180,kcal_per_oz:30,confidence:'high'},{time:'12:00',intake_type:'modular_diet',recipe_name:'Daily modular recipe',final_volume_ml:1000,actual_volume_ml:250,components:[{food:'Panenteral',amount:100,unit:'g'},{food:'น้ำมัน',amount:20,unit:'g'}],confidence:'high'}]},null,2)});
@@ -921,7 +929,7 @@ function dietGroupFactor(d=ensureDesignDraft(),group){
 }
 function thaiFoodGuidePenalty(d=ensureDesignDraft()){
   if(!d.dietEnabled)return 0;const g=thaiFoodGuideAgeBand();if(!g)return 0;
-  const groups=['starch','meat','egg','vegetable','fruit','oil'];let score=0;
+  const groups=['starch','meat','vegetable','fruit','oil'];let score=0;
   groups.forEach(group=>{const target=thaiFoodGuideDesiredFactor(group,g);if(!(target>0))return;const actual=dietGroupFactor(d,group);const rel=(actual-target)/target;const excess=Math.max(0,Math.abs(rel)-0.15);score+=excess*excess*2.5e5;});
   return score;
 }
@@ -938,7 +946,7 @@ function thaiFoodGuideBoundsForVariable(v,d=ensureDesignDraft()){
 function thaiFoodGuideWarnings(d=ensureDesignDraft()){
   if(!d.dietEnabled)return [];const g=thaiFoodGuideAgeBand();if(!g)return [];
   const names={starch:'rice/starch',meat:'meat',egg:'egg',vegetable:'vegetable',fruit:'fruit',oil:'oil/fat'},w=[];
-  ['starch','meat','egg','vegetable','fruit','oil'].forEach(group=>{const t=thaiFoodGuideDesiredFactor(group,g);if(!(t>0))return;const a=dietGroupFactor(d,group);if(a<t*0.75-1e-6||a>t*1.25+1e-6)w.push(`${names[group]} is outside the age-guide anchor (${round(a,1)} vs ${round(t,1)} exchange-equivalent/day)`)});
+  ['starch','meat','vegetable','fruit','oil'].forEach(group=>{const t=thaiFoodGuideDesiredFactor(group,g);if(!(t>0))return;const a=dietGroupFactor(d,group);if(a<t*0.75-1e-6||a>t*1.25+1e-6)w.push(`${names[group]} is outside the age-guide anchor (${round(a,1)} vs ${round(t,1)} exchange-equivalent/day)`)});
   return w;
 }
 function thaiFoodGuideSummary(){
@@ -960,14 +968,14 @@ function thaiMilkGuideTargetMl(){
 function thaiMilkGuidePenalty(d=ensureDesignDraft()){
   if(!d.formulaEnabled)return 0;const target=thaiMilkGuideTargetMl();if(!(target>0))return 0;
   const plans=(d.formulaPlans||[]).filter(p=>p.dbMatchId&&!rowIsConstrained(p));if(!plans.length)return 0;
-  const fluid=num(formulaDesignCalc(d).fluid),rel=(fluid-target)/target,excess=Math.max(0,Math.abs(rel)-0.20);
-  return excess*excess*4e5;
+  const fluid=num(formulaDesignCalc(d).fluid),rel=(fluid-target)/target,excess=Math.max(0,Math.abs(rel)-0.60);
+  return excess*excess*2e5;
 }
 function thaiMilkGuideBoundsForVariable(v,d=ensureDesignDraft()){
   if(v.kind!=='formula'||rowIsConstrained(v.row))return null;const target=thaiMilkGuideTargetMl();if(!(target>0))return null;
   const unit=String(v.row.unit||'').toLowerCase(),mode=v.row.mode||'per_day',feeds=mode==='per_feed'?Math.max(1,num(v.row.feeds)):1;
   let targetAmount=null;if(unit==='ml')targetAmount=target/feeds;else if(['oz','fl oz','ounce'].includes(unit))targetAmount=target/30/feeds;
-  if(!(targetAmount>0))return null;return {min:targetAmount*0.75,max:targetAmount*1.25,target:targetAmount};
+  if(!(targetAmount>0))return null;return {min:targetAmount*0.75,max:targetAmount*1.75,target:targetAmount};
 }
 function optimizerBounds(v,d=ensureDesignDraft()){return thaiFoodGuideBoundsForVariable(v,d)||thaiMilkGuideBoundsForVariable(v,d)}
 function optimizationTargets(){const r=state.requirements,d=ensureDesignDraft(),a=d.allocation||{};return {kcal:num(r.energy),protein:num(r.protein),proteinKey:proteinTargetKey(),fatKcal:fatTargetKcal(),dietFatPct:num(a.dietFatPct),modularFatPct:num(a.modularFatPct),calcium:num(r.calcium),sodium:requirementElectrolyteMg('na',r),potassium:requirementElectrolyteMg('k',r)}}
@@ -1248,14 +1256,13 @@ function ageMonthsNow(){return Math.max(0,num(state.patient.ageYears)*12+num(sta
 function buildDietDraft(d,targetKcal){
   const picks={
     starch:dbPick(['ข้าวสวย','ข้าวซ้อมมือ'],f=>f.type==='food'&&f.diet_group==='starch'),
-    meat:dbPick(['อกไก่','ปลา','หมู'],f=>f.type==='food'&&f.diet_group==='meat'),
-    egg:dbPick(['ไข่ไก่','ไข่เป็ด'],f=>f.type==='food'&&f.diet_group==='egg'),
+    meat:dbPick(['หมู','หมูเนื้อไม่มีมัน','หมูสับ','อกไก่','ปลา'],f=>f.type==='food'&&f.diet_group==='meat'),
     vegetable:dbPick(['ผัก','ฟักทอง'],f=>f.type==='food'&&f.diet_group==='vegetable'),
     fruit:dbPick(['แอปเปิล','แอปเปิ้ล','กล้วยน้ำว้า','มะละกอสุก'],f=>f.type==='food'&&f.diet_group==='fruit'),
     oil:dbPick(['น้ำมัน','LCT oil'],f=>f.type==='food'&&f.diet_group==='oil')
   };
   const g=thaiFoodGuideAgeBand();
-  d.dietItems=[makeDesignRow('starch',picks.starch,1),makeDesignRow('meat',picks.meat,1),makeDesignRow('egg',picks.egg,1),makeDesignRow('vegetable',picks.vegetable,1),makeDesignRow('fruit',picks.fruit,1),makeDesignRow('oil',picks.oil,1)].filter(x=>x.dbMatchId);
+  d.dietItems=[makeDesignRow('starch',picks.starch,1),makeDesignRow('meat',picks.meat,1),makeDesignRow('vegetable',picks.vegetable,1),makeDesignRow('fruit',picks.fruit,1),makeDesignRow('oil',picks.oil,1)].filter(x=>x.dbMatchId);
   if(g){
     d.dietItems.forEach(r=>{const target=guideTargetAmountForRow(r,d);if(target!=null&&target>0)r.amount=target;});
     // For age-guided drafts, do not globally scale all food groups to energy because that distorts the food-group pattern.
@@ -1946,7 +1953,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.119',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.120',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
