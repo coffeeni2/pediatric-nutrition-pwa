@@ -228,7 +228,7 @@ if(!st.settings.genericFruitExchangeV0482){
       sodium:0,potassium:0,iron:0,zinc:0,source:'Custom',grams_per_scoop:'',
       standard_kcal_oz:'',min_kcal_oz:'',max_kcal_oz:'',protein_source:'other',
       protein_source_user_set:true,diet_group:'fruit',conversions:[],portions:[],
-      created_by:'template',user_modified:false,seed_version:'0.4.114',
+      created_by:'template',user_modified:false,seed_version:'0.4.116',
       updated_at:new Date().toISOString()
     });
   }
@@ -319,7 +319,7 @@ $('globalNewCaseBtn')?.addEventListener('click',()=>{newCase();renderActiveCaseB
 $('globalDeleteCaseBtn')?.addEventListener('click',()=>{deleteCase();renderActiveCaseBar()});
 $('globalCaseSelector')?.addEventListener('change',e=>{try{syncPatientFormToState();commitCaseDrafts();saveState()}catch(err){console.error('Case-switch autosave failed',err)}loadCase(e.target.value);renderActiveCaseBar()});
 window.addEventListener('beforeunload',e=>{if(foodDbDirty||reviewDirty||modularDirty||designDirty||pnDirty){e.preventDefault();e.returnValue='';}});
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').classList.remove('hidden')});$('installBtn').addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn').classList.add('hidden')});if('serviceWorker' in navigator) window.addEventListener('load', async()=>{
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn')?.classList.remove('hidden')});$('installBtn')?.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn')?.classList.add('hidden')});if('serviceWorker' in navigator) window.addEventListener('load', async()=>{
   try {
     // 0.4.17 cache recovery: preserve app data (localStorage/IndexedDB), remove only SW registrations and Cache Storage.
     const marker='pedNutritionCacheRecovery0416';
@@ -1844,7 +1844,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.114',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.116',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
@@ -1855,8 +1855,13 @@ async function importFullBackup(e){
     if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw new Error('Invalid backup root');
     if(!Array.isArray(parsed.cases)&&!Array.isArray(parsed.foodDB))throw new Error('Missing backup data');
     const meta=parsed.backup_meta;delete parsed.backup_meta;
-    state=merge(defaultState,parsed);saveState();foodDbDraft=null;foodDbDirty=false;resetReviewDraft();resetModularDraft();resetDesignDraft();renderPatient();renderMeals();renderFoodDB();renderModular();renderDietDesign();renderPn();
+    state=merge(defaultState,parsed);saveState();foodDbDraft=null;foodDbDirty=false;resetReviewDraft();resetModularDraft();// v0.4.116 resilient bootstrap: event handlers above are already registered.
+// Mark the app interactive before any heavy tab renderer runs, and isolate renderer failures
+// so one broken tab can never disable buttons in the rest of the app.
 window.__pedMainAppReady=true;
+try{resetDesignDraft()}catch(err){console.error('Initial design draft failed',err)}
+[['Patient',renderPatient],['Review Intake',renderMeals],['Custom Database',renderFoodDB],['Modular Diet',renderModular],['Diet Design',renderDietDesign],['PN',renderPn]].forEach(([label,fn])=>{try{fn()}catch(err){console.error('Initial '+label+' render failed',err)}});
+renderActiveCaseBar();
     alert(`Restore สำเร็จ — นำเข้าข้อมูล backup ทุก tab${meta?.version?' จาก v'+meta.version:''}`);
   }catch(err){console.error(err);alert('Backup ไม่ถูกต้องหรืออ่านไฟล์ไม่ได้')}finally{input.value=''}
 }
@@ -1864,5 +1869,10 @@ $('exportBtn')?.addEventListener('click',exportFullBackup);
 $('importBackupInput')?.addEventListener('change',importFullBackup);
 $('resetBtn').addEventListener('click',()=>{if(confirm('This will permanently delete local patient/case data and custom data on this device. Export a backup first. Continue?')){localStorage.removeItem('pedNutritionStateV4');localStorage.removeItem('pedNutritionStateV3');location.reload()}});
 
-resetDesignDraft();renderPatient();renderMeals();renderFoodDB();renderModular();renderDietDesign();renderPn();
+// v0.4.116 resilient bootstrap: event handlers above are already registered.
+// Mark the app interactive before any heavy tab renderer runs, and isolate renderer failures
+// so one broken tab can never disable buttons in the rest of the app.
 window.__pedMainAppReady=true;
+try{resetDesignDraft()}catch(err){console.error('Initial design draft failed',err)}
+[['Patient',renderPatient],['Review Intake',renderMeals],['Custom Database',renderFoodDB],['Modular Diet',renderModular],['Diet Design',renderDietDesign],['PN',renderPn]].forEach(([label,fn])=>{try{fn()}catch(err){console.error('Initial '+label+' render failed',err)}});
+renderActiveCaseBar();
