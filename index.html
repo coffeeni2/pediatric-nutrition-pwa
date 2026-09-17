@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.122" />
+  <link rel="stylesheet" href="styles.css?v=0.4.123" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -300,6 +300,11 @@
         <label>Filter<select id="dbTypeFilter"><option value="all">All</option><option value="food">Food</option><option value="menu">Menu / prepared dish</option><option value="formula">Medical formula</option><option value="modular">Modular component</option><option value="medication">Medication / mineral</option></select></label>
         <label>Search<input id="dbSearch" placeholder="ชื่ออาหาร/สูตร" /></label>
       </div>
+      <div class="inmucal-import card-subtle top-gap">
+        <div class="section-title-row"><div><strong>Import INMUCAL Excel</strong><div class="muted">เลือกไฟล์ Export_Nutrient per Code (.xlsx) → Preview → Import. ระบบรวมตาม INMUCAL Code, ไม่ทับ Custom/Exchange เดิม และไม่เดา portion→g เมื่อหลักฐานไม่พอ.</div></div><label class="file-button secondary">Choose Excel<input id="inmucalExcelInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden /></label></div>
+        <div id="inmucalPreview" class="top-gap muted">ยังไม่ได้เลือกไฟล์</div>
+        <div class="inline-actions top-gap"><button id="importInmucalBtn" class="primary" disabled>Import / Enrich INMUCAL</button><button id="clearInmucalPreviewBtn" class="secondary" disabled>Clear preview</button></div>
+      </div>
       <datalist id="dbUnitOptions"><option value="g"><option value="mL"><option value="cc"><option value="portion"><option value="ทัพพี"><option value="ถ้วยตวง"><option value="ช้อนโต๊ะ"><option value="ชต."><option value="ช้อนชา"><option value="ชช."><option value="ฟอง"><option value="ชิ้น"><option value="ผล"><option value="แผ่น"><option value="scoop"><option value="เม็ด"><option value="ซอง"><option value="ขวด"><option value="ampule"><option value="mL"><option value="g"></datalist>
       <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Standard kcal/oz</th><th>Min kcal/oz</th><th>Max kcal/oz</th><th>Food group</th><th>kcal</th><th>Protein</th><th>LCT / %total fat</th><th>MCT</th><th>CHO</th><th>Ca (mg)</th><th>Mg (mg)</th><th>P (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
     </div>
@@ -339,7 +344,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.122</strong> • persistent Custom DB • Custom-only calculation • food/menu/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<footer><strong>PWA 0.4.123</strong> • persistent Custom DB • Custom-only calculation • food/menu/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
 <script>
 // Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
 (function(){
@@ -360,7 +365,7 @@
 })();
 </script>
 <script>
-// v0.4.122: never fail silently. A startup/runtime error is shown without blocking controls.
+// v0.4.123: INMUCAL Excel importer + fast matching. Never fail silently. A startup/runtime error is shown without blocking controls.
 window.addEventListener('error',function(e){
   console.error('PWA runtime error',e.error||e.message);
   var old=document.getElementById('runtimeErrorNotice'); if(old)return;
@@ -370,6 +375,6 @@ window.addEventListener('error',function(e){
   var main=document.querySelector('main'); if(main) main.insertBefore(n,main.firstChild); else document.body.prepend(n);
 });
 </script>
-<script src="app.js?v=0.4.122"></script>
+<script src="app.js?v=0.4.123"></script>
 </body>
 </html>
