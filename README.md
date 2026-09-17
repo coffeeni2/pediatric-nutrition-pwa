@@ -1,4 +1,4 @@
-# Pediatric Nutrition PWA 0.4.140
+# Pediatric Nutrition PWA 0.4.114
 
 
 
@@ -351,72 +351,14 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Existing full Diet/Milk/Modular editors remain below for advanced changes, units, rounding, locks and component setup.
 
 
-## 0.4.114
+## 0.4.113
 - Tab navigation now has an independent capture-phase fallback in index.html, so tapping a tab changes the visible panel even if the main app initialization/render fails.
 - Main showTab is exposed only after successful initial rendering; destination rendering remains available when the app is healthy.
 - Removed duplicate Export/Import backup controls from the header. Full JSON Export/Import remains in Settings & Backup.
 - Active Case bar retains New Case, Delete Case, Save Case.
 
 
-## v0.4.114
-- Hardened button bindings so one missing control cannot stop all later controls.
-- Fixed saved-case switching/deletion path and simplified Patient case controls to the global case bar.
-- Diet Design separates Generate Draft, Calculate Intake (no optimization), and Optimize Again next to Nutrient Recheck.
-- Rechecked Add food, Add milk/formula, Prepare component template, Modular Add time and Add component wiring.
-
-
-## v0.4.116
-- Save Case now commits the currently visible Patient/Case ID before snapshotting the case.
-- Active Patient/Case dropdown is rebuilt immediately after Save Case and always lists every saved case.
-- Switching a dropdown entry refreshes the active-case bar before and after loading the selected case.
-
-
-## v0.4.116 functional QA fix
-- Fixed a startup JavaScript ReferenceError caused by missing `renderCalculationDetail()`. This error stopped execution before later button handlers were attached, which explained why many tabs/buttons appeared but did nothing.
-- Restored Nutrient Summary and Calculation Detail rendering.
-- Rechecked Case, Modular Diet, and Diet Design action wiring after the startup fix.
-
-
-## v0.4.118
-- New Case now force-saves the current Patient form/case snapshot before creating a blank case.
-- Saved Patient IDs remain listed in the global case dropdown after creating subsequent cases.
-- Case dropdown is rebuilt immediately after New Case.
-
-## v0.4.127
-- Review Intake unit aliases are normalized automatically (ชต./ช้อนโต๊ะ, ชช./ช้อนชา, cc/mL, กรัม/g, ลูก/ผล).
-- Review & Calculate now includes Daily Modular Diet scaled by actual intake (fallback prescribed) over final recipe volume.
-- Nutrient Summary is compact/mobile-first and adds protein g/kg/day, MCT % total energy, and Na/K mg/day + mEq/100 kcal Holliday-Segar/day.
-- Calculation Detail now shows actual calculated food/formula rows and modular daily contribution; Refresh recalculates before rendering.
-- Reduced vertical spacing on Review Intake, Modular Diet, and Review & Calculate for Android/mobile.
-
-
-## v0.4.127
-- Simplified PNIF → Review Ingredients → Calculate workflow for mobile use.
-- Food menu names are labels only; nutrient calculation uses quantified ingredients. Standalone formula remains calculable.
-- Review autosaves to active case; removed mandatory Save/Cancel step.
-- Default Review view after PNIF import shows only items needing review.
-- Added direct Calculate Intake from Review and collapsible Calculation Detail.
-- Calculation Detail follows ingredient-only food calculation.
-
-
-## v0.4.127
-- Keep explicit Clear actions in Diet Design, Review Intake, and Modular Intake.
-- Diet Design Nutrient Recheck keeps Requirement − Total Remaining.
-- Recheck preserves Diet / Milk-Formula / Modular contribution for every nutrient; on mobile the source breakdown is shown compactly under Total while full source columns remain on larger screens.
-
-
-## v0.4.127
-- Diet Design mobile-first workflow: compact Daily Requirements target, Generate Diet Plan only before a prescription exists, then Calculate Intake / Optimize Again.
-- Quick adjust remains beside Nutrient Recheck; Calculate Intake never rebalances and now autosaves the current Diet Design.
-- Detailed Diet, Milk/Formula, Modular and Fluid editors plus source allocation/rounding controls are preserved under Advanced setup.
-- Nutrient Recheck retains Diet / Milk-Formula / Modular / Total / Target / Remaining.
-
-
-## v0.4.140
-- Removed the duplicate Quick adjust prescription/component list from Diet Design Nutrient Recheck; nutrient contribution tables A-D remain.
-- Fixed Review & Calculate Calculation Detail to render from the same persisted `state.meals` snapshot used by `calculateIntake()`, preventing stale `reviewDraft` from producing an empty detail table while the summary contained calculated food.
-
-
-## v0.4.140
-- Nutrient Summary Additional now reports Energy % requirement; Protein/HBV g/kg/day + % requirement; Total fat/LCT/MCT kcal + % total energy; Calcium % requirement; Sodium/Potassium mEq/100 kcal Holliday-Segar/day + % requirement.
-- Requirement percentages use the active case Patient → Daily Requirements. Na/K support either mg/day or mEq/100 kcal/day targets through the existing Holliday-Segar conversion.
+## 0.4.114
+- Fix Diet Design Optimize Again: when Diet is selected but diet rows are empty, initialize the age-guided Diet draft before optimization instead of silently optimizing only Milk/Formula.
+- Preserve Manual/Locked Milk/Formula amounts; optimizer can use the newly initialized Diet rows to cover the remaining target.
+- Actual energy allocation is synchronized only after a real Diet prescription exists.
