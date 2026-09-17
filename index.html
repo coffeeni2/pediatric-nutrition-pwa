@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.116" />
+  <link rel="stylesheet" href="styles.css?v=0.4.117" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -360,7 +360,7 @@
 })();
 </script>
 <script>
-// v0.4.116: never fail silently. A startup/runtime error is shown without blocking controls.
+// v0.4.117: never fail silently. A startup/runtime error is shown without blocking controls.
 window.addEventListener('error',function(e){
   console.error('PWA runtime error',e.error||e.message);
   var old=document.getElementById('runtimeErrorNotice'); if(old)return;
@@ -370,6 +370,6 @@ window.addEventListener('error',function(e){
   var main=document.querySelector('main'); if(main) main.insertBefore(n,main.firstChild); else document.body.prepend(n);
 });
 </script>
-<script src="app.js?v=0.4.116"></script>
+<script src="app.js?v=0.4.117"></script>
 </body>
 </html>

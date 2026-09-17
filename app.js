@@ -228,7 +228,7 @@ if(!st.settings.genericFruitExchangeV0482){
       sodium:0,potassium:0,iron:0,zinc:0,source:'Custom',grams_per_scoop:'',
       standard_kcal_oz:'',min_kcal_oz:'',max_kcal_oz:'',protein_source:'other',
       protein_source_user_set:true,diet_group:'fruit',conversions:[],portions:[],
-      created_by:'template',user_modified:false,seed_version:'0.4.116',
+      created_by:'template',user_modified:false,seed_version:'0.4.117',
       updated_at:new Date().toISOString()
     });
   }
@@ -280,6 +280,24 @@ function syncPatientFormToState(){
   state.patient.age=state.patient.ageYears||'';
 }
 function saveActiveCaseFromAnywhere(){
+  // v0.4.117: Case ID typed into the Patient form is treated as a case identifier, not a rename.
+  // If the active saved case already has a different non-empty Case ID, preserve it and create
+  // a new internal case before saving the newly typed ID. This prevents 001 -> 002 from
+  // overwriting 001 when the user saves the next patient without pressing New Case first.
+  const active=state.cases.find(x=>x.id===state.activeCaseId);
+  const savedAlias=String(active?.patient?.alias||'').trim();
+  const typedAlias=String($('patientAlias')?.value||'').trim();
+  if(active && savedAlias && typedAlias && savedAlias!==typedAlias){
+    // Persist the old case exactly as it was before switching the active internal UUID.
+    const fresh=blankCase();
+    state.cases.push(fresh);
+    state.activeCaseId=fresh.id;
+    state.patient=clone(fresh.patient);
+    state.requirements=clone(fresh.requirements);
+    state.dietDesign=clone(fresh.dietDesign);
+    state.pn=clone(fresh.pn);
+    state.pnif={}; state.meals=[]; state.modular=clone(fresh.modular); state.lastSummary=null;
+  }
   syncPatientFormToState();
   commitCaseDrafts(); saveState(); resetReviewDraft(); resetModularDraft(); resetDesignDraft();
   renderCaseSelector(); renderActiveCaseBar('Saved ✓');
@@ -468,7 +486,7 @@ function requirementElectrolyteSummary(kind,r=state.requirements){
 }
 function renderPatient(){renderCaseSelector();const p=normalizePatientAge(state.patient),r=state.requirements;[['Alias','alias'],['Dob','dob'],['AgeYears','ageYears'],['AgeMonths','ageMonths'],['AgeDays','ageDays'],['GaWeeks','gaWeeks'],['GaDays','gaDays'],['Sex','sex'],['VisitDate','visitDate'],['Weight','weight'],['Height','height']].forEach(([id,key])=>{const el=$('patient'+id);if(el)el.value=p[key]??''});$('trackFluid').checked=!!r.trackFluid;$('reqFluid').value=r.fluid||'';$('reqFluid').disabled=!r.trackFluid;$('reqEnergy').value=r.energy||'';$('reqProteinMode').value=r.proteinMode||'counted';$('reqProtein').value=r.protein||'';$('reqFatPct').value=r.fatPct||'';$('reqMctPct').value=r.mctPct||'';$('reqCalcium').value=r.calcium||'';$('reqSodiumUnit').value=r.sodiumUnit||'mg_day';$('reqSodium').value=r.sodium||'';$('reqPotassiumUnit').value=r.potassiumUnit||'mg_day';$('reqPotassium').value=r.potassium||'';if($('requirementsSaveStatus'))$('requirementsSaveStatus').innerHTML=requirementsDirty?'<span class="dirty-pill">Unsaved requirement changes</span>':'<span class="saved-pill">Saved</span>';const w=num(p.weight),h=num(p.height),bmi=w&&h?w/(h/100)**2:0,pre=pretermAgeMetrics(p),naS=requirementElectrolyteSummary('na',r),kS=requirementElectrolyteSummary('k',r);$('patientSummary').innerHTML=`<div class="summary-grid"><div class="metric">Case<b>${esc(p.alias||'—')}</b></div><div class="metric">Chronological age / Sex<b>${ageDisplay(p)} ${esc(p.sex||'')}</b>${p.dob?`<span>DOB ${esc(p.dob)}</span>`:''}</div><div class="metric">GA at birth<b>${gestationalAgeDisplay(p)}</b></div><div class="metric">Corrected age<b>${correctedAgeDisplay(p)}</b>${pre&&pre.preterm&&pre.pmaDays!=null?`<span>PMA ${pmaDisplay(pre)}</span>`:''}</div><div class="metric">Weight<b>${w?round(w,2)+' kg':'—'}</b></div><div class="metric">Length / Height<b>${h?round(h,1)+' cm':'—'}</b></div><div class="metric">BMI<b>${bmi?round(bmi,2)+' kg/m²':'—'}</b></div></div>`;$('requirementSummary').innerHTML=`<div class="summary-grid"><div class="metric">Fluid<b>${r.trackFluid&&r.fluid?esc(r.fluid)+' mL/day':'Not tracked'}</b>${r.trackFluid&&w&&r.fluid?`<span>${round(num(r.fluid)/w,1)} mL/kg/day</span>`:''}</div><div class="metric">Energy<b>${r.energy?esc(r.energy)+' kcal/day':'—'}</b>${w&&r.energy?`<span>${round(num(r.energy)/w,1)} kcal/kg/day</span>`:''}</div><div class="metric">${(r.proteinMode||'counted')==='counted'?'High biological value protein':'Total protein'}<b>${r.protein?esc(r.protein)+' g/day':'—'}</b>${w&&r.protein?`<span>${round(num(r.protein)/w,2)} g/kg/day</span>`:''}</div><div class="metric">Total fat<b>${r.fatPct?esc(r.fatPct)+'% energy':'—'}</b></div><div class="metric">MCT<b>${r.mctPct?esc(r.mctPct)+'% energy':'—'}</b></div><div class="metric">Calcium<b>${r.calcium?esc(r.calcium)+' mg/day':'—'}</b></div><div class="metric">Sodium<b>${naS.main}</b>${naS.sub?`<span>${naS.sub}</span>`:''}</div><div class="metric">Potassium<b>${kS.main}</b>${kS.sub?`<span>${kS.sub}</span>`:''}</div></div>`}
 let requirementsDirty=false;
-function savePatientForm(){syncPatientFormToState();saveState();if(!requirementsDirty)renderPatient()}
+function savePatientForm(){saveActiveCaseFromAnywhere();if(!requirementsDirty)renderPatient()}
 function saveRequirementsForm(){state.requirements={trackFluid:$('trackFluid').checked,fluid:$('reqFluid').value,energy:$('reqEnergy').value,proteinMode:$('reqProteinMode').value||'counted',protein:$('reqProtein').value,fatPct:$('reqFatPct').value,mctPct:$('reqMctPct').value,calcium:$('reqCalcium').value,sodium:$('reqSodium').value,sodiumUnit:$('reqSodiumUnit').value||'mg_day',potassium:$('reqPotassium').value,potassiumUnit:$('reqPotassiumUnit').value||'mg_day'};requirementsDirty=false;saveState();renderPatient();resetDesignDraft();renderDietDesign();if($('requirementsSaveStatus'))$('requirementsSaveStatus').innerHTML='<span class="saved-pill">Saved ✓</span>'}
 function clearRequirementsTab(){if(!confirm('Clear all Daily Requirements for the current case? Patient, Diet Design, PN, intake and other tabs will be kept.'))return;state.requirements=clone(blankCase().requirements);requirementsDirty=false;saveState();renderPatient();resetDesignDraft();renderDietDesign();if($('requirementsSaveStatus'))$('requirementsSaveStatus').innerHTML='<span class="saved-pill">Cleared ✓</span>';}
 function markRequirementsDirty(){requirementsDirty=true;if($('reqFluid'))$('reqFluid').disabled=!$('trackFluid').checked;if($('requirementsSaveStatus'))$('requirementsSaveStatus').innerHTML='<span class="dirty-pill">Unsaved requirement changes</span>'}
@@ -575,6 +593,21 @@ function macroRatio(t){
 }
 function proteinDisplay(g,w,prefix=''){const bw=w?` <span class="protein-perkg">(${prefix}${round(g/w,2)} g/kg/day)</span>`:' <span class="protein-perkg">(BW required)</span>';return `${prefix}${round(g)} g/day${bw}`}
 function nutGrid(t,prefix=''){const w=num(state.patient.weight),rows=[['Energy',`${round(t.kcal)} kcal/day`,w?`${round(t.kcal/w,1)} kcal/kg/day`:''],['Total protein',`${round(t.protein,1)} g/day`,w?`${round(t.protein/w,2)} g/kg/day`:''],['High biological value protein',`${round(t.protein_excl_cho,1)} g/day`,w?`${round(t.protein_excl_cho/w,2)} g/kg/day`:''],['P : CHO : Fat',macroRatio(t),'% macronutrient energy'],['Total fat',`${round(totalFatGrams(t),1)} g/day`,`${round(fatEnergyPct(t),1)}% energy`],['LCT',`${round(t.fat,1)} g/day`,`${round(lctKcal(t),1)} kcal`],['MCT',`${round(t.mct,1)} g/day`,`${round(mctKcal(t),1)} kcal`],['CHO',`${round(t.cho,1)} g/day`,''],['Calcium',`${round(t.calcium)} mg`,''],['Magnesium',`${round(t.magnesium)} mg`,''],['Phosphorus',`${round(t.phosphorus)} mg`,''],['Sodium',`${round(t.sodium)} mg`,`${round(t.sodium/23,2)} mEq`],['Potassium',`${round(t.potassium)} mg`,`${round(t.potassium/39,2)} mEq`],['Iron',`${round(t.iron,1)} mg`,''],['Zinc',`${round(t.zinc,1)} mg`,'']];return `<div class="table-wrap nutrient-table-wrap"><table class="compact-summary-table nutrient-table"><thead><tr><th>Nutrient</th><th>Daily intake</th><th>Additional</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td><strong>${r[1]}</strong></td><td>${r[2]||'—'}</td></tr>`).join('')}</tbody></table></div>`}
+function renderCalculationDetail(){
+  // v0.4.117 restored calculation-detail renderer. It must never prevent the rest of the app
+  // from initializing, even when an intake row is incomplete.
+  const fb=$('foodCalcDetailBody'),ff=$('foodCalcDetailFoot'),mb=$('modCalcDetailBody'),mf=$('modCalcDetailFoot'),wn=$('calcDetailWarnings'),note=$('modCalcBasisNote');
+  if(!fb||!ff||!mb||!mf)return;
+  const foodTotal=emptyNut(),modTotal=emptyNut(),warnings=[]; fb.innerHTML=''; mb.innerHTML='';
+  const addFoodRow=(label,x)=>{try{const f=matchedFood(x);if(!f){warnings.push(`${label}: no Custom Database match`);return}const fac=factorFor(x,f);if(fac===null){warnings.push(`${label}: amount/unit cannot be converted to ${f.basis_unit}`);return}const t=emptyNut();addNut(t,f,fac);TOTAL_KEYS.forEach(k=>foodTotal[k]+=t[k]);const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(label)}</td><td>${esc(x.food||x.name||'—')}</td><td>${esc(f.name||'—')}</td><td>${esc(x.amount||x.volume_ml||'—')} ${esc(x.convertUnit||x.unit||'')}</td><td>${round(t.kcal,1)}</td><td>${round(t.protein,2)}</td><td>${round(totalFatGrams(t),2)}</td><td>${round(t.calcium,1)}</td><td>${round(t.sodium,1)}</td><td>${round(t.potassium,1)}</td>`;fb.appendChild(tr)}catch(err){console.error('Calculation detail row failed',err);warnings.push(`${label}: calculation detail unavailable`)}};
+  (state.meals||[]).forEach(m=>{let method=m.calcMethod==='auto'?autoCalcRule(m).method:m.calcMethod;if(method==='whole')addFoodRow(m.time||m.food||'Intake',m);else if(method==='ingredients'||method==='hybrid')(m.ingredients||[]).filter(hasPortion).forEach(i=>addFoodRow(`${m.time||''} ${m.food||''}`.trim(),i))});
+  if(!fb.children.length)fb.innerHTML='<tr><td colspan="10" class="muted">No calculated Review Intake items</td></tr>';
+  ff.innerHTML=`<tr><th colspan="4">Total</th><th>${round(foodTotal.kcal,1)}</th><th>${round(foodTotal.protein,2)}</th><th>${round(totalFatGrams(foodTotal),2)}</th><th>${round(foodTotal.calcium,1)}</th><th>${round(foodTotal.sodium,1)}</th><th>${round(foodTotal.potassium,1)}</th></tr>`;
+  try{const md=state.modular||{},recipe=modularTotals(md),vol=num(md.finalVolume),daily=(md.feedMode||'daily')==='daily',pres=daily?num(md.dailyPrescribed):(md.feeds||[]).reduce((a,x)=>a+num(x.prescribed),0),act=daily?num(md.dailyActual):(md.feeds||[]).reduce((a,x)=>a+num(x.actual),0),used=act||pres,ratio=vol?used/vol:0;if(note)note.textContent=vol?`Daily contributing volume ${round(used,1)} mL of ${round(vol,1)} mL recipe.`:'Enter final recipe volume to calculate daily modular contribution.';(md.components||[]).forEach(c=>{const f=matchedFood({food:c.name,dbMatchId:c.dbMatchId,amount:c.amount,unit:c.unit,convertUnit:c.unit,formulaKcalOz:c.formulaKcalOz});if(!f)return;const fac=factorFor({food:c.name,dbMatchId:c.dbMatchId,amount:c.amount,unit:c.unit,convertUnit:c.unit,formulaKcalOz:c.formulaKcalOz},f);if(fac===null)return;const t=emptyNut();addNut(t,f,fac*ratio);TOTAL_KEYS.forEach(k=>modTotal[k]+=t[k]);const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(c.name||'—')}</td><td>${esc(f.name||'—')}</td><td>${esc(c.amount||'—')} ${esc(c.unit||'')}</td><td>${round(num(c.amount)*ratio,2)} ${esc(c.unit||'')}</td><td>${round(t.kcal,1)}</td><td>${round(t.protein,2)}</td><td>${round(totalFatGrams(t),2)}</td><td>${round(t.calcium,1)}</td><td>${round(t.sodium,1)}</td><td>${round(t.potassium,1)}</td>`;mb.appendChild(tr)});}catch(err){console.error('Modular calculation detail failed',err);warnings.push('Modular calculation detail unavailable')}
+  if(!mb.children.length)mb.innerHTML='<tr><td colspan="10" class="muted">No calculated Modular Diet items</td></tr>';
+  mf.innerHTML=`<tr><th colspan="4">Total</th><th>${round(modTotal.kcal,1)}</th><th>${round(modTotal.protein,2)}</th><th>${round(totalFatGrams(modTotal),2)}</th><th>${round(modTotal.calcium,1)}</th><th>${round(modTotal.sodium,1)}</th><th>${round(modTotal.potassium,1)}</th></tr>`;
+  if(wn)wn.innerHTML=warnings.length?`<div class="warning-box"><strong>Calculation detail warnings</strong><br>${warnings.map(esc).join('<br>')}</div>`:'';
+}
 function requirementCompare(t){const r=state.requirements,w=num(state.patient.weight),a=[];if(r.trackFluid&&r.fluid)a.push(`Fluid target ${esc(r.fluid)} mL/day`);if(r.energy)a.push(`Energy ${round(t.kcal/num(r.energy)*100,1)}% target`);if(r.protein)a.push(`Protein ${round(t.protein/num(r.protein)*100,1)}% target`);if(r.calcium)a.push(`Calcium ${round(t.calcium/num(r.calcium)*100,1)}% target`);const naT=requirementElectrolyteMg('na',r),kT=requirementElectrolyteMg('k',r);if(naT)a.push(`Na ${round(t.sodium/naT*100,1)}% target`);if(kT)a.push(`K ${round(t.potassium/kT*100,1)}% target`);if(w)a.push(`${round(t.kcal/w,1)} kcal/kg/day • ${round(t.protein/w,2)} g protein/kg/day`);return a.length?`<p class="muted top-gap"><strong>Requirement comparison:</strong> ${a.join(' • ')}</p>`:''}$('calculateBtn').addEventListener('click',()=>{calculateIntake();renderSummary();renderCalculationDetail()});
 $('refreshCalcDetailBtn').addEventListener('click',renderCalculationDetail);
 
@@ -1844,7 +1877,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.116',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.117',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
