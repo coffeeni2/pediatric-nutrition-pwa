@@ -228,7 +228,7 @@ if(!st.settings.genericFruitExchangeV0482){
       sodium:0,potassium:0,iron:0,zinc:0,source:'Custom',grams_per_scoop:'',
       standard_kcal_oz:'',min_kcal_oz:'',max_kcal_oz:'',protein_source:'other',
       protein_source_user_set:true,diet_group:'fruit',conversions:[],portions:[],
-      created_by:'template',user_modified:false,seed_version:'0.4.113',
+      created_by:'template',user_modified:false,seed_version:'0.4.116',
       updated_at:new Date().toISOString()
     });
   }
@@ -265,9 +265,24 @@ function commitCaseDrafts(){
   if(requirementsDirty)saveRequirementsForm();
   reviewDirty=false; modularDirty=false; designDirty=false;
 }
+function syncPatientFormToState(){
+  const alias=$('patientAlias');
+  // Patient controls exist even when another tab is visible. Always copy their current values
+  // before a global save/case switch so a typed value cannot be lost just because `change`
+  // has not fired yet (common when tapping Save Case immediately on mobile).
+  if(!alias)return;
+  state.patient={...state.patient,
+    alias:alias.value.trim(),dob:$('patientDob')?.value||'',ageYears:$('patientAgeYears')?.value||'',
+    ageMonths:$('patientAgeMonths')?.value||'',ageDays:$('patientAgeDays')?.value||'',
+    gaWeeks:$('patientGaWeeks')?.value||'',gaDays:$('patientGaDays')?.value||'',sex:$('patientSex')?.value||'',
+    visitDate:$('patientVisitDate')?.value||'',weight:$('patientWeight')?.value||'',height:$('patientHeight')?.value||'',
+    note:state.patient.note||''};
+  state.patient.age=state.patient.ageYears||'';
+}
 function saveActiveCaseFromAnywhere(){
+  syncPatientFormToState();
   commitCaseDrafts(); saveState(); resetReviewDraft(); resetModularDraft(); resetDesignDraft();
-  renderActiveCaseBar('Saved ✓');
+  renderCaseSelector(); renderActiveCaseBar('Saved ✓');
   const rs=$('reviewSaveStatus');if(rs)rs.innerHTML='<span class="saved-pill">Saved</span>';
   const ms=$('modularSaveStatus');if(ms)ms.innerHTML='<span class="saved-pill">Saved</span>';
 }
@@ -302,9 +317,9 @@ window.showTab=showTab;
 $('globalSaveCaseBtn')?.addEventListener('click',saveActiveCaseFromAnywhere);
 $('globalNewCaseBtn')?.addEventListener('click',()=>{newCase();renderActiveCaseBar()});
 $('globalDeleteCaseBtn')?.addEventListener('click',()=>{deleteCase();renderActiveCaseBar()});
-$('globalCaseSelector')?.addEventListener('change',e=>{try{commitCaseDrafts();saveState()}catch(err){console.error('Case-switch autosave failed',err)}loadCase(e.target.value);renderActiveCaseBar()});
+$('globalCaseSelector')?.addEventListener('change',e=>{try{syncPatientFormToState();commitCaseDrafts();saveState()}catch(err){console.error('Case-switch autosave failed',err)}loadCase(e.target.value);renderActiveCaseBar()});
 window.addEventListener('beforeunload',e=>{if(foodDbDirty||reviewDirty||modularDirty||designDirty||pnDirty){e.preventDefault();e.returnValue='';}});
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn').classList.remove('hidden')});$('installBtn').addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn').classList.add('hidden')});if('serviceWorker' in navigator) window.addEventListener('load', async()=>{
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn')?.classList.remove('hidden')});$('installBtn')?.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn')?.classList.add('hidden')});if('serviceWorker' in navigator) window.addEventListener('load', async()=>{
   try {
     // 0.4.17 cache recovery: preserve app data (localStorage/IndexedDB), remove only SW registrations and Cache Storage.
     const marker='pedNutritionCacheRecovery0416';
@@ -453,11 +468,11 @@ function requirementElectrolyteSummary(kind,r=state.requirements){
 }
 function renderPatient(){renderCaseSelector();const p=normalizePatientAge(state.patient),r=state.requirements;[['Alias','alias'],['Dob','dob'],['AgeYears','ageYears'],['AgeMonths','ageMonths'],['AgeDays','ageDays'],['GaWeeks','gaWeeks'],['GaDays','gaDays'],['Sex','sex'],['VisitDate','visitDate'],['Weight','weight'],['Height','height']].forEach(([id,key])=>{const el=$('patient'+id);if(el)el.value=p[key]??''});$('trackFluid').checked=!!r.trackFluid;$('reqFluid').value=r.fluid||'';$('reqFluid').disabled=!r.trackFluid;$('reqEnergy').value=r.energy||'';$('reqProteinMode').value=r.proteinMode||'counted';$('reqProtein').value=r.protein||'';$('reqFatPct').value=r.fatPct||'';$('reqMctPct').value=r.mctPct||'';$('reqCalcium').value=r.calcium||'';$('reqSodiumUnit').value=r.sodiumUnit||'mg_day';$('reqSodium').value=r.sodium||'';$('reqPotassiumUnit').value=r.potassiumUnit||'mg_day';$('reqPotassium').value=r.potassium||'';if($('requirementsSaveStatus'))$('requirementsSaveStatus').innerHTML=requirementsDirty?'<span class="dirty-pill">Unsaved requirement changes</span>':'<span class="saved-pill">Saved</span>';const w=num(p.weight),h=num(p.height),bmi=w&&h?w/(h/100)**2:0,pre=pretermAgeMetrics(p),naS=requirementElectrolyteSummary('na',r),kS=requirementElectrolyteSummary('k',r);$('patientSummary').innerHTML=`<div class="summary-grid"><div class="metric">Case<b>${esc(p.alias||'—')}</b></div><div class="metric">Chronological age / Sex<b>${ageDisplay(p)} ${esc(p.sex||'')}</b>${p.dob?`<span>DOB ${esc(p.dob)}</span>`:''}</div><div class="metric">GA at birth<b>${gestationalAgeDisplay(p)}</b></div><div class="metric">Corrected age<b>${correctedAgeDisplay(p)}</b>${pre&&pre.preterm&&pre.pmaDays!=null?`<span>PMA ${pmaDisplay(pre)}</span>`:''}</div><div class="metric">Weight<b>${w?round(w,2)+' kg':'—'}</b></div><div class="metric">Length / Height<b>${h?round(h,1)+' cm':'—'}</b></div><div class="metric">BMI<b>${bmi?round(bmi,2)+' kg/m²':'—'}</b></div></div>`;$('requirementSummary').innerHTML=`<div class="summary-grid"><div class="metric">Fluid<b>${r.trackFluid&&r.fluid?esc(r.fluid)+' mL/day':'Not tracked'}</b>${r.trackFluid&&w&&r.fluid?`<span>${round(num(r.fluid)/w,1)} mL/kg/day</span>`:''}</div><div class="metric">Energy<b>${r.energy?esc(r.energy)+' kcal/day':'—'}</b>${w&&r.energy?`<span>${round(num(r.energy)/w,1)} kcal/kg/day</span>`:''}</div><div class="metric">${(r.proteinMode||'counted')==='counted'?'High biological value protein':'Total protein'}<b>${r.protein?esc(r.protein)+' g/day':'—'}</b>${w&&r.protein?`<span>${round(num(r.protein)/w,2)} g/kg/day</span>`:''}</div><div class="metric">Total fat<b>${r.fatPct?esc(r.fatPct)+'% energy':'—'}</b></div><div class="metric">MCT<b>${r.mctPct?esc(r.mctPct)+'% energy':'—'}</b></div><div class="metric">Calcium<b>${r.calcium?esc(r.calcium)+' mg/day':'—'}</b></div><div class="metric">Sodium<b>${naS.main}</b>${naS.sub?`<span>${naS.sub}</span>`:''}</div><div class="metric">Potassium<b>${kS.main}</b>${kS.sub?`<span>${kS.sub}</span>`:''}</div></div>`}
 let requirementsDirty=false;
-function savePatientForm(){state.patient={...state.patient,alias:$('patientAlias').value.trim(),dob:$('patientDob').value,ageYears:$('patientAgeYears').value,ageMonths:$('patientAgeMonths').value,ageDays:$('patientAgeDays').value,gaWeeks:$('patientGaWeeks').value,gaDays:$('patientGaDays').value,sex:$('patientSex').value,visitDate:$('patientVisitDate').value,weight:$('patientWeight').value,height:$('patientHeight').value,note:state.patient.note||''};state.patient.age=state.patient.ageYears||'';saveState();if(!requirementsDirty)renderPatient()}
+function savePatientForm(){syncPatientFormToState();saveState();if(!requirementsDirty)renderPatient()}
 function saveRequirementsForm(){state.requirements={trackFluid:$('trackFluid').checked,fluid:$('reqFluid').value,energy:$('reqEnergy').value,proteinMode:$('reqProteinMode').value||'counted',protein:$('reqProtein').value,fatPct:$('reqFatPct').value,mctPct:$('reqMctPct').value,calcium:$('reqCalcium').value,sodium:$('reqSodium').value,sodiumUnit:$('reqSodiumUnit').value||'mg_day',potassium:$('reqPotassium').value,potassiumUnit:$('reqPotassiumUnit').value||'mg_day'};requirementsDirty=false;saveState();renderPatient();resetDesignDraft();renderDietDesign();if($('requirementsSaveStatus'))$('requirementsSaveStatus').innerHTML='<span class="saved-pill">Saved ✓</span>'}
 function clearRequirementsTab(){if(!confirm('Clear all Daily Requirements for the current case? Patient, Diet Design, PN, intake and other tabs will be kept.'))return;state.requirements=clone(blankCase().requirements);requirementsDirty=false;saveState();renderPatient();resetDesignDraft();renderDietDesign();if($('requirementsSaveStatus'))$('requirementsSaveStatus').innerHTML='<span class="saved-pill">Cleared ✓</span>';}
 function markRequirementsDirty(){requirementsDirty=true;if($('reqFluid'))$('reqFluid').disabled=!$('trackFluid').checked;if($('requirementsSaveStatus'))$('requirementsSaveStatus').innerHTML='<span class="dirty-pill">Unsaved requirement changes</span>'}
-$('savePatientBtn').addEventListener('click',savePatientForm);$('saveRequirementsBtn').addEventListener('click',saveRequirementsForm);$('clearRequirementsBtn')?.addEventListener('click',clearRequirementsTab);['patientAlias','patientAgeYears','patientAgeMonths','patientAgeDays','patientGaWeeks','patientGaDays','patientSex','patientWeight','patientHeight'].forEach(id=>$(id).addEventListener('change',savePatientForm));['trackFluid','reqFluid','reqEnergy','reqProteinMode','reqProtein','reqFatPct','reqMctPct','reqCalcium','reqSodiumUnit','reqSodium','reqPotassiumUnit','reqPotassium'].forEach(id=>$(id).addEventListener('change',markRequirementsDirty));['patientDob','patientVisitDate'].forEach(id=>$(id).addEventListener('change',()=>{applyDobAgeToForm();savePatientForm()}));$('caseSelector').addEventListener('change',e=>loadCase(e.target.value));$('newCaseBtn').addEventListener('click',newCase);$('deleteCaseBtn').addEventListener('click',deleteCase);$('clearPatientBtn')?.addEventListener('click',clearPatientTab);
+$('savePatientBtn').addEventListener('click',savePatientForm);$('saveRequirementsBtn').addEventListener('click',saveRequirementsForm);$('clearRequirementsBtn')?.addEventListener('click',clearRequirementsTab);['patientAlias','patientAgeYears','patientAgeMonths','patientAgeDays','patientGaWeeks','patientGaDays','patientSex','patientWeight','patientHeight'].forEach(id=>$(id).addEventListener('change',savePatientForm));['trackFluid','reqFluid','reqEnergy','reqProteinMode','reqProtein','reqFatPct','reqMctPct','reqCalcium','reqSodiumUnit','reqSodium','reqPotassiumUnit','reqPotassium'].forEach(id=>$(id).addEventListener('change',markRequirementsDirty));['patientDob','patientVisitDate'].forEach(id=>$(id).addEventListener('change',()=>{applyDobAgeToForm();savePatientForm()}));$('caseSelector').addEventListener('change',e=>{try{syncPatientFormToState();commitCaseDrafts();saveState()}catch(err){console.error('Case-switch autosave failed',err)}loadCase(e.target.value)});$('newCaseBtn').addEventListener('click',newCase);$('deleteCaseBtn').addEventListener('click',deleteCase);$('clearPatientBtn')?.addEventListener('click',clearPatientTab);
 
 function normAmt(v){if(v===null||v===undefined||v==='')return{value:'',original:''};if(typeof v==='number')return{value:v,original:String(v)};const s=String(v).trim();const frac=s.match(/^(\d+)\s*\/\s*(\d+)$/);if(frac)return{value:Number(frac[1])/Number(frac[2]),original:s};const mixed=s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);if(mixed)return{value:Number(mixed[1])+Number(mixed[2])/Number(mixed[3]),original:s};const range=s.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);if(range)return{value:round((+range[1]+ +range[2])/2,2),original:s};const n=Number(s);return{value:Number.isFinite(n)?n:s,original:s}}
 function isMeatOrEgg(name=''){return /(ไก่|หมู|เนื้อ|ปลา|กุ้ง|ปู|หอย|เป็ด|ไข่|ตับ|กึ๋น|แฮม|แหนม|ไส้กรอก|ลูกชิ้น)/i.test(name)}function defaultFoodState(name,stateValue){return stateValue&&stateValue!=='unknown'?stateValue:(isMeatOrEgg(name)?'cooked':'unknown')}
@@ -1101,6 +1116,16 @@ function scaleRowsAmounts(rows,factor,whole=false){(rows||[]).forEach(r=>{if(row
 function autoCalculateDesignFromRequirements(){
   const d=ensureDesignDraft(),target=num(state.requirements.energy);if(!(target>0)){alert('กรุณากรอก Energy requirement (kcal/day) ใน Patient Profile ก่อน');return}
   const enabled=[d.dietEnabled?'diet':null,d.formulaEnabled?'formula':null,d.modularEnabled?'modular':null].filter(Boolean);if(!enabled.length){alert('กรุณาเปิดอย่างน้อย 1 source: Diet, Milk/Formula หรือ Modular Diet');return}
+
+  // v0.4.114 — Optimize Again must honor the user's selected sources.
+  // A selected Diet with no rows used to contribute 0 kcal, leaving the optimizer with no diet
+  // variables to adjust. syncAllocationToActual() then displayed Diet 0% / Milk 100%, making it
+  // appear that Optimize had discarded Diet. Initialize a missing Diet draft BEFORE optimization.
+  if(d.dietEnabled && !(d.dietItems||[]).some(r=>r.dbMatchId)){
+    const nonDiet=designCombined(d),remaining=Math.max(0,target-num(nonDiet.formula.total.kcal)-num(nonDiet.modular.daily.kcal));
+    buildDietDraft(d,remaining>0?remaining:target/Math.max(1,enabled.length));
+  }
+
   const a=suggestedAllocation(d),sumPct=enabled.reduce((z,k)=>z+num(a[k+'Pct']),0)||100,norm={};enabled.forEach(k=>norm[k]=num(a[k+'Pct'])/sumPct);
   // Allocation is only a starting point. The optimizer may change source proportions to hit Energy/Protein first.
   if(d.dietEnabled&&norm.diet>0&&!thaiFoodGuideAgeBand()){const cur=dietDesignCalc(d).total.kcal,want=target*norm.diet;if(cur>0){const f=want/cur;(d.dietItems||[]).forEach(r=>{if(!rowIsConstrained(r)&&num(r.amount)>0){let v=num(r.amount)*f;if(num(r.maxAmount)>0)v=Math.min(v,num(r.maxAmount));r.amount=v}})}}
@@ -1819,7 +1844,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.113',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.116',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
@@ -1830,8 +1855,13 @@ async function importFullBackup(e){
     if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw new Error('Invalid backup root');
     if(!Array.isArray(parsed.cases)&&!Array.isArray(parsed.foodDB))throw new Error('Missing backup data');
     const meta=parsed.backup_meta;delete parsed.backup_meta;
-    state=merge(defaultState,parsed);saveState();foodDbDraft=null;foodDbDirty=false;resetReviewDraft();resetModularDraft();resetDesignDraft();renderPatient();renderMeals();renderFoodDB();renderModular();renderDietDesign();renderPn();
+    state=merge(defaultState,parsed);saveState();foodDbDraft=null;foodDbDirty=false;resetReviewDraft();resetModularDraft();// v0.4.116 resilient bootstrap: event handlers above are already registered.
+// Mark the app interactive before any heavy tab renderer runs, and isolate renderer failures
+// so one broken tab can never disable buttons in the rest of the app.
 window.__pedMainAppReady=true;
+try{resetDesignDraft()}catch(err){console.error('Initial design draft failed',err)}
+[['Patient',renderPatient],['Review Intake',renderMeals],['Custom Database',renderFoodDB],['Modular Diet',renderModular],['Diet Design',renderDietDesign],['PN',renderPn]].forEach(([label,fn])=>{try{fn()}catch(err){console.error('Initial '+label+' render failed',err)}});
+renderActiveCaseBar();
     alert(`Restore สำเร็จ — นำเข้าข้อมูล backup ทุก tab${meta?.version?' จาก v'+meta.version:''}`);
   }catch(err){console.error(err);alert('Backup ไม่ถูกต้องหรืออ่านไฟล์ไม่ได้')}finally{input.value=''}
 }
@@ -1839,5 +1869,10 @@ $('exportBtn')?.addEventListener('click',exportFullBackup);
 $('importBackupInput')?.addEventListener('change',importFullBackup);
 $('resetBtn').addEventListener('click',()=>{if(confirm('This will permanently delete local patient/case data and custom data on this device. Export a backup first. Continue?')){localStorage.removeItem('pedNutritionStateV4');localStorage.removeItem('pedNutritionStateV3');location.reload()}});
 
-resetDesignDraft();renderPatient();renderMeals();renderFoodDB();renderModular();renderDietDesign();renderPn();
+// v0.4.116 resilient bootstrap: event handlers above are already registered.
+// Mark the app interactive before any heavy tab renderer runs, and isolate renderer failures
+// so one broken tab can never disable buttons in the rest of the app.
 window.__pedMainAppReady=true;
+try{resetDesignDraft()}catch(err){console.error('Initial design draft failed',err)}
+[['Patient',renderPatient],['Review Intake',renderMeals],['Custom Database',renderFoodDB],['Modular Diet',renderModular],['Diet Design',renderDietDesign],['PN',renderPn]].forEach(([label,fn])=>{try{fn()}catch(err){console.error('Initial '+label+' render failed',err)}});
+renderActiveCaseBar();
