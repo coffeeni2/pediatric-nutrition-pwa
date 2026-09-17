@@ -368,3 +368,9 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Fix Diet Design Optimize Again: when Diet is selected but diet rows are empty, initialize the age-guided Diet draft before optimization instead of silently optimizing only Milk/Formula.
 - Preserve Manual/Locked Milk/Formula amounts; optimizer can use the newly initialized Diet rows to cover the remaining target.
 - Actual energy allocation is synchronized only after a real Diet prescription exists.
+
+
+## v0.4.122
+- Added a sticky horizontal scrollbar above Custom Database.
+- Top and bottom/table horizontal scrolling are synchronized for iPad/Android.
+- No clinical calculation or database schema changes.

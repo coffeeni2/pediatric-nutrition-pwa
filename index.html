@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.121" />
+  <link rel="stylesheet" href="styles.css?v=0.4.122" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -301,7 +301,8 @@
         <label>Search<input id="dbSearch" placeholder="ชื่ออาหาร/สูตร" /></label>
       </div>
       <datalist id="dbUnitOptions"><option value="g"><option value="mL"><option value="cc"><option value="portion"><option value="ทัพพี"><option value="ถ้วยตวง"><option value="ช้อนโต๊ะ"><option value="ชต."><option value="ช้อนชา"><option value="ชช."><option value="ฟอง"><option value="ชิ้น"><option value="ผล"><option value="แผ่น"><option value="scoop"><option value="เม็ด"><option value="ซอง"><option value="ขวด"><option value="ampule"><option value="mL"><option value="g"></datalist>
-      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Standard kcal/oz</th><th>Min kcal/oz</th><th>Max kcal/oz</th><th>Food group</th><th>kcal</th><th>Protein</th><th>LCT / %total fat</th><th>MCT</th><th>CHO</th><th>Ca (mg)</th><th>Mg (mg)</th><th>P (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
+      <div id="foodDbTopScroll" class="food-db-top-scroll" aria-label="เลื่อนตาราง Custom Database ซ้ายขวา"><div id="foodDbTopScrollInner"></div></div>
+      <div id="foodDbTableWrap" class="table-wrap food-db-table-wrap"><table><thead><tr><th>Type</th><th>Name + actions</th><th>Basis</th><th>g/scoop</th><th>Standard kcal/oz</th><th>Min kcal/oz</th><th>Max kcal/oz</th><th>Food group</th><th>kcal</th><th>Protein</th><th>LCT / %total fat</th><th>MCT</th><th>CHO</th><th>Ca (mg)</th><th>Mg (mg)</th><th>P (mg)</th><th>Na (mg)</th><th>K (mg)</th><th>Fe</th><th>Zn</th><th>Source</th></tr></thead><tbody id="foodDbBody"></tbody></table></div>
     </div>
   </section>
 
@@ -339,7 +340,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.121</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<footer><strong>PWA 0.4.122</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
 <script>
 // Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
 (function(){
@@ -360,7 +361,7 @@
 })();
 </script>
 <script>
-// v0.4.121: never fail silently. A startup/runtime error is shown without blocking controls.
+// v0.4.122: never fail silently. A startup/runtime error is shown without blocking controls.
 window.addEventListener('error',function(e){
   console.error('PWA runtime error',e.error||e.message);
   var old=document.getElementById('runtimeErrorNotice'); if(old)return;
@@ -370,6 +371,6 @@ window.addEventListener('error',function(e){
   var main=document.querySelector('main'); if(main) main.insertBefore(n,main.firstChild); else document.body.prepend(n);
 });
 </script>
-<script src="app.js?v=0.4.121"></script>
+<script src="app.js?v=0.4.122"></script>
 </body>
 </html>
