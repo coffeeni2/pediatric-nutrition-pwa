@@ -1,3 +1,7 @@
+Pediatric Nutrition PWA v0.4.118
+
+Regression repair build: single case bar, combined Review Intake + Modular calculation, restored Nutrient Summary, shared modular calculation engine, aligned total rows, optimizer fat-target weighting, ingredient-first Review Intake.
+
 Version 0.4.117
 
 # Pediatric Nutrition PWA 0.4.114

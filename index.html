@@ -41,7 +41,7 @@
 
   <section id="tab-patient" class="tab-panel active">
     <div class="card patient-card">
-      <div class="section-title-row"><div><h2>Patient / Case</h2><p class="muted">ใช้ anonymous Case ID เท่านั้น • ผู้ป่วยเดิมไม่ถูกลบเมื่อเริ่มรายใหม่</p></div><div class="inline-actions"><select id="caseSelector" aria-label="Select case"></select><button id="newCaseBtn" class="secondary">+ New Case</button><button id="deleteCaseBtn" class="danger">Delete Case</button><button id="clearPatientBtn" class="secondary">Clear Patient</button><button id="savePatientBtn" class="primary">Save</button></div></div>
+      <div class="section-title-row"><div><h2>Patient / Case</h2><p class="muted">ใช้ anonymous Case ID เท่านั้น • จัดการ New / Delete / Save Case จากแถบ Active Case ด้านบนเพียงแห่งเดียว</p></div></div>
       <div class="grid-3 patient-main-grid">
         <label>Anonymous name / Case ID<input id="patientAlias" autocomplete="off" placeholder="Case A / P001" /></label>
         <label>Date of birth (optional)<input id="patientDob" type="date" /></label>
@@ -339,7 +339,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.115</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<footer><strong>PWA 0.4.118</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
 <script>
 // Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
 (function(){
@@ -360,7 +360,7 @@
 })();
 </script>
 <script>
-// v0.4.117: never fail silently. A startup/runtime error is shown without blocking controls.
+// v0.4.118: never fail silently. A startup/runtime error is shown without blocking controls.
 window.addEventListener('error',function(e){
   console.error('PWA runtime error',e.error||e.message);
   var old=document.getElementById('runtimeErrorNotice'); if(old)return;
@@ -370,6 +370,6 @@ window.addEventListener('error',function(e){
   var main=document.querySelector('main'); if(main) main.insertBefore(n,main.firstChild); else document.body.prepend(n);
 });
 </script>
-<script src="app.js?v=0.4.117"></script>
+<script src="app.js?v=0.4.118"></script>
 </body>
 </html>
