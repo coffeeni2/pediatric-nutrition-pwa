@@ -545,13 +545,34 @@ function importPnif(){try{
   const isRecipe=x=>!!(x.recipe_name||x.final_volume_ml||x.preparation||Array.isArray(x.components));const inlineMods=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet'&&isRecipe(x));const allMods=[...inlineMods,...separateMods.filter(isRecipe).map(x=>({...x,intake_type:'modular_diet'}))];
   const modularCount=allMods.length?modularItemToRecipe(allMods,o):0;
   const added=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)!=='modular_diet'||!isRecipe(x)).map(x=>normItem(x));
-  // v0.4.120: a timed PNIF modular_diets entry is an ACTUAL intake component, not a Daily Modular Recipe.
+  // v0.4.121: a timed PNIF modular_diets entry is an ACTUAL intake component, not a Daily Modular Recipe.
   // Attach it to the food/formula entry at the same time so Review Intake shows dextrin/Milnutri Sure
   // with that feeding and the nutrient engine counts it once. If no same-time intake exists, keep it
   // as a standalone modular_diet row in Review Intake. Recipe-shaped modular data still goes to the
   // dedicated Daily Modular Diet tab above.
   const timedMods=separateMods.filter(x=>!isRecipe(x));let timedModCount=0;
-  timedMods.forEach(x=>{const ing=normIng({food:x.food||x.item||x.name||'',amount:x.amount,unit:x.unit,weight_g:x.weight_g,volume_ml:x.volume_ml??x.volume,note:x.note||'',dbMatchId:x.dbMatchId||autoMatchId(x.food||x.item||x.name||'')});const same=added.find(m=>String(m.time||'')===String(x.time||''));if(same){same.ingredients=same.ingredients||[];same.ingredients.push(ing)}else added.push(normItem({...x,intake_type:'modular_diet'}));timedModCount++});
+  // v0.4.121: timed modular_diets in a 24-hour recall are actual components of that feeding.
+  // They are NOT converted into a Daily Modular Recipe. `note` is preserved verbatim and is never
+  // interpreted as kcal/oz; formula concentration is only taken from an explicit kcal_per_oz field
+  // or from a value the user enters in Review Intake.
+  state.pnif.timedModularSignature=timedMods.map(x=>({time:String(x.time||''),food:String(x.food||x.item||x.name||'').trim(),amount:String(x.amount??''),unit:normalizeUnit(x.unit||'')}));
+  timedMods.forEach(x=>{
+    const name=x.food||x.item||x.name||'';
+    const ing=normIng({food:name,amount:x.amount,unit:x.unit,weight_g:x.weight_g,volume_ml:x.volume_ml??x.volume,note:x.note||'',dbMatchId:x.dbMatchId||autoMatchId(name),formulaKcalOz:x.kcal_per_oz??x.formulaKcalOz??''});
+    const same=added.find(m=>String(m.time||'')===String(x.time||''));
+    if(same){
+      same.ingredients=same.ingredients||[];
+      // If a base food/formula row has its own quantified portion, preserve it as an ingredient
+      // before adding the timed modular component; otherwise ingredient-based calculation would
+      // silently drop the base formula/food.
+      if(same.ingredients.length===0&&hasPortion(same)){
+        const u=normalizeUnit(same.unit||''), isMl=String(u).toLowerCase()==='ml';
+        same.ingredients.push(normIng({food:same.food,amount:same.amount,unit:u,weight_g:same.weight_g,volume_ml:same.volume_ml!==''?same.volume_ml:(isMl?same.amount:''),note:same.note||'',dbMatchId:same.dbMatchId,formulaKcalOz:same.formulaKcalOz||''}));
+      }
+      same.ingredients.push(ing);
+    }else added.push(normItem({...x,intake_type:'modular_diet'}));
+    timedModCount++;
+  });
   state.meals=[...(state.meals||[]),...added];sortMeals();saveState();resetReviewDraft();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent=`เพิ่มเข้า encounter แล้ว: Intake +${added.length}${timedModCount?` • Timed modular +${timedModCount}`:''}${modularCount?` • Modular recipe +${modularCount}`:''} (ไม่ลบข้อมูลเดิม)`;showTab(added.length?'review':'modular')
 }catch(e){$('pnifStatus').className='status error';$('pnifStatus').textContent='Import ไม่สำเร็จ: '+e.message}}
 function importModular(o,additive=false){const comps=(o.ingredients||[]).map(x=>{const a=normAmt(x.amount);return{id:uid(),name:x.food||x.name||'',amount:a.value,unit:x.unit||'',dbMatchId:'',source:'Custom',kcalOverride:'',proteinOverride:'',fatOverride:'',mctOverride:'',choOverride:'',calciumOverride:'',sodiumOverride:'',potassiumOverride:'',note:x.note||''}});const fp=o.feeding_plan||{},actual=o.actual_intake?.feeds||[];let feeds=[];if(actual.length)feeds=actual.map((x,i)=>({id:uid(),time:x.time||'',prescribed:x.prescribed_ml??fp.volume_per_feed_ml??'',actual:x.actual_ml??'',note:x.note||''}));else if(fp.feeds_per_day){for(let i=0;i<num(fp.feeds_per_day);i++)feeds.push({id:uid(),time:'',prescribed:fp.volume_per_feed_ml??'',actual:'',note:''})}const prev=additive?(state.modular||{}):{};state.modular={name:o.recipe_name||prev.name||'Daily modular recipe',finalVolume:o.preparation?.final_volume_ml??o.final_volume_ml??prev.finalVolume??'',notes:[prev.notes,(o.warnings||[]).join(' | ')].filter(Boolean).join(' | '),components:[...(prev.components||[]),...comps],feeds:[...(prev.feeds||[]),...feeds],route:fp.route||prev.route||'',durationHr:fp.duration_hr_per_feed??prev.durationHr??''}}
@@ -1953,7 +1974,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.120',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.121',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
