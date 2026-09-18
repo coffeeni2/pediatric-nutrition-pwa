@@ -370,7 +370,13 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Actual energy allocation is synchronized only after a real Diet prescription exists.
 
 
-## v0.4.122
+## v0.4.123
 - Added a sticky horizontal scrollbar above Custom Database.
 - Top and bottom/table horizontal scrolling are synchronized for iPad/Android.
 - No clinical calculation or database schema changes.
+
+
+## v0.4.123
+- Modular optimizer: for Tube feeding, Auto cooked rice is capped at <=9% of total energy requirement. Remaining CHO/energy can be filled by dextrin/other selected CHO sources.
+- Modular optimizer: added preference against calcium medication when a selected Auto formula/milk protein source can provide calcium, preserving the Ca-first protein strategy before CaCO3.
+- Calculate Intake behavior unchanged: recalculates the current prescription without re-optimizing.

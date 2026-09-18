@@ -1015,6 +1015,9 @@ function thaiMilkGuideBoundsForVariable(v,d=ensureDesignDraft()){
 }
 function optimizerBounds(v,d=ensureDesignDraft()){return thaiFoodGuideBoundsForVariable(v,d)||thaiMilkGuideBoundsForVariable(v,d)}
 function optimizationTargets(){const r=state.requirements,d=ensureDesignDraft(),a=d.allocation||{};return {kcal:num(r.energy),protein:num(r.protein),proteinKey:proteinTargetKey(),fatKcal:fatTargetKcal(),dietFatPct:num(a.dietFatPct),modularFatPct:num(a.modularFatPct),calcium:num(r.calcium),sodium:requirementElectrolyteMg('na',r),potassium:requirementElectrolyteMg('k',r)}}
+function modularIsRiceRow(r){const f=state.foodDB.find(x=>x.id===r?.dbMatchId),n=String(f?.name||r?.name||'').toLowerCase();return /ข้าวสวย|cooked rice|\brice\b/.test(n)}
+function modularRiceEnergyCapAmount(row,d=ensureDesignDraft()){if(!row||!modularIsRiceRow(row)||String(d.modular?.route||'oral')!=='tube')return Infinity;const energyReq=num(state.requirements.energy);if(!(energyReq>0))return Infinity;const u=modularUnitDailyNut(row,d),k=num(u?.kcal);return k>0?(energyReq*0.09)/k:0}
+function modularCalciumMedicationPenalty(c,t,d=ensureDesignDraft()){if(!(t.calcium>0)||!d.modularEnabled)return 0;const hasCaProtein=(d.modular?.components||[]).some(r=>{if(rowIsConstrained(r)||r.role!=='protein'||!r.dbMatchId)return false;const f=state.foodDB.find(x=>x.id===r.dbMatchId);return modularFormulaLike(f)&&num(f?.calcium)>0&&num(f?.protein)>0});if(!hasCaProtein)return 0;let medCa=0;(d.modular?.components||[]).forEach(r=>{const f=state.foodDB.find(x=>x.id===r.dbMatchId);if(f?.type!=='medication'||num(f.calcium)<=0)return;const z=sourceRowCalc(r);if(z.ok)medCa+=num(z.nut.calcium)*modularDailyRatio(d)});return (medCa/t.calcium)**2*1.5e5}
 function optimizationScore(c,t,d=ensureDesignDraft(),phase='food'){
   const rel=(v,target)=>target>0?(num(v)-target)/target:0;
   const e=rel(c.total.kcal,t.kcal),p=rel(c.total[t.proteinKey],t.protein),f=rel(fatEnergyKcal(c.total),t.fatKcal);
@@ -1031,7 +1034,7 @@ function optimizationScore(c,t,d=ensureDesignDraft(),phase='food'){
   // Protein remain the strongest constraints. All candidate scores use the rounded amounts.
   const caWeight=phase==='food'?8e4:2e4;
   const fatWeight=phase==='food'?6e5:5e5;
-  return primary*8e5+fatErr*fatWeight+sourceFat*4e3+caErr*caWeight+otherMineral*250+thaiFoodGuidePenalty(d)+thaiMilkGuidePenalty(d);
+  return primary*8e5+fatErr*fatWeight+sourceFat*4e3+caErr*caWeight+otherMineral*250+modularCalciumMedicationPenalty(c,t,d)+thaiFoodGuidePenalty(d)+thaiMilkGuidePenalty(d);
 }
 function optimizationStep(row,kind){const rule=String(row?.roundRule||defaultRoundRule(row,kind));return rule==='0.1'?0.1:rule==='0.5'?0.5:rule==='5'?5:1}
 function optimizationVariables(d,opts={}){const vars=[];const includeMedication=opts.includeMedication!==false;const add=(row,kind,opts={})=>{if(!row||rowIsConstrained(row)||!row.dbMatchId)return;const u=rowUnitNut(row,opts);if(!u||TOTAL_KEYS.every(k=>Math.abs(num(u[k]))<1e-12))return;vars.push({row,kind,opts,step:optimizationStep(row,kind)});};
@@ -1044,7 +1047,7 @@ function optimizationVariables(d,opts={}){const vars=[];const includeMedication=
   if(d.modularEnabled)(d.modular?.components||[]).forEach(r=>{const f=state.foodDB.find(x=>x.id===r.dbMatchId);if(!includeMedication&&f?.type==='medication')return;add(r,'modular')});
   return vars;
 }
-function optimizationMaxAmount(v,d){const r=v.row;if(v.kind==='diet'&&num(r.maxAmount)>0)return num(r.maxAmount);if(v.kind==='modular'){const f=state.foodDB.find(x=>x.id===r.dbMatchId);if(f?.type==='formula'&&num(f.max_kcal_oz)>0&&num(d.modular?.finalVolume)>0&&num(f.kcal)>0&&num(f.basis_value)>0){const maxKcal=num(f.max_kcal_oz)*num(d.modular.finalVolume)/30;return maxKcal*num(f.basis_value)/num(f.kcal)}}return Infinity}
+function optimizationMaxAmount(v,d){const r=v.row;if(v.kind==='diet'&&num(r.maxAmount)>0)return num(r.maxAmount);if(v.kind==='modular'){let mx=modularRiceEnergyCapAmount(r,d);const f=state.foodDB.find(x=>x.id===r.dbMatchId);if(f?.type==='formula'&&num(f.max_kcal_oz)>0&&num(d.modular?.finalVolume)>0&&num(f.kcal)>0&&num(f.basis_value)>0){const maxKcal=num(f.max_kcal_oz)*num(d.modular.finalVolume)/30;mx=Math.min(mx,maxKcal*num(f.basis_value)/num(f.kcal))}return mx}return Infinity}
 function syncAllocationToActual(d){const c=designCombined(d),total=num(c.total.kcal),a=d.allocation||(d.allocation={dietPct:'',formulaPct:'',modularPct:''});if(total>0){a.dietPct=d.dietEnabled?round(c.diet.total.kcal/total*100,1):0;a.formulaPct=d.formulaEnabled?round(c.formula.total.kcal/total*100,1):0;a.modularPct=d.modularEnabled?round(c.modular.daily.kcal/total*100,1):0;const enabled=['diet','formula','modular'].filter(k=>d[k==='diet'?'dietEnabled':k==='formula'?'formulaEnabled':'modularEnabled']);if(enabled.length){const sum=enabled.reduce((s,k)=>s+num(a[k+'Pct']),0),last=enabled[enabled.length-1];a[last+'Pct']=round(num(a[last+'Pct'])+(100-sum),1)}}return a}
 function ensureCalciumSupplementForRequirement(d=ensureDesignDraft()){
   const req=num(state.requirements.calcium);if(!(req>0)||!d.modularEnabled)return null;
@@ -1393,7 +1396,7 @@ function modularChoEnergyFill(d,energyTargetKcal,trace){
   // Clinical CHO order: cooked rice → fruit → dextrin/glucose polymer → sucrose → other CHO.
   // Preserve the visible row order inside each priority group.
   const indexed=usable.map((r,i)=>({r,i,p:modularChoPriority(r)})).sort((a,b)=>a.p-b.p||a.i-b.i);
-  const tube=String(d.modular?.route||'oral')==='tube',fv=num(d.modular?.finalVolume),riceCapG=tube&&fv>0?9*fv/100:Infinity;
+  const tube=String(d.modular?.route||'oral')==='tube',fv=num(d.modular?.finalVolume),riceEnergyCapKcal=tube?target*0.09:Infinity;
   const detail=[];
   for(const z of indexed){
     const r=z.r;
@@ -1402,8 +1405,8 @@ function modularChoEnergyFill(d,energyTargetKcal,trace){
     const f=state.foodDB.find(x=>x.id===r.dbMatchId),name=String(f?.name||'').toLowerCase(),u=modularUnitDailyNut(r,d),unitKcal=num(u?.kcal);
     if(!(unitKcal>0))continue;
     let wanted=remain/unitKcal;
-    if(/ข้าวสวย|cooked rice|\brice\b/.test(name)&&tube&&Number.isFinite(riceCapG)){
-      const gPerUnit=modularRiceGramEquivalent(r);if(gPerUnit>0)wanted=Math.min(wanted,riceCapG/gPerUnit);
+    if(/ข้าวสวย|cooked rice|\brice\b/.test(name)&&tube&&Number.isFinite(riceEnergyCapKcal)){
+      const riceMax=modularRiceEnergyCapAmount(r,d);if(Number.isFinite(riceMax))wanted=Math.min(wanted,riceMax);
     }
     const before=num(designCombined(d).total.kcal);
     setModularAmountCapped(r,wanted);
@@ -1414,7 +1417,7 @@ function modularChoEnergyFill(d,energyTargetKcal,trace){
   if(tube){
     const riceRows=modularAllRows(d,'cho').filter(r=>/ข้าวสวย|cooked rice|\brice\b/i.test(String(state.foodDB.find(x=>x.id===r.dbMatchId)?.name||'')));
     let grams=0;riceRows.forEach(r=>{const gu=modularRiceGramEquivalent(r);if(gu!=null)grams+=gu*num(r.amount)});
-    if(fv>0&&grams/fv*100>8)trace.push(`Tube feeding rice concentration ${round(grams/fv*100,1)} g/100 mL (warning above 8; Auto rice hard cap 9 g/100 mL)`);
+    const riceKcal=riceRows.reduce((sum,r)=>sum+num(modularUnitDailyNut(r,d)?.kcal)*num(r.amount),0),pct=target>0?riceKcal/target*100:0;if(pct>9.01)trace.push(`Tube feeding cooked-rice energy ${round(pct,1)}%E exceeds the 9%E Auto cap because a rice row is Manual/Locked.`);else trace.push(`Tube feeding cooked-rice energy ${round(pct,1)}%E (Auto cap ≤9%E).`);
   }
   return Math.max(0,target-num(designCombined(d).total.kcal));
 }
@@ -1478,9 +1481,8 @@ function buildModularDraft(d,targetKcal){
   if(choSourceEnergyRemaining>0)choSourceEnergyRemaining=modularChoEnergyFill(d,energyReq,trace);
   trace.push(`5. CHO-source energy from actual rounded prescription: energy before CHO ${round(energyBeforeCho,1)} kcal/day; target ${round(energyReq,1)}; remaining after CHO ${round(Math.max(0,energyReq-num(current().kcal)),1)} kcal/day; order rice → fruit → dextrin → sucrose → other CHO; delivered CHO ${round(num(current().cho),1)} g/day.`);
 
-  // 6) Rice tube-feeding limit is enforced inside the CHO step (warning >8 g/100 mL;
-  // Auto rice hard cap 9 g/100 mL final modular volume).
-  trace.push('6. Tube-feeding rice check: warning above 8 g/100 mL; Auto rice is capped at 9 g/100 mL final modular volume.');
+  // 6) For tube feeding, Auto cooked-rice rows are capped by ENERGY contribution, not grams/volume.
+  trace.push('6. Tube-feeding cooked-rice check: Auto cooked rice is capped at ≤9% of total energy requirement; remaining CHO/energy is filled by later CHO sources such as dextrin.');
 
   // 7) Ca/Na/K correction is also rounded sequentially and recalculated from actual delivery.
   const mineralSpecs=[['calcium',caReq,/caco3|calcium|แคลเซียม/i,'Ca'],['sodium',naReq,/nacl|sodium|โซเดียม/i,'Na'],['potassium',kReq,/kcl|potassium|โพแทสเซียม/i,'K']];
@@ -1989,7 +1991,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.122',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.123',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
