@@ -416,10 +416,12 @@ function pretermAgeMetrics(p={}){
   const preterm=ga<37*7;
   let chronoDays=calendarDayDiff(p.dob,p.visitDate);
   if(chronoDays==null)chronoDays=approximateChronologicalDays(p);
-  if(chronoDays==null)return {preterm,ga,pmaDays:null,earlyDays:Math.max(0,280-ga),corrected:null};
-  const pmaDays=ga+chronoDays, earlyDays=Math.max(0,280-ga);
-  if(!preterm)return {preterm:false,ga,pmaDays,earlyDays:0,corrected:null};
-  if(pmaDays<280)return {preterm:true,ga,pmaDays,earlyDays,corrected:{notTerm:true,days:pmaDays-280}};
+  const earlyDays=Math.max(0,280-ga);
+  if(chronoDays==null)return {preterm,ga,earlyDays,corrected:null};
+  if(!preterm)return {preterm:false,ga,earlyDays:0,corrected:null};
+  // Corrected age = chronological age minus the number of days born before 40 weeks.
+  // Before the 40-week reference point, do not display PMA; corrected age is not yet available.
+  if(chronoDays<earlyDays)return {preterm:true,ga,earlyDays,corrected:{notTerm:true}};
   let corrected=null;
   if(p.dob&&p.visitDate){
     const edd=addDaysISO(p.dob,earlyDays);
@@ -431,17 +433,13 @@ function pretermAgeMetrics(p={}){
     const years=Math.floor(cd/365.2425), rem1=cd-years*365.2425, months=Math.floor(rem1/30.4375), days=Math.round(rem1-months*30.4375);
     corrected={notTerm:false,years,months,days};
   }
-  return {preterm:true,ga,pmaDays,earlyDays,corrected};
-}
-function pmaDisplay(metrics){
-  if(!metrics||metrics.pmaDays==null)return '—';
-  return `${Math.floor(metrics.pmaDays/7)}+${metrics.pmaDays%7} weeks`;
+  return {preterm:true,ga,earlyDays,corrected};
 }
 function correctedAgeDisplay(p={}){
   const m=pretermAgeMetrics(p);if(!m)return '—';
   if(!m.preterm)return 'Not applicable (GA ≥37 weeks)';
   if(!m.corrected)return '—';
-  if(m.corrected.notTerm)return `Not yet term • PMA ${pmaDisplay(m)}`;
+  if(m.corrected.notTerm)return 'Not yet 40 weeks corrected age';
   return `${m.corrected.years||0} y ${m.corrected.months||0} m ${m.corrected.days||0} d`;
 }
 function applyDobAgeToForm(){
@@ -484,7 +482,7 @@ function requirementElectrolyteSummary(kind,r=state.requirements){
   }
   return {main:`${round(val,1)} mg/day`,sub:`${round(val/atomic,1)} mEq/day`};
 }
-function renderPatient(){renderCaseSelector();const p=normalizePatientAge(state.patient),r=state.requirements;[['Alias','alias'],['Dob','dob'],['AgeYears','ageYears'],['AgeMonths','ageMonths'],['AgeDays','ageDays'],['GaWeeks','gaWeeks'],['GaDays','gaDays'],['Sex','sex'],['VisitDate','visitDate'],['Weight','weight'],['Height','height']].forEach(([id,key])=>{const el=$('patient'+id);if(el)el.value=p[key]??''});$('trackFluid').checked=!!r.trackFluid;$('reqFluid').value=r.fluid||'';$('reqFluid').disabled=!r.trackFluid;$('reqEnergy').value=r.energy||'';$('reqProteinMode').value=r.proteinMode||'counted';$('reqProtein').value=r.protein||'';$('reqFatPct').value=r.fatPct||'';$('reqMctPct').value=r.mctPct||'';$('reqCalcium').value=r.calcium||'';$('reqSodiumUnit').value=r.sodiumUnit||'mg_day';$('reqSodium').value=r.sodium||'';$('reqPotassiumUnit').value=r.potassiumUnit||'mg_day';$('reqPotassium').value=r.potassium||'';if($('requirementsSaveStatus'))$('requirementsSaveStatus').innerHTML=requirementsDirty?'<span class="dirty-pill">Unsaved requirement changes</span>':'<span class="saved-pill">Saved</span>';const w=num(p.weight),h=num(p.height),bmi=w&&h?w/(h/100)**2:0,pre=pretermAgeMetrics(p),naS=requirementElectrolyteSummary('na',r),kS=requirementElectrolyteSummary('k',r);$('patientSummary').innerHTML=`<div class="summary-grid"><div class="metric">Case<b>${esc(p.alias||'—')}</b></div><div class="metric">Chronological age / Sex<b>${ageDisplay(p)} ${esc(p.sex||'')}</b>${p.dob?`<span>DOB ${esc(p.dob)}</span>`:''}</div><div class="metric">GA at birth<b>${gestationalAgeDisplay(p)}</b></div><div class="metric">Corrected age<b>${correctedAgeDisplay(p)}</b>${pre&&pre.preterm&&pre.pmaDays!=null?`<span>PMA ${pmaDisplay(pre)}</span>`:''}</div><div class="metric">Weight<b>${w?round(w,2)+' kg':'—'}</b></div><div class="metric">Length / Height<b>${h?round(h,1)+' cm':'—'}</b></div><div class="metric">BMI<b>${bmi?round(bmi,2)+' kg/m²':'—'}</b></div></div>`;$('requirementSummary').innerHTML=`<div class="summary-grid"><div class="metric">Fluid<b>${r.trackFluid&&r.fluid?esc(r.fluid)+' mL/day':'Not tracked'}</b>${r.trackFluid&&w&&r.fluid?`<span>${round(num(r.fluid)/w,1)} mL/kg/day</span>`:''}</div><div class="metric">Energy<b>${r.energy?esc(r.energy)+' kcal/day':'—'}</b>${w&&r.energy?`<span>${round(num(r.energy)/w,1)} kcal/kg/day</span>`:''}</div><div class="metric">${(r.proteinMode||'counted')==='counted'?'High biological value protein':'Total protein'}<b>${r.protein?esc(r.protein)+' g/day':'—'}</b>${w&&r.protein?`<span>${round(num(r.protein)/w,2)} g/kg/day</span>`:''}</div><div class="metric">Total fat<b>${r.fatPct?esc(r.fatPct)+'% energy':'—'}</b></div><div class="metric">MCT<b>${r.mctPct?esc(r.mctPct)+'% energy':'—'}</b></div><div class="metric">Calcium<b>${r.calcium?esc(r.calcium)+' mg/day':'—'}</b></div><div class="metric">Sodium<b>${naS.main}</b>${naS.sub?`<span>${naS.sub}</span>`:''}</div><div class="metric">Potassium<b>${kS.main}</b>${kS.sub?`<span>${kS.sub}</span>`:''}</div></div>`}
+function renderPatient(){renderCaseSelector();const p=normalizePatientAge(state.patient),r=state.requirements;[['Alias','alias'],['Dob','dob'],['AgeYears','ageYears'],['AgeMonths','ageMonths'],['AgeDays','ageDays'],['GaWeeks','gaWeeks'],['GaDays','gaDays'],['Sex','sex'],['VisitDate','visitDate'],['Weight','weight'],['Height','height']].forEach(([id,key])=>{const el=$('patient'+id);if(el)el.value=p[key]??''});$('trackFluid').checked=!!r.trackFluid;$('reqFluid').value=r.fluid||'';$('reqFluid').disabled=!r.trackFluid;$('reqEnergy').value=r.energy||'';$('reqProteinMode').value=r.proteinMode||'counted';$('reqProtein').value=r.protein||'';$('reqFatPct').value=r.fatPct||'';$('reqMctPct').value=r.mctPct||'';$('reqCalcium').value=r.calcium||'';$('reqSodiumUnit').value=r.sodiumUnit||'mg_day';$('reqSodium').value=r.sodium||'';$('reqPotassiumUnit').value=r.potassiumUnit||'mg_day';$('reqPotassium').value=r.potassium||'';if($('requirementsSaveStatus'))$('requirementsSaveStatus').innerHTML=requirementsDirty?'<span class="dirty-pill">Unsaved requirement changes</span>':'<span class="saved-pill">Saved</span>';const w=num(p.weight),h=num(p.height),bmi=w&&h?w/(h/100)**2:0,pre=pretermAgeMetrics(p),naS=requirementElectrolyteSummary('na',r),kS=requirementElectrolyteSummary('k',r);$('patientSummary').innerHTML=`<div class="summary-grid"><div class="metric">Case<b>${esc(p.alias||'—')}</b></div><div class="metric">Chronological age / Sex<b>${ageDisplay(p)} ${esc(p.sex||'')}</b>${p.dob?`<span>DOB ${esc(p.dob)}</span>`:''}</div><div class="metric">GA at birth<b>${gestationalAgeDisplay(p)}</b></div><div class="metric">Corrected age<b>${correctedAgeDisplay(p)}</b></div><div class="metric">Weight<b>${w?round(w,2)+' kg':'—'}</b></div><div class="metric">Length / Height<b>${h?round(h,1)+' cm':'—'}</b></div><div class="metric">BMI<b>${bmi?round(bmi,2)+' kg/m²':'—'}</b></div></div>`;$('requirementSummary').innerHTML=`<div class="summary-grid"><div class="metric">Fluid<b>${r.trackFluid&&r.fluid?esc(r.fluid)+' mL/day':'Not tracked'}</b>${r.trackFluid&&w&&r.fluid?`<span>${round(num(r.fluid)/w,1)} mL/kg/day</span>`:''}</div><div class="metric">Energy<b>${r.energy?esc(r.energy)+' kcal/day':'—'}</b>${w&&r.energy?`<span>${round(num(r.energy)/w,1)} kcal/kg/day</span>`:''}</div><div class="metric">${(r.proteinMode||'counted')==='counted'?'High biological value protein':'Total protein'}<b>${r.protein?esc(r.protein)+' g/day':'—'}</b>${w&&r.protein?`<span>${round(num(r.protein)/w,2)} g/kg/day</span>`:''}</div><div class="metric">Total fat<b>${r.fatPct?esc(r.fatPct)+'% energy':'—'}</b></div><div class="metric">MCT<b>${r.mctPct?esc(r.mctPct)+'% energy':'—'}</b></div><div class="metric">Calcium<b>${r.calcium?esc(r.calcium)+' mg/day':'—'}</b></div><div class="metric">Sodium<b>${naS.main}</b>${naS.sub?`<span>${naS.sub}</span>`:''}</div><div class="metric">Potassium<b>${kS.main}</b>${kS.sub?`<span>${kS.sub}</span>`:''}</div></div>`}
 let requirementsDirty=false;
 function savePatientForm(){saveActiveCaseFromAnywhere();if(!requirementsDirty)renderPatient()}
 function saveRequirementsForm(){state.requirements={trackFluid:$('trackFluid').checked,fluid:$('reqFluid').value,energy:$('reqEnergy').value,proteinMode:$('reqProteinMode').value||'counted',protein:$('reqProtein').value,fatPct:$('reqFatPct').value,mctPct:$('reqMctPct').value,calcium:$('reqCalcium').value,sodium:$('reqSodium').value,sodiumUnit:$('reqSodiumUnit').value||'mg_day',potassium:$('reqPotassium').value,potassiumUnit:$('reqPotassiumUnit').value||'mg_day'};requirementsDirty=false;saveState();renderPatient();resetDesignDraft();renderDietDesign();if($('requirementsSaveStatus'))$('requirementsSaveStatus').innerHTML='<span class="saved-pill">Saved ✓</span>'}
@@ -500,6 +498,34 @@ const UNIT_ALIASES={'ชต.':'ช้อนโต๊ะ','ชต':'ช้อน�
 function normalizeUnit(v){const raw=String(v||'').trim();return UNIT_ALIASES[raw.toLowerCase()]||UNIT_ALIASES[raw]||raw}
 function autoMatchId(name){const f=exactCustom(name);return f?.id||''}
 function normItem(i={}){const a=normAmt(i.amount),food=i.food||i.item||i.name||'';return{id:i.id||uid(),time:i.time||'',intake_type:normalizeIntakeType(i.intake_type||i.intakeType||(i.type==='formula'?'formula':'food')),food,amount:a.value,original_amount:a.original,unit:normalizeUnit(i.unit||''),weight_g:i.weight_g??'',volume_ml:i.volume_ml??i.volume??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',needs_review:Boolean(i.needs_review||i.confidence==='low'||normalizeIntakeType(i.intake_type||i.intakeType)==='unknown'),note:i.note||'',ingredients:[...(i.ingredients||[]),...(i.additions||[]),...(i.modular_components||[]),...(i.supplements||[])].map(normIng),calcMethod:i.calcMethod||'auto',dbMatchId:i.dbMatchId||autoMatchId(food),sourcePreference:'Custom',formulaKcalOz:i.formulaKcalOz??i.kcal_per_oz??'',editOpen:false}}
+// v0.4.127 — 24-hour recall formula-note enrichment.
+// PNIF intentionally preserves preparation details in `note`; Review Intake may safely turn
+// explicit quantities in that note into reviewable ingredients. No household->gram guessing is
+// done here. Formula is calculated from explicit consumed mL + explicit kcal/oz. Oil/dextrin are
+// scaled by the explicitly reported consumed/prepared volume fraction.
+function parseFormulaRecallNote(m){
+  if(normalizeIntakeType(m.intake_type)!=='formula'||!String(m.note||'').trim())return m;
+  const note=String(m.note||'');
+  const u=normalizeUnit(m.unit||'');
+  if(m.volume_ml===''&&String(u).toLowerCase()==='ml'&&num(m.amount)>0)m.volume_ml=m.amount;
+  if(!m.formulaKcalOz){const km=note.match(/([0-9]+(?:\.[0-9]+)?)\s*kcal\s*\/\s*oz/i);if(km)m.formulaKcalOz=km[1]}
+  const prep=note.match(/(?:น้ำครบ|final\s*volume|ครบ)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:ซีซี|cc|mL|ml)/i);
+  const eaten=note.match(/(?:กินได้|รับได้|actual(?:\s*intake)?)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:ซีซี|cc|mL|ml)(?:\s*จาก\s*([0-9]+(?:\.[0-9]+)?)\s*(?:ซีซี|cc|mL|ml))?/i);
+  const preparedVol=num(eaten?.[2]||prep?.[1]), consumedVol=num(eaten?.[1]||m.volume_ml||m.amount);
+  if(consumedVol>0)m.volume_ml=consumedVol;
+  const frac=preparedVol>0&&consumedVol>=0?Math.min(1,consumedVol/preparedVol):1;
+  const extras=[];
+  const oil=note.match(/น้ำมัน\s*([0-9]+(?:\.[0-9]+)?)\s*(ซีซี|cc|mL|ml|มล\.?)/i);
+  if(oil){const amount=num(oil[1])*frac;extras.push(normIng({food:'น้ำมัน',amount:round(amount,3),unit:'mL',volume_ml:round(amount,3),note:`จากสูตรเตรียม ${oil[1]} mL${preparedVol?` × กิน ${consumedVol}/${preparedVol}`:''}`}))}
+  const dex=note.match(/dextrin\s*([0-9]+(?:\.[0-9]+)?|[0-9]+\s*\/\s*[0-9]+)\s*(ชต\.?|ช้อนโต๊ะ|tbsp|ชช\.?|ช้อนชา|tsp|g|กรัม)/i);
+  if(dex){const a=normAmt(dex[1]);const amount=num(a.value)*frac;extras.push(normIng({food:'Dextrin',amount:round(amount,3),unit:normalizeUnit(dex[2]),note:`จากสูตรเตรียม ${dex[1]} ${dex[2]}${preparedVol?` × กิน ${consumedVol}/${preparedVol}`:''}`}))}
+  if(extras.length){
+    const base=normIng({food:m.food,amount:consumedVol||m.amount,unit:'mL',volume_ml:consumedVol||m.volume_ml,dbMatchId:m.dbMatchId,formulaKcalOz:m.formulaKcalOz,note:'Formula base'});
+    m.ingredients=[base,...(m.ingredients||[]),...extras];
+  }
+  return m;
+}
+
 function extractJson(text){
   text=String(text||'').replace(/^\uFEFF/,'').trim();
   const f=text.match(/```(?:json)?\s*([\s\S]*?)```/i);if(f)text=f[1];
@@ -544,7 +570,7 @@ function importPnif(){try{
   const baseIntake=Array.isArray(o.items)?o.items:(Array.isArray(o.meals)?o.meals:[]);const topFormula=Array.isArray(o.formula)?o.formula:[];const intakeItems=[...baseIntake,...topFormula.map(x=>({...x,intake_type:'formula'}))];const separateMods=Array.isArray(o.modular_diets)?o.modular_diets:[];
   const isRecipe=x=>!!(x.recipe_name||x.final_volume_ml||x.preparation||Array.isArray(x.components));const inlineMods=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet'&&isRecipe(x));const allMods=[...inlineMods,...separateMods.filter(isRecipe).map(x=>({...x,intake_type:'modular_diet'}))];
   const modularCount=allMods.length?modularItemToRecipe(allMods,o):0;
-  const added=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)!=='modular_diet'||!isRecipe(x)).map(x=>normItem(x));
+  const added=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)!=='modular_diet'||!isRecipe(x)).map(x=>parseFormulaRecallNote(normItem(x)));
   // v0.4.122: a timed PNIF modular_diets entry is an ACTUAL intake component, not a Daily Modular Recipe.
   // Attach it to the food/formula entry at the same time so Review Intake shows dextrin/Milnutri Sure
   // with that feeding and the nutrient engine counts it once. If no same-time intake exists, keep it
@@ -598,7 +624,7 @@ $('addMealBtn').addEventListener('click',()=>{ensureReviewDraft().push(normItem(
 
 $('saveReviewBtn').addEventListener('click',()=>{state.meals=clone(ensureReviewDraft());saveState();resetReviewDraft();renderMeals()});$('cancelReviewBtn').addEventListener('click',()=>{resetReviewDraft();renderMeals()});
 
-function exactCustom(name){const q=String(name||'').trim().toLowerCase();return state.foodDB.find(f=>f.name.trim().toLowerCase()===q)||state.foodDB.find(f=>f.name.toLowerCase().includes(q)||q.includes(f.name.toLowerCase()))}
+function exactCustom(name){let q=String(name||'').trim().toLowerCase();const aliases={'infatrini':'infratini'};q=aliases[q]||q;return state.foodDB.find(f=>f.name.trim().toLowerCase()===q)||state.foodDB.find(f=>f.name.toLowerCase().includes(q)||q.includes(f.name.toLowerCase()))}
 function factorFor(x,f){const bu=String(f.basis_unit||'').toLowerCase(),xu=String(x.convertUnit||x.unit||'').toLowerCase();const fg=formulaPowderGrams(x,f);if(fg!==null&&bu==='g')return fg/num(f.basis_value);const cg=convertToGrams(x);if(cg!==null&&bu==='g')return cg/num(f.basis_value);if(x.volume_ml!==''&&bu==='ml')return num(x.volume_ml)/num(f.basis_value);if(xu===bu&&x.amount!=='')return num(x.amount)/num(f.basis_value);const cv=savedConversions(f).find(c=>String(c.unit).toLowerCase()===xu);if(cv&&x.amount!=='')return num(x.amount)/num(cv.amount)*num(cv.basis_multiplier||1);const hp=(f.portions||[]).find(p=>String(p.unit).toLowerCase()===xu);if(hp&&x.amount!=='')return num(x.amount)/num(hp.amount);return null}
 const NUT=['kcal','protein','fat','mct','cho','calcium','magnesium','phosphorus','sodium','potassium','iron','zinc'];const TOTAL_KEYS=[...NUT,'protein_excl_cho'];function emptyNut(){const t=Object.fromEntries(NUT.map(k=>[k,0]));t.protein_excl_cho=0;return t}function addNut(t,f,fac){NUT.forEach(k=>t[k]+=num(f[k])*fac);if(proteinSourceCounts(f))t.protein_excl_cho+=num(f.protein)*fac}
 
@@ -1406,7 +1432,9 @@ function modularChoEnergyFill(d,energyTargetKcal,trace){
     if(!(unitKcal>0))continue;
     let wanted=remain/unitKcal;
     if(/ข้าวสวย|cooked rice|\brice\b/.test(name)&&tube&&Number.isFinite(riceEnergyCapKcal)){
-      const riceMax=modularRiceEnergyCapAmount(r,d);if(Number.isFinite(riceMax))wanted=Math.min(wanted,riceMax);
+      // Rice was prefilled to the 9%E target. Keep/restore that target here; later CHO sources
+      // (e.g. dextrin) fill the remaining energy instead of reducing rice below target.
+      const riceMax=modularRiceEnergyCapAmount(r,d);if(Number.isFinite(riceMax))wanted=riceMax;
     }
     const before=num(designCombined(d).total.kcal);
     setModularAmountCapped(r,wanted);
@@ -1431,36 +1459,62 @@ function buildModularDraft(d,targetKcal){
   const current=()=>designCombined(d).total;
   const proteinRows=modularAllRows(d,'protein'),formulaRows=proteinRows.filter(r=>modularFormulaLike(state.foodDB.find(x=>x.id===r.dbMatchId))&&!rowIsConstrained(r)),otherProteinRows=proteinRows.filter(r=>!modularFormulaLike(state.foodDB.find(x=>x.id===r.dbMatchId))&&!rowIsConstrained(r));
 
-  // 1) Formula/milk: Ca-first, but never intentionally exceed the remaining protein target
-  // or the product concentration ceiling. Round each source before recalculating the next.
+  // 0) Tube feeding: selected Auto cooked rice is a TARGET at 9%E, not merely a ceiling.
+  // Put it in before protein/fat so later sources fill around the rice instead of crowding it out.
+  if(String(m.route||'oral')==='tube'){
+    const riceRows=modularAutoRows(d,'cho').filter(r=>modularIsRiceRow(r));
+    let riceRemainKcal=energyReq*0.09;
+    const riceDetail=[];
+    for(const r of riceRows){
+      if(riceRemainKcal<=1e-9)break;
+      const u=modularUnitDailyNut(r,d),perKcal=num(u?.kcal);if(!(perKcal>0))continue;
+      const before=num(current().kcal);setModularAmountCapped(r,riceRemainKcal/perKcal);const after=num(current().kcal);
+      const added=Math.max(0,after-before);riceRemainKcal=Math.max(0,riceRemainKcal-added);
+      const f=state.foodDB.find(x=>x.id===r.dbMatchId);riceDetail.push(`${f?.name||r.name||'cooked rice'} ${round(num(r.amount),2)} ${r.unit||''} → ${round(added,1)} kcal`);
+    }
+    const riceKcal=energyReq*0.09-riceRemainKcal;
+    trace.push(`0. Tube cooked-rice target: ${round(riceKcal,1)} / ${round(energyReq*0.09,1)} kcal/day (${round(energyReq>0?riceKcal/energyReq*100:0,1)}%E)${riceDetail.length?`; ${riceDetail.join(' → ')}`:' (no usable Auto cooked-rice source selected)'}`);
+  }
+
+  // 1) Milk/formula is calcium-first. Use the selected Auto milk/formula source(s)
+  // toward the calcium requirement before allocating the remaining HBV protein to foods.
+  // Do NOT reserve protein for meat/liver/egg here: the clinical sequence is explicitly
+  // Ca from milk/formula first, then protein from meat -> liver -> egg.
   let caRemaining=Math.max(0,caReq-num(current().calcium)),proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));
   const fDetail=[];
   for(const r of formulaRows){
-    caRemaining=Math.max(0,caReq-num(current().calcium));proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));
-    if(proteinRemaining<=1e-9)break;
-    const u=modularUnitDailyNut(r,d);if(!u)continue;
-    let wanted=0;if(caRemaining>0&&num(u.calcium)>0)wanted=caRemaining/num(u.calcium);else if(num(u[proteinKey]||u.protein)>0)wanted=proteinRemaining/num(u[proteinKey]||u.protein);
-    let maxA=modularRowMaxByFormulaConcentration(r,d);const pu=num(u[proteinKey]||u.protein);if(pu>0)maxA=Math.min(maxA,proteinRemaining/pu);
+    caRemaining=Math.max(0,caReq-num(current().calcium));
+    if(caRemaining<=1e-9)break;
+    const u=modularUnitDailyNut(r,d);if(!u||!(num(u.calcium)>0))continue;
+    const wanted=caRemaining/num(u.calcium),maxA=modularRowMaxByFormulaConcentration(r,d);
     const before={ca:num(current().calcium),p:num(current()[proteinKey])};
     setModularAmountCapped(r,wanted,maxA);
     const f=state.foodDB.find(x=>x.id===r.dbMatchId),recipeUnit=rowUnitNut(r),formulaKcal=num(recipeUnit?.kcal)*num(r.amount);if(f&&num(m.finalVolume)>0&&formulaKcal>0)r.concentrationKcalOz=round(formulaKcal/num(m.finalVolume)*30,2);
     const after=current();
-    fDetail.push(`${f?.name||r.name||'formula'} ${round(num(r.amount),2)} ${r.unit||''}: Ca +${round(Math.max(0,num(after.calcium)-before.ca),1)} mg, protein +${round(Math.max(0,num(after[proteinKey])-before.p),2)} g`);
+    fDetail.push(`${f?.name||r.name||'formula'} ${round(num(r.amount),2)} ${r.unit||''}: Ca +${round(Math.max(0,num(after.calcium)-before.ca),1)} mg, HBV protein +${round(Math.max(0,num(after[proteinKey])-before.p),2)} g`);
   }
   caRemaining=Math.max(0,caReq-num(current().calcium));proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));
-  trace.push(`1. Formula/milk Ca-first (rounded sequential): Ca remaining ${round(caRemaining,1)} mg/day; protein remaining ${round(proteinRemaining,1)} g/day${fDetail.length?`; ${fDetail.join(' → ')}`:' (no Auto formula/milk source selected)'}`);
+  trace.push(`1. Milk/formula Ca-first (rounded sequential): Ca remaining ${round(caRemaining,1)} mg/day; HBV protein remaining after milk/formula ${round(proteinRemaining,1)} g/day${fDetail.length?`; ${fDetail.join(' → ')}`:' (no usable Auto milk/formula Ca source selected)'}`);
 
-  // 2) Non-formula protein sources: each row gets only the ACTUAL remaining protein after
-  // the prior rounded row has been recalculated.
+  // 2) Fill only the HBV protein still remaining after milk/formula.
+  // Clinical priority requested for modular diet: meat/animal protein -> liver -> egg -> other protein.
+  const proteinPriority=r=>{
+    const f=state.foodDB.find(x=>x.id===r.dbMatchId),n=String(f?.name||r.name||'').toLowerCase(),g=String(f?.diet_group||'').toLowerCase();
+    if(/ตับ|liver/.test(n))return 1;
+    if(g==='egg'||/ไข่|egg/.test(n))return 2;
+    if(g==='meat'||/ไก่|หมู|เนื้อ|ปลา|กุ้ง|ปู|หอย|เป็ด|meat|chicken|pork|beef|fish/.test(n))return 0;
+    return 3;
+  };
+  const orderedProteinRows=otherProteinRows.map((r,i)=>({r,i,p:proteinPriority(r)})).sort((a,b)=>a.p-b.p||a.i-b.i).map(x=>x.r);
   const pDetail=[];
-  for(const r of otherProteinRows){
+  for(const r of orderedProteinRows){
     proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));if(proteinRemaining<=1e-9)break;
     const u=modularUnitDailyNut(r,d),pu=num(u?.[proteinKey]||u?.protein);if(!(pu>0))continue;
     const before=num(current()[proteinKey]);setModularAmountCapped(r,proteinRemaining/pu);const after=num(current()[proteinKey]);
     const f=state.foodDB.find(x=>x.id===r.dbMatchId);pDetail.push(`${f?.name||r.name||'protein source'} ${round(num(r.amount),2)} ${r.unit||''} → +${round(Math.max(0,after-before),2)} g; remaining ${round(Math.max(0,proteinReq-after),2)} g`);
   }
   proteinRemaining=Math.max(0,proteinReq-num(current()[proteinKey]));
-  trace.push(`2. Other protein sources (rounded sequential): remaining ${round(proteinRemaining,1)} g/day${pDetail.length?`; ${pDetail.join(' → ')}`:''}`);
+  trace.push(`2. Remaining HBV protein: meat → liver → egg → other protein; remaining ${round(proteinRemaining,1)} g/day${pDetail.length?`; ${pDetail.join(' → ')}`:''}`);
 
   // 3) MCT target = (%MCT × target energy)/8.3. Subtract ACTUAL MCT from all rounded
   // prior components, then round/recalculate each selected MCT source sequentially.
@@ -1482,7 +1536,7 @@ function buildModularDraft(d,targetKcal){
   trace.push(`5. CHO-source energy from actual rounded prescription: energy before CHO ${round(energyBeforeCho,1)} kcal/day; target ${round(energyReq,1)}; remaining after CHO ${round(Math.max(0,energyReq-num(current().kcal)),1)} kcal/day; order rice → fruit → dextrin → sucrose → other CHO; delivered CHO ${round(num(current().cho),1)} g/day.`);
 
   // 6) For tube feeding, Auto cooked-rice rows are capped by ENERGY contribution, not grams/volume.
-  trace.push('6. Tube-feeding cooked-rice check: Auto cooked rice is capped at ≤9% of total energy requirement; remaining CHO/energy is filled by later CHO sources such as dextrin.');
+  trace.push('6. Tube-feeding cooked-rice check: selected Auto cooked rice targets 9% of total energy requirement (rounding may make it slightly lower); later CHO sources such as dextrin fill the remaining CHO/energy.');
 
   // 7) Ca/Na/K correction is also rounded sequentially and recalculated from actual delivery.
   const mineralSpecs=[['calcium',caReq,/caco3|calcium|แคลเซียม/i,'Ca'],['sodium',naReq,/nacl|sodium|โซเดียม/i,'Na'],['potassium',kReq,/kcl|potassium|โพแทสเซียม/i,'K']];
@@ -1991,7 +2045,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.123',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.127',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }

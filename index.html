@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.123" />
+  <link rel="stylesheet" href="styles.css?v=0.4.127" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -57,7 +57,7 @@
       <div class="grid-3 top-gap patient-ga-grid">
         <label>Gestational age at birth — weeks<input id="patientGaWeeks" type="number" min="20" max="45" step="1" placeholder="e.g. 32" /></label>
         <label>Gestational age at birth — days<input id="patientGaDays" type="number" min="0" max="6" step="1" placeholder="0–6" /></label>
-        <div class="check-card"><span><strong>Preterm age</strong></span><small class="muted">GA &lt;37 weeks: app calculates corrected age from a 40-week term reference and displays PMA. GA ≥37 weeks: corrected age is not applicable.</small></div>
+        <div class="check-card"><span><strong>Preterm age</strong></span><small class="muted">GA &lt;37 weeks: app calculates corrected age from a 40-week term reference. GA ≥37 weeks: corrected age is not applicable.</small></div>
       </div>
       <div class="grid-3 top-gap patient-anthro-grid">
         <label>Weight (kg)<input id="patientWeight" type="number" min="0" step="0.01" /></label>
@@ -340,7 +340,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.123</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<footer><strong>PWA 0.4.127</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
 <script>
 // Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
 (function(){
@@ -361,7 +361,7 @@
 })();
 </script>
 <script>
-// v0.4.123: never fail silently. A startup/runtime error is shown without blocking controls.
+// v0.4.127: never fail silently. A startup/runtime error is shown without blocking controls.
 window.addEventListener('error',function(e){
   console.error('PWA runtime error',e.error||e.message);
   var old=document.getElementById('runtimeErrorNotice'); if(old)return;
@@ -371,6 +371,6 @@ window.addEventListener('error',function(e){
   var main=document.querySelector('main'); if(main) main.insertBefore(n,main.firstChild); else document.body.prepend(n);
 });
 </script>
-<script src="app.js?v=0.4.123"></script>
+<script src="app.js?v=0.4.127"></script>
 </body>
 </html>

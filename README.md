@@ -380,3 +380,33 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Modular optimizer: for Tube feeding, Auto cooked rice is capped at <=9% of total energy requirement. Remaining CHO/energy can be filled by dextrin/other selected CHO sources.
 - Modular optimizer: added preference against calcium medication when a selected Auto formula/milk protein source can provide calcium, preserving the Ca-first protein strategy before CaCO3.
 - Calculate Intake behavior unchanged: recalculates the current prescription without re-optimizing.
+
+
+## v0.4.125 — Preterm corrected age
+- Patient / Case: added gestational age at birth (weeks + days).
+- For GA <37 weeks, corrected age is calculated from the 40-week reference using DOB/visit date when available, otherwise entered chronological age.
+- PMA is intentionally not displayed or used in the Patient / Case corrected-age UI.
+- Existing calculation modules are unchanged.
+
+
+## v0.4.125 — Tube modular rice/protein optimizer
+- Tube feeding: selected Auto cooked rice now targets 9% of energy (subject to rounding), rather than acting only as a maximum.
+- Reserves at least one rounding step for selected non-formula protein sources so Ca-rich formula does not force meat/egg/liver to zero.
+- Formula remains Ca-first within the remaining protein allowance; dextrin/later CHO sources fill energy after rice.
+- Calculate Intake behavior unchanged.
+
+
+## v0.4.127 — Modular Ca-first milk/formula + protein priority
+- Modular optimizer now fills calcium from selected milk/formula first (subject to product concentration cap).
+- Removed the v0.4.125 protein-reserve rule.
+- Remaining HBV protein is filled in the requested order: meat/animal protein → liver → egg → other protein sources.
+- Tube cooked rice target remains 9% of energy; downstream CHO sources fill the remaining energy.
+- Calculate Intake remains recalculation-only and does not optimize.
+
+
+## v0.4.127 — PNIF formula recall enrichment
+- Review Intake recognizes Infatrini as the existing Infratini formula alias.
+- cc/ซีซี are normalized to mL and formula amount is used as consumed volume.
+- Explicit kcal/oz in formula notes is imported into Review Intake.
+- Explicit oil and Dextrin mixed into formula are surfaced as ingredients and scaled by consumed/prepared volume.
+- No household-to-gram conversion is guessed; unsupported Dextrin tablespoon units remain Needs review until a Custom DB conversion exists.
