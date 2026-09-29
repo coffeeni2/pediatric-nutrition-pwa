@@ -412,9 +412,9 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - No household-to-gram conversion is guessed; unsupported Dextrin tablespoon units remain Needs review until a Custom DB conversion exists.
 
 
-## v0.4.128 — Cross-device update/cache fix
-- Version-aligns index/app/service worker cache busting to 0.4.128.
+## v0.4.129 — Cross-device update/cache fix
+- Version-aligns index/app/service worker cache busting to 0.4.129.
 - Uses a new service-worker registration URL per release and a new one-time cache recovery marker.
-- Installed PWA start_url includes appv=0.4.128.
+- Installed PWA start_url includes appv=0.4.129.
 - Preserves localStorage/IndexedDB while clearing only stale service workers and Cache Storage on first load of this release.
 - App-shell requests remain network-first/no-store, with offline fallback when available.
