@@ -340,17 +340,17 @@ window.addEventListener('beforeunload',e=>{if(foodDbDirty||reviewDirty||modularD
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn')?.classList.remove('hidden')});$('installBtn')?.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn')?.classList.add('hidden')});if('serviceWorker' in navigator) window.addEventListener('load', async()=>{
   try {
     // 0.4.17 cache recovery: preserve app data (localStorage/IndexedDB), remove only SW registrations and Cache Storage.
-    const marker='pedNutritionCacheRecovery0416';
+    const marker='pedNutritionCacheRecovery04128';
     if(!sessionStorage.getItem(marker)){
       const regs=await navigator.serviceWorker.getRegistrations();
       await Promise.all(regs.map(r=>r.unregister()));
       if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
       sessionStorage.setItem(marker,'1');
-      const u=new URL(location.href); u.searchParams.set('appv','0.4.27');
+      const u=new URL(location.href); u.searchParams.set('appv','0.4.128');
       location.replace(u.toString());
       return;
     }
-    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.42',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.128',{updateViaCache:'none'});
     await reg.update();
   } catch(e){ console.warn('Service worker recovery/update failed',e); }
 });
@@ -2045,7 +2045,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.127',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.128',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }

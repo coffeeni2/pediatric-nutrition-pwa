@@ -1,5 +1,5 @@
-const CACHE='ped-nutrition-pwa-0.4.127-20260930a';
-const OFFLINE='./index.html?offline=118';
+const CACHE='ped-nutrition-pwa-0.4.128-20260930b';
+const OFFLINE='./index.html?offline=128';
 self.addEventListener('install',e=>e.waitUntil(self.skipWaiting()));
 self.addEventListener('activate',e=>e.waitUntil((async()=>{
   const keys=await caches.keys();
@@ -12,7 +12,14 @@ self.addEventListener('fetch',e=>{
   if(u.origin!==self.location.origin) return;
   // Always go to network for navigation and app code. This prevents Safari from reviving old UI.
   if(e.request.mode==='navigate' || /\/(index\.html|app\.js|styles\.css|manifest\.webmanifest|sw\.js)$/.test(u.pathname)){
-    e.respondWith(fetch(e.request,{cache:'no-store'}));
+    e.respondWith((async()=>{
+      try {
+        const res=await fetch(e.request,{cache:'no-store'});
+        return res;
+      } catch(err) {
+        return (await caches.match(e.request)) || (await caches.match('./index.html')) || Response.error();
+      }
+    })());
     return;
   }
   e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
