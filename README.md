@@ -446,7 +446,7 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Never import a full backup solely to replace a Custom Database conversion: that imports all tabs and can overwrite locally stored cases.
 
 
-## v0.4.134 — PNIF repeat-import and existing-duplicate review
+## v0.4.135 — PNIF repeat-import and existing-duplicate review
 - Import matching uses time, reported numeric amount, normalized unit, intake type, cleaned menu names and matching Custom Database ID; optional (25 kcal/oz) label and derived 5 vs 150 mL do not defeat the duplicate guard. Different documented formula concentrations remain distinct.
 - Confirm before skipping potentially repeated intakes. The user can cancel and nothing will be imported. The same-time and same-portion matching is a suggestion, not an automatic deletion: separate real feedings can look identical.
 - Review Intake > ตรวจรายการซ้ำ: groups old potentially repeated rows without modifying them. Users explicitly select which row to keep per group; all other groups remain untouched. Export Full Backup first. A second confirmation precedes any case-local removal. This allows users to retain 5 oz ≈150 mL rather than old 5 oz (5 mL), but never silently changes old values or Clinical Algorithms.
@@ -455,9 +455,17 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Full browser acceptance testing is still required before clinical use.
 
 
-## v0.4.134 — Confirmed Infatrini spelling and repeat-intake warnings
+## v0.4.135 — Confirmed Infatrini spelling and repeat-intake warnings
 - Corrections: when an exact `Infratini` name is tied to Infatrini's same Database ID, display `Infatrini`. The correction is restricted to the label, not the nutrient data, portions, ID or clinical formulas.
 - A one-off safe case-label migration runs at load time and does not change ingredient amounts or Case IDs. If a Local Custom DB has only one wrongly spelled `Infratini` formula, it renames that row without changing its ID. If two distinct formula rows conflict, neither is merged or renamed automatically.
 - Confirmed `Infratini` / `Infatrini` alias is recognized when matching PNIF records and when detecting re-imported duplicates; no general fuzzy formula auto-matching.
 - Review Intake now explicitly marks potentially duplicate rows as **Needs review**, so duplicate intake is not shown as ready. Use the existing `ตรวจรายการซ้ำ` button and export Full Backup first. No automatic deletion or changes to clinical calculation algorithms.
 - PNIF schema v0.3 and all custom nutrient values are unchanged. Corrected backups are provided separately for the user only, not in the public PWA ZIP.
+
+
+## v0.4.135 - Review Intake amount/unit normalization
+- Parse clear attached units such as `1 ลูก` into numeric amount `1` and unit `ลูก`; preserve the reported source in `original_amount`.
+- Numeric-only Amount editors and no doubled units in review labels.
+- Normalize old rows in the Review Intake draft without modifying storage automatically. Save Review Intake explicitly after verifying.
+- Do not infer ambiguous or conflicting units; keep Needs review and exclude invalid amount from automatic factor calculation.
+- No clinical nutrient formula or Custom Database changes.
