@@ -418,3 +418,12 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Installed PWA start_url includes appv=0.4.129.
 - Preserves localStorage/IndexedDB while clearing only stale service workers and Cache Storage on first load of this release.
 - App-shell requests remain network-first/no-store, with offline fallback when available.
+
+
+## v0.4.130 — PNIF formula volume normalization
+- Formula recall with an explicitly reported volume unit converts oz/fl oz to mL using the existing 30 mL/oz application convention; mL/cc input remains unchanged. Reported amount and unit are preserved.
+- Removed the bug that treated 5 oz as 5 mL from formula-note amount fallback. An explicit actual/consumed volume in the note still takes precedence. Other/unsupported units are not guessed.
+- Review Intake displays reported oz together with derived mL, and changing the reported quantity recalculates only auto-derived mL (never an explicitly overridden volume).
+- Prefer exact Custom Database formula names over the legacy Infatrini/Infratini alias, including the (25 kcal/oz) annotation.
+- No changes to PNIF v0.3 schema, clinical nutrient formulas, DB data, or existing cases. The provided private full-backup JSON is intentionally not bundled into the deployable source ZIP. Import that backup explicitly on the target device only after exporting its current data.
+- Updated app, manifest, cache-busting, and service worker release identifiers to v0.4.130.
