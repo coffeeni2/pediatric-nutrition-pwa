@@ -435,3 +435,29 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - During 24-hour recall import, compare with existing case intake on time, food (including original descriptive menu name), amount, unit, and intake type. If matches exist, require user confirmation to skip them or cancel the import; never automatically delete/replace existing patient data. A repeat imported batch is not inserted again.
 - Previously stored duplicates or incorrectly converted legacy intake entries are NOT changed automatically. Inspect or remove those records manually after exporting a backup.
 - Preserve existing clinical algorithms, database, case IDs, PNIF schema v0.3, and custom database JSON. Private patient backup is not included in the release ZIP.
+
+
+## v0.4.132 — Custom DB delta from October 14 full backup
+- Compared 2026-09-29 versus 2026-10-14 full backup `foodDB` by immutable item ID: both contain 133 items; one item changed. No nutrient values changed.
+- Item `b40cegee` (ข้าวต้ม): added user-defined conversion and portion `6 ช้อนโต๊ะ = 150 g` (equivalent to 25 g per tablespoon), using the exact records and IDs from the October 14 backup.
+- Guarded migration on app load: only appends the new conversion/portion when the existing rice conversion and portion lists match the previous snapshot. Existing updated records remain intact; conflicting local edits are preserved and migration status is recorded at `settings.customDbRice20261014Status`.
+- Existing `foodDB` IDs, all clinical nutrient values, patient/case data, and PNIF/review intake are not changed by this migration.
+- Updated release, service-worker cache, and manifest versions. The full backup containing cases/health information is not shipped in the public web ZIP.
+- Never import a full backup solely to replace a Custom Database conversion: that imports all tabs and can overwrite locally stored cases.
+
+
+## v0.4.134 — PNIF repeat-import and existing-duplicate review
+- Import matching uses time, reported numeric amount, normalized unit, intake type, cleaned menu names and matching Custom Database ID; optional (25 kcal/oz) label and derived 5 vs 150 mL do not defeat the duplicate guard. Different documented formula concentrations remain distinct.
+- Confirm before skipping potentially repeated intakes. The user can cancel and nothing will be imported. The same-time and same-portion matching is a suggestion, not an automatic deletion: separate real feedings can look identical.
+- Review Intake > ตรวจรายการซ้ำ: groups old potentially repeated rows without modifying them. Users explicitly select which row to keep per group; all other groups remain untouched. Export Full Backup first. A second confirmation precedes any case-local removal. This allows users to retain 5 oz ≈150 mL rather than old 5 oz (5 mL), but never silently changes old values or Clinical Algorithms.
+- Blocks PNIF import if Review Intake contains unsaved draft changes.
+- Preserves FoodDB, identities, clinical calculations, PWA/PNIF schemas, other cases and historical data. Backup JSON is not included in the release.
+- Full browser acceptance testing is still required before clinical use.
+
+
+## v0.4.134 — Confirmed Infatrini spelling and repeat-intake warnings
+- Corrections: when an exact `Infratini` name is tied to Infatrini's same Database ID, display `Infatrini`. The correction is restricted to the label, not the nutrient data, portions, ID or clinical formulas.
+- A one-off safe case-label migration runs at load time and does not change ingredient amounts or Case IDs. If a Local Custom DB has only one wrongly spelled `Infratini` formula, it renames that row without changing its ID. If two distinct formula rows conflict, neither is merged or renamed automatically.
+- Confirmed `Infratini` / `Infatrini` alias is recognized when matching PNIF records and when detecting re-imported duplicates; no general fuzzy formula auto-matching.
+- Review Intake now explicitly marks potentially duplicate rows as **Needs review**, so duplicate intake is not shown as ready. Use the existing `ตรวจรายการซ้ำ` button and export Full Backup first. No automatic deletion or changes to clinical calculation algorithms.
+- PNIF schema v0.3 and all custom nutrient values are unchanged. Corrected backups are provided separately for the user only, not in the public PWA ZIP.

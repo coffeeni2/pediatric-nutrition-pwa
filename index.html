@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Ped Nutrition" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=0.4.131" />
+  <link rel="stylesheet" href="styles.css?v=0.4.134" />
   <title>Pediatric Nutrition Toolkit</title>
 </head>
 <body>
@@ -270,9 +270,10 @@
     <div class="card">
       <div class="section-title-row">
         <div><h2>Review Intake</h2><p class="muted">คำนวณจาก ingredient เป็นหลัก • รายการที่ match ได้จะไม่ต้องเปิดแก้ • กด Edit เฉพาะ Needs review</p></div><div class="inline-actions"><button id="clearEncounterIntakeBtn" class="danger">Clear intake</button><button id="cancelReviewBtn" class="secondary">Cancel changes</button><button id="saveReviewBtn" class="primary">Save Review Intake</button><span id="reviewSaveStatus" class="muted"></span></div>
-        <div class="inline-actions"><button id="needsReviewBtn" class="secondary">Needs review only: Off</button><button id="addMealBtn" class="primary">+ Add food</button></div>
+        <div class="inline-actions"><button id="reviewDuplicatesBtn" class="secondary" type="button">ตรวจรายการซ้ำ</button><button id="needsReviewBtn" class="secondary">Needs review only: Off</button><button id="addMealBtn" class="primary">+ Add food</button></div>
       </div>
       <div id="reviewSummary" class="review-summary"></div>
+      <div id="reviewDuplicatesPanel" class="duplicate-review-panel hidden" aria-live="polite"></div>
       <div id="reviewWarnings"></div>
       <div id="mealsContainer"></div>
     </div>
@@ -340,7 +341,7 @@
     </div>
   </section>
 </main>
-<footer><strong>PWA 0.4.131</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
+<footer><strong>PWA 0.4.134</strong> • persistent Custom DB • Custom-only calculation • food/formula/modular matching • editable conversion units <span id="updateStatus"></span></footer>
 <script>
 // Navigation fallback: tabs remain usable even if the main app has a runtime/init error.
 (function(){
@@ -361,7 +362,7 @@
 })();
 </script>
 <script>
-// v0.4.131: never fail silently. A startup/runtime error is shown without blocking controls.
+// v0.4.134: never fail silently. A startup/runtime error is shown without blocking controls.
 window.addEventListener('error',function(e){
   console.error('PWA runtime error',e.error||e.message);
   var old=document.getElementById('runtimeErrorNotice'); if(old)return;
@@ -371,6 +372,6 @@ window.addEventListener('error',function(e){
   var main=document.querySelector('main'); if(main) main.insertBefore(n,main.firstChild); else document.body.prepend(n);
 });
 </script>
-<script src="app.js?v=0.4.131"></script>
+<script src="app.js?v=0.4.134"></script>
 </body>
 </html>
