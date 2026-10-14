@@ -340,17 +340,17 @@ window.addEventListener('beforeunload',e=>{if(foodDbDirty||reviewDirty||modularD
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('installBtn')?.classList.remove('hidden')});$('installBtn')?.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;$('installBtn')?.classList.add('hidden')});if('serviceWorker' in navigator) window.addEventListener('load', async()=>{
   try {
     // 0.4.17 cache recovery: preserve app data (localStorage/IndexedDB), remove only SW registrations and Cache Storage.
-    const marker='pedNutritionCacheRecovery04130';
+    const marker='pedNutritionCacheRecovery04131';
     if(!sessionStorage.getItem(marker)){
       const regs=await navigator.serviceWorker.getRegistrations();
       await Promise.all(regs.map(r=>r.unregister()));
       if('caches' in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
       sessionStorage.setItem(marker,'1');
-      const u=new URL(location.href); u.searchParams.set('appv','0.4.130');
+      const u=new URL(location.href); u.searchParams.set('appv','0.4.131');
       location.replace(u.toString());
       return;
     }
-    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.130',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?v=0.4.131',{updateViaCache:'none'});
     await reg.update();
   } catch(e){ console.warn('Service worker recovery/update failed',e); }
 });
@@ -492,13 +492,13 @@ $('savePatientBtn')?.addEventListener('click',savePatientForm);$('saveRequiremen
 
 function normAmt(v){if(v===null||v===undefined||v==='')return{value:'',original:''};if(typeof v==='number')return{value:v,original:String(v)};const s=String(v).trim();const frac=s.match(/^(\d+)\s*\/\s*(\d+)$/);if(frac)return{value:Number(frac[1])/Number(frac[2]),original:s};const mixed=s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);if(mixed)return{value:Number(mixed[1])+Number(mixed[2])/Number(mixed[3]),original:s};const range=s.match(/^(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)$/);if(range)return{value:round((+range[1]+ +range[2])/2,2),original:s};const n=Number(s);return{value:Number.isFinite(n)?n:s,original:s}}
 function isMeatOrEgg(name=''){return /(ไก่|หมู|เนื้อ|ปลา|กุ้ง|ปู|หอย|เป็ด|ไข่|ตับ|กึ๋น|แฮม|แหนม|ไส้กรอก|ลูกชิ้น)/i.test(name)}function defaultFoodState(name,stateValue){return stateValue&&stateValue!=='unknown'?stateValue:(isMeatOrEgg(name)?'cooked':'unknown')}
-function normIng(i={}){const a=normAmt(i.amount),food=i.food||i.item||i.name||'';return{id:i.id||uid(),food,amount:a.value,original_amount:a.original,unit:normalizeUnit(i.unit||''),weight_g:i.weight_g??'',volume_ml:i.volume_ml??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',note:i.note||'',dbMatchId:i.dbMatchId||autoMatchId(food),convertFood:i.convertFood||'',convertUnit:i.convertUnit||'',formulaKcalOz:i.formulaKcalOz??''}}
+function normIng(i={}){if(typeof i==='string')i={food:i};const a=normAmt(i.amount),food=i.food||i.item||i.name||'';return{id:i.id||uid(),food,amount:a.value,original_amount:a.original,unit:normalizeUnit(i.unit||''),weight_g:i.weight_g??'',volume_ml:i.volume_ml??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',note:i.note||'',dbMatchId:i.dbMatchId||autoMatchId(food),convertFood:i.convertFood||'',convertUnit:i.convertUnit||'',formulaKcalOz:i.formulaKcalOz??''}}
 function normalizeIntakeType(v){const x=String(v||'').trim().toLowerCase();return ['food','formula','modular_diet','unknown'].includes(x)?x:'unknown'}
 const UNIT_ALIASES={'ชต.':'ช้อนโต๊ะ','ชต':'ช้อนโต๊ะ','tbsp':'ช้อนโต๊ะ','ช้อนโต๊ะ':'ช้อนโต๊ะ','ชช.':'ช้อนชา','ชช':'ช้อนชา','tsp':'ช้อนชา','ช้อนชา':'ช้อนชา','ml':'mL','มล.':'mL','มล':'mL','cc':'mL','ซีซี':'mL','g':'g','gm':'g','กรัม':'g'};
 function normalizeUnit(v){const raw=String(v||'').trim();return UNIT_ALIASES[raw.toLowerCase()]||UNIT_ALIASES[raw]||raw}
 function autoMatchId(name){const f=exactCustom(name);return f?.id||''}
 function normItem(i={}){const a=normAmt(i.amount),food=i.food||i.item||i.name||'';return{id:i.id||uid(),time:i.time||'',intake_type:normalizeIntakeType(i.intake_type||i.intakeType||(i.type==='formula'?'formula':'food')),food,amount:a.value,original_amount:i.original_amount??a.original,unit:normalizeUnit(i.unit||''),weight_g:i.weight_g??'',volume_ml:i.volume_ml??i.volume??'',raw_cooked:defaultFoodState(food,i.raw_cooked),confidence:i.confidence||'medium',needs_review:Boolean(i.needs_review||i.confidence==='low'||normalizeIntakeType(i.intake_type||i.intakeType)==='unknown'),note:i.note||'',ingredients:[...(i.ingredients||[]),...(i.additions||[]),...(i.modular_components||[]),...(i.supplements||[])].map(normIng),calcMethod:i.calcMethod||'auto',dbMatchId:i.dbMatchId||autoMatchId(food),sourcePreference:'Custom',formulaKcalOz:i.formulaKcalOz??i.kcal_per_oz??'',editOpen:false}}
-// v0.4.130 — intake-only normalization. The existing clinical engine uses 30 mL per fluid oz.
+// v0.4.131 — intake-only normalization. The existing clinical engine uses 30 mL per fluid oz.
 // PNIF reported amount and unit remain unchanged; never infer volume for unsupported units.
 function reportedFormulaVolumeMl(m){
   const unit=normalizeUnit(m.convertUnit||m.unit||'').trim().toLowerCase();
@@ -511,6 +511,20 @@ function reportedFormulaVolumeMl(m){
 function formulaVolumeWasDerived(m){
   const fromReported=reportedFormulaVolumeMl(m);
   return fromReported!==null&&m.volume_ml!==''&&m.volume_ml!=null&&Math.abs(num(m.volume_ml)-fromReported)<0.000001;
+}
+
+// Safety review only: flag historical 5 oz -> 5 mL values without modifying
+// the stored original or the existing nutrient engine. An explicitly recorded
+// smaller consumed volume is allowed and remains authoritative.
+function formulaReportedVolumeConflict(m){
+  if(normalizeIntakeType(m.intake_type)!=='formula')return false;
+  const u=normalizeUnit(m.unit||'').toLowerCase();
+  if(!['oz','fl oz','fl. oz','fluid oz','fluid ounce','fluid ounces','ออนซ์'].includes(u))return false;
+  const expected=reportedFormulaVolumeMl({...m,convertUnit:''});
+  if(expected===null||m.volume_ml===''||m.volume_ml===null||m.volume_ml===undefined)return false;
+  const note=String(m.note||'');
+  if(/(?:กินได้|รับได้|actual(?:\s*intake)?)\s*[0-9]+(?:\.[0-9]+)?\s*(?:ซีซี|cc|mL|ml)/i.test(note))return false;
+  return Math.abs(Number(m.volume_ml)-expected)>0.001;
 }
 
 // v0.4.127 — 24-hour recall formula-note enrichment.
@@ -584,13 +598,50 @@ function modularItemToRecipe(items,root={}){
   const names=[...new Set(mods.map(x=>x.recipe_name).filter(Boolean))];
   state.modular={...old,name:root.recipe_name||names[0]||old.name||'Daily modular recipe',finalVolume,notes:[old.notes,...(root.warnings||[]),...(names.length>1?[`PNIF contained multiple modular recipe names: ${names.join(', ')}`]:[])].filter(Boolean).join(' | '),components:existing,feeds,route:root.route||old.route||'',durationHr:root.duration_hr_per_feed??old.durationHr??''};return mods.length
 }
+// v0.4.131: PNIF 0.3 remains a flat list. Some transcriptions include one
+// descriptive menu name followed by its individually quantified components.
+// Rewrite only when the FIRST listed component is absent as its own item,
+// EVERY remaining named component is a quantified item at the identical time,
+// and the menu title literally contains all those ingredient names.
+// Preserve the original menu label as a note, instead of double-counting it.
+function preparePnifDescriptiveMenus(rows){
+  const key=v=>String(v??'').toLocaleLowerCase().replace(/\s+/g,'');
+  const measured=x=>x?.amount!==null&&x?.amount!==undefined&&String(x.amount).trim()!=='';
+  return rows.map((row,idx)=>{
+    if(normalizeIntakeType(row.intake_type||row.intakeType)!=='food'||!measured(row))return row;
+    const ings=row.ingredients;
+    if(!Array.isArray(ings)||ings.length<2||!ings.every(i=>typeof i==='string'&&i.trim()))return row;
+    const names=ings.map(i=>i.trim()),title=key(row.food),time=String(row.time??'').trim();
+    if(!names.every(n=>title.includes(key(n))))return row;
+    const hasRow=name=>rows.some((other,j)=>j!==idx&&String(other.time??'').trim()===time&&key(other.food)===key(name)&&measured(other));
+    if(hasRow(names[0])||!names.slice(1).every(hasRow))return row;
+    const originalMenu=String(row.food||'');
+    return {...row,food:names[0],ingredients:[],note:[row.note,`ชื่อเมนูต้นฉบับ: ${originalMenu}`].filter(Boolean).join(' | ')};
+  });
+}
+// This is only an import-time guard. It never deduplicates two rows INSIDE
+// the same incoming record, since that might represent two real intakes.
+function isSamePnifIntake(a,b){
+  const str=v=>String(v??'').trim().toLocaleLowerCase();
+  const foodKey=x=>str(x.food), menuSource=x=>{
+    const m=String(x.note||'').match(/ชื่อเมนูต้นฉบับ:\s*([^|]+)/);
+    return m?str(m[1]):'';
+  };
+  const equalFood=foodKey(a)===foodKey(b)||
+    (menuSource(a)&&menuSource(a)===foodKey(b))||
+    (menuSource(b)&&menuSource(b)===foodKey(a));
+  return str(a.time)===str(b.time)&&str(a.intake_type)===str(b.intake_type)&&
+    equalFood&&str(normalizeUnit(a.unit))===str(normalizeUnit(b.unit))&&
+    String(a.amount??'')===String(b.amount??'');
+}
+
 function importPnif(){try{
-  const o=extractJson($('pnifInput').value),selectedMode=document.querySelector('input[name="pnifMode"]:checked')?.value||'24hr',type=o.type||'24hr_recall';state.pnif={format:o.format||'PNIF',version:o.version||'',type,warnings:[...(state.pnif?.warnings||[]),...(o.warnings||[])]};
+  const o=extractJson($('pnifInput').value),selectedMode=document.querySelector('input[name="pnifMode"]:checked')?.value||'24hr',type=o.type||'24hr_recall';
+  if(selectedMode==='modular')state.pnif={format:o.format||'PNIF',version:o.version||'',type,warnings:[...(state.pnif?.warnings||[]),...(o.warnings||[])]};
   if(selectedMode==='modular'){if(!['daily_modular_recipe','modular_recipe'].includes(type)){const its=Array.isArray(o.items)?o.items:(Array.isArray(o.meals)?o.meals:[]);const mods=[...its.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet'),...(Array.isArray(o.modular_diets)?o.modular_diets:[])];if(!mods.length)throw new Error('ไม่พบ modular_diet ใน PNIF นี้');modularItemToRecipe(mods,o);saveState();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent='เพิ่ม PNIF for Modular Diet แล้ว';showTab('modular');return;}importModular(o,true);saveState();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent='เพิ่ม Modular Diet เข้า encounter นี้แล้ว (ข้อมูล intake เดิมยังอยู่)';showTab('modular');return}
   const baseIntake=Array.isArray(o.items)?o.items:(Array.isArray(o.meals)?o.meals:[]);const topFormula=Array.isArray(o.formula)?o.formula:[];const intakeItems=[...baseIntake,...topFormula.map(x=>({...x,intake_type:'formula'}))];const separateMods=Array.isArray(o.modular_diets)?o.modular_diets:[];
   const isRecipe=x=>!!(x.recipe_name||x.final_volume_ml||x.preparation||Array.isArray(x.components));const inlineMods=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet'&&isRecipe(x));const allMods=[...inlineMods,...separateMods.filter(isRecipe).map(x=>({...x,intake_type:'modular_diet'}))];
-  const modularCount=allMods.length?modularItemToRecipe(allMods,o):0;
-  const added=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)!=='modular_diet'||!isRecipe(x)).map(x=>parseFormulaRecallNote(normItem(x)));
+  let added=preparePnifDescriptiveMenus(intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)!=='modular_diet'||!isRecipe(x))).map(x=>parseFormulaRecallNote(normItem(x)));
   // v0.4.122: a timed PNIF modular_diets entry is an ACTUAL intake component, not a Daily Modular Recipe.
   // Attach it to the food/formula entry at the same time so Review Intake shows dextrin/Milnutri Sure
   // with that feeding and the nutrient engine counts it once. If no same-time intake exists, keep it
@@ -601,7 +652,7 @@ function importPnif(){try{
   // They are NOT converted into a Daily Modular Recipe. `note` is preserved verbatim and is never
   // interpreted as kcal/oz; formula concentration is only taken from an explicit kcal_per_oz field
   // or from a value the user enters in Review Intake.
-  state.pnif.timedModularSignature=timedMods.map(x=>({time:String(x.time||''),food:String(x.food||x.item||x.name||'').trim(),amount:String(x.amount??''),unit:normalizeUnit(x.unit||'')}));
+  const timedModularSignature=timedMods.map(x=>({time:String(x.time||''),food:String(x.food||x.item||x.name||'').trim(),amount:String(x.amount??''),unit:normalizeUnit(x.unit||'')}));
   timedMods.forEach(x=>{
     const name=x.food||x.item||x.name||'';
     const ing=normIng({food:name,amount:x.amount,unit:x.unit,weight_g:x.weight_g,volume_ml:x.volume_ml??x.volume,note:x.note||'',dbMatchId:x.dbMatchId||autoMatchId(name),formulaKcalOz:x.kcal_per_oz??x.formulaKcalOz??''});
@@ -619,7 +670,18 @@ function importPnif(){try{
     }else added.push(normItem({...x,intake_type:'modular_diet'}));
     timedModCount++;
   });
-  state.meals=[...(state.meals||[]),...added];sortMeals();saveState();resetReviewDraft();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent=`เพิ่มเข้า encounter แล้ว: Intake +${added.length}${timedModCount?` • Timed modular +${timedModCount}`:''}${modularCount?` • Modular recipe +${modularCount}`:''} (ไม่ลบข้อมูลเดิม)`;showTab(added.length?'review':'modular')
+  const existing=state.meals||[];
+  const duplicates=added.filter(x=>existing.some(y=>isSamePnifIntake(x,y)));
+  if(duplicates.length){
+    // No existing patient intake is deleted or replaced automatically.
+    if(!confirm(`พบรายการอาหารเดิมที่ตรงกับ PNIF จำนวน ${duplicates.length} รายการ\n\nOK = ข้ามรายการที่ซ้ำ แล้วนำเข้าเฉพาะรายการใหม่\nCancel = ยกเลิกการนำเข้าครั้งนี้\n\nหมายเหตุ: การข้ามรายการซ้ำจะไม่แก้ไข volume ของรายการเก่าที่เคยนำเข้าผิด กรุณาตรวจสอบรายการเดิมก่อนคำนวณ`)){
+      $('pnifStatus').className='status warn';$('pnifStatus').textContent='ยกเลิก Import: ไม่มีการเปลี่ยนรายการอาหาร';return;
+    }
+    added=added.filter(x=>!existing.some(y=>isSamePnifIntake(x,y)));
+  }
+  const modularCount=allMods.length?modularItemToRecipe(allMods,o):0;
+  state.pnif={format:o.format||'PNIF',version:o.version||'',type,warnings:[...(state.pnif?.warnings||[]),...(o.warnings||[])],timedModularSignature};
+  state.meals=[...existing,...added];sortMeals();saveState();resetReviewDraft();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent=`นำเข้า PNIF: เพิ่มรายการใหม่ ${added.length}${duplicates.length?` • ข้ามรายการซ้ำ ${duplicates.length}`:''}${timedModCount?` • Timed modular +${timedModCount}`:''}${modularCount?` • Modular recipe +${modularCount}`:''} (ไม่ลบข้อมูลเดิม)`;showTab(added.length?'review':'modular')
 }catch(e){$('pnifStatus').className='status error';$('pnifStatus').textContent='Import ไม่สำเร็จ: '+e.message}}
 function importModular(o,additive=false){const comps=(o.ingredients||[]).map(x=>{const a=normAmt(x.amount);return{id:uid(),name:x.food||x.name||'',amount:a.value,unit:x.unit||'',dbMatchId:'',source:'Custom',kcalOverride:'',proteinOverride:'',fatOverride:'',mctOverride:'',choOverride:'',calciumOverride:'',sodiumOverride:'',potassiumOverride:'',note:x.note||''}});const fp=o.feeding_plan||{},actual=o.actual_intake?.feeds||[];let feeds=[];if(actual.length)feeds=actual.map((x,i)=>({id:uid(),time:x.time||'',prescribed:x.prescribed_ml??fp.volume_per_feed_ml??'',actual:x.actual_ml??'',note:x.note||''}));else if(fp.feeds_per_day){for(let i=0;i<num(fp.feeds_per_day);i++)feeds.push({id:uid(),time:'',prescribed:fp.volume_per_feed_ml??'',actual:'',note:''})}const prev=additive?(state.modular||{}):{};state.modular={name:o.recipe_name||prev.name||'Daily modular recipe',finalVolume:o.preparation?.final_volume_ml??o.final_volume_ml??prev.finalVolume??'',notes:[prev.notes,(o.warnings||[]).join(' | ')].filter(Boolean).join(' | '),components:[...(prev.components||[]),...comps],feeds:[...(prev.feeds||[]),...feeds],route:fp.route||prev.route||'',durationHr:fp.duration_hr_per_feed??prev.durationHr??''}}
 $('importPnifBtn').addEventListener('click',importPnif);$('clearPnifBtn').addEventListener('click',()=>{$('pnifInput').value='';$('pnifStatus').textContent=''});$('loadExampleBtn').addEventListener('click',()=>{$('pnifInput').value=JSON.stringify({format:'PNIF',version:'0.4',type:'24hr_recall',items:[{time:'07:00',intake_type:'food',food:'ข้าวไก่ย่าง',ingredients:[{food:'ข้าว',amount:2,unit:'ทัพพี'},{food:'ไก่ย่าง',amount:3,unit:'ชิ้น'}],confidence:'high'},{time:'10:00',intake_type:'formula',food:'Panenteral',volume_ml:180,kcal_per_oz:30,confidence:'high'},{time:'12:00',intake_type:'modular_diet',recipe_name:'Daily modular recipe',final_volume_ml:1000,actual_volume_ml:250,components:[{food:'Panenteral',amount:100,unit:'g'},{food:'น้ำมัน',amount:20,unit:'g'}],confidence:'high'}]},null,2)});
@@ -632,7 +694,7 @@ function matchedFood(x){if(x.dbMatchId){const f=state.foodDB.find(f=>f.id===x.db
 function unitsForIngredient(x){const f=matchedFood(x);const set=new Set();if(f){if(f.basis_unit)set.add(f.basis_unit);if(num(f.grams_per_scoop)>0)set.add('scoop');savedConversions(f).forEach(c=>set.add(c.unit));(f.portions||[]).forEach(p=>set.add(p.unit));state.portionDB.filter(r=>r.food===f.name||(r.aliases||[]).includes(f.name)).forEach(r=>set.add(r.unit))}const cf=x.convertFood||f?.name||'';state.portionDB.filter(r=>r.food===cf||(r.aliases||[]).includes(cf)).forEach(r=>set.add(r.unit));if(x.unit)set.add(x.unit);return [...set].filter(Boolean)}
 function formulaPowderGrams(x,f){if(!f||f.type!=='formula'||String(f.basis_unit||'').toLowerCase()!=='g')return null;const vol=num(x.volume_ml),conc=num(x.formulaKcalOz),basis=num(f.basis_value),kcal=num(f.kcal);if(!(vol>0&&conc>0&&basis>0&&kcal>0))return null;const deliveredKcal=conc*(vol/30);const kcalPerGram=kcal/basis;return deliveredKcal/kcalPerGram}
 function ingredientReviewReason(i){const f=matchedFood(i);if(!String(i.food||'').trim())return 'ยังไม่ได้ระบุชื่อ ingredient';if(!f)return 'ไม่พบรายการที่คำนวณได้ใน Custom Database — เลือก Food / Formula / Modular component ที่ใกล้เคียง';if(f.type==='formula'&&String(f.basis_unit||'').toLowerCase()==='g'&&i.volume_ml!==''&&i.formulaKcalOz==='')return 'Formula แบบผง: ระบุ kcal/oz เพื่อคำนวณกรัมผงจาก volume';if(i.amount===''&&formulaPowderGrams(i,f)===null&&!(i.volume_ml!==''&&String(f.basis_unit||'').toLowerCase()==='ml'))return 'ยังไม่ได้ระบุ amount/volume ที่ใช้คำนวณ';const fac=factorFor(i,f);if(fac===null)return `หน่วย “${i.convertUnit||i.unit||'—'}” ยังแปลงเป็น basis ${f.basis_value} ${f.basis_unit} ไม่ได้ — เลือก Unit ที่รองรับ หรือระบุ formula kcal/oz + volume`;return ''}
-function menuReviewReasons(m){const reasons=[];if(normalizeIntakeType(m.intake_type)==='unknown')reasons.push('Intake type ยังไม่ชัดเจน — เลือก Food หรือ Formula');(m.ingredients||[]).forEach(i=>{const r=ingredientReviewReason(i);if(r)reasons.push(`${i.food||'Ingredient'}: ${r}`)});if(!(m.ingredients||[]).length){const f=matchedFood(m);if(!f)reasons.push(`${m.food||'Menu'}: ไม่พบอาหารที่คำนวณได้ใน Custom Database`);else{if(normalizeIntakeType(m.intake_type)==='formula'&&f.type!=='formula')reasons.push(`${m.food||'Menu'}: Intake type เป็น Formula แต่ DB match ไม่ใช่ Formula`);if(factorFor(m,f)===null)reasons.push(`${m.food||'Menu'}: หน่วย/ปริมาณยังไม่ตรงกับข้อมูลที่ใช้คำนวณ`)}}return reasons}
+function menuReviewReasons(m){const reasons=[];if(formulaReportedVolumeConflict(m))reasons.push(`Formula: reported ${m.amount} ${m.unit} แต่ Volume ${m.volume_ml} mL ไม่สอดคล้องกัน — ตรวจสอบก่อนคำนวณ`);if(normalizeIntakeType(m.intake_type)==='unknown')reasons.push('Intake type ยังไม่ชัดเจน — เลือก Food หรือ Formula');(m.ingredients||[]).forEach(i=>{const r=ingredientReviewReason(i);if(r)reasons.push(`${i.food||'Ingredient'}: ${r}`)});if(!(m.ingredients||[]).length){const f=matchedFood(m);if(!f)reasons.push(`${m.food||'Menu'}: ไม่พบอาหารที่คำนวณได้ใน Custom Database`);else{if(normalizeIntakeType(m.intake_type)==='formula'&&f.type!=='formula')reasons.push(`${m.food||'Menu'}: Intake type เป็น Formula แต่ DB match ไม่ใช่ Formula`);if(factorFor(m,f)===null)reasons.push(`${m.food||'Menu'}: หน่วย/ปริมาณยังไม่ตรงกับข้อมูลที่ใช้คำนวณ`)}}return reasons}
 function needsReview(m){return menuReviewReasons(m).length>0||autoCalcRule(m).method==='none'}
 function addIntakeAt(time=''){ensureReviewDraft().push(normItem({time,food:'',needs_review:true}));ensureReviewDraft().sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));markReviewDirty();renderMeals()}function addIntakeAfterTime(time,newTime=''){const idxs=ensureReviewDraft().map((m,i)=>m.time===time?i:-1).filter(i=>i>=0),idx=idxs.length?idxs[idxs.length-1]:ensureReviewDraft().length-1;ensureReviewDraft().splice(idx+1,0,normItem({time:newTime,food:'',needs_review:true}));markReviewDirty();renderMeals()}
 function renderMeals(){if($('reviewSaveStatus'))$('reviewSaveStatus').innerHTML=reviewDirty?'<span class="dirty-pill">Unsaved changes</span>':'<span class="saved-pill">Saved</span>';const c=$('mealsContainer');c.innerHTML='';const filtered=state.settings.needsReviewOnly?ensureReviewDraft().filter(needsReview):ensureReviewDraft();const groups={};filtered.forEach(m=>(groups[m.time||'No time']??=[]).push(m));const nReview=ensureReviewDraft().filter(needsReview).length;$('reviewSummary').textContent=`${ensureReviewDraft().length} items • ${nReview} need review`;$('needsReviewBtn').textContent=`Needs review only: ${state.settings.needsReviewOnly?'On':'Off'}`;$('reviewWarnings').innerHTML=(state.pnif.warnings||[]).length?`<div class="warning-box">${state.pnif.warnings.map(esc).join(' • ')}</div>`:'';const entries=Object.entries(groups);entries.forEach(([time,items],idx)=>{const card=document.createElement('div');card.className='time-card';card.innerHTML=`<div class="time-head"><span>${esc(time)}</span><div class="inline-actions"><button class="small-btn secondary add-time">+ Add at this time</button><button class="small-btn secondary add-between">+ Add intake between</button></div></div>`;card.querySelector('.add-time').onclick=()=>addIntakeAt(time==='No time'?'':time);card.querySelector('.add-between').onclick=()=>{const next=entries[idx+1]?.[0]||'';const val=prompt(`เวลา intake ใหม่${next?` ระหว่าง ${time}–${next}`:` หลัง ${time}`} (เช่น 08:00)`,'');if(val!==null&&val.trim())addIntakeAfterTime(time==='No time'?'':time,val.trim().replace('.',':'))};items.forEach(m=>card.appendChild(menuNode(m)));c.appendChild(card)});if(!filtered.length)c.innerHTML='<p class="muted">ไม่มีรายการใน filter นี้</p>'}
@@ -2073,7 +2135,7 @@ function exportFullBackup(){
   try{pnSyncFormToState()}catch{}
   syncActiveCase();
   localStorage.setItem('pedNutritionStateV4',JSON.stringify(state));
-  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.130',exported_at:new Date().toISOString(),scope:'all_tabs'}};
+  const payload={...clone(state),backup_meta:{app:'Pediatric Nutrition Toolkit',version:'0.4.131',exported_at:new Date().toISOString(),scope:'all_tabs'}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
   a.href=url;a.download=`ped-nutrition-full-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }

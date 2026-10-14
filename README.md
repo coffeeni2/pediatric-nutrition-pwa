@@ -427,3 +427,11 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Prefer exact Custom Database formula names over the legacy Infatrini/Infratini alias, including the (25 kcal/oz) annotation.
 - No changes to PNIF v0.3 schema, clinical nutrient formulas, DB data, or existing cases. The provided private full-backup JSON is intentionally not bundled into the deployable source ZIP. Import that backup explicitly on the target device only after exporting its current data.
 - Updated app, manifest, cache-busting, and service worker release identifiers to v0.4.130.
+
+
+## v0.4.131 — PNIF component transcription and duplicate import protection
+- Parse string-only `ingredients` as named components instead of blank unnamed ingredient rows.
+- When a flat PNIF food list has a descriptive combined dish whose first named component is only represented by the combined row, and ALL other named components have separate quantified rows at the same exact time, treat the combined row as the first quantified component, preserving the original menu name in its note. Never fabricate weights, ingredient amounts or food matches.
+- During 24-hour recall import, compare with existing case intake on time, food (including original descriptive menu name), amount, unit, and intake type. If matches exist, require user confirmation to skip them or cancel the import; never automatically delete/replace existing patient data. A repeat imported batch is not inserted again.
+- Previously stored duplicates or incorrectly converted legacy intake entries are NOT changed automatically. Inspect or remove those records manually after exporting a backup.
+- Preserve existing clinical algorithms, database, case IDs, PNIF schema v0.3, and custom database JSON. Private patient backup is not included in the release ZIP.
