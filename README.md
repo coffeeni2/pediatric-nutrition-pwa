@@ -500,3 +500,7 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Full recipe components checked back against their source rows; unclassified modular entries fail instead of disappearing silently.
 - Import exceptions restore pre-import meals, modular, PNIF state. Existing nutrition formula/DB unchanged.
 - Not yet an independent clinical nutrient-calculation verification or Android browser E2E test.
+
+
+## v0.4.141 — MCT optimization target
+Optimizer score now includes MCT as percent of total energy, with a recheck of MCT tolerance and explicit warning when unavailable. Preserves nutritional calculations, product data, rounding and locks.

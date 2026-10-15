@@ -844,7 +844,7 @@ function pnifFlatModularRecipe(o){
        ...(unresolved.length?[`NEEDS REVIEW: no exact Custom DB match for ${unresolved.join(', ')}`]:[])].join(' | '),
     unresolved};
 }
-// v0.4.140: Preflight checks do not mutate case state. Keep the original
+// v0.4.141: Preflight checks do not mutate case state. Keep the original
 // reported amount, unit, name and component order for user-facing review.
 function pnifSafetyCheck(o,recipe,reviewRows=[]){
   const errors=[],warnings=[];
@@ -1428,7 +1428,7 @@ function thaiMilkGuideBoundsForVariable(v,d=ensureDesignDraft()){
   if(!(targetAmount>0))return null;return {min:targetAmount*0.75,max:targetAmount*1.75,target:targetAmount};
 }
 function optimizerBounds(v,d=ensureDesignDraft()){return thaiFoodGuideBoundsForVariable(v,d)||thaiMilkGuideBoundsForVariable(v,d)}
-function optimizationTargets(){const r=state.requirements,d=ensureDesignDraft(),a=d.allocation||{};return {kcal:num(r.energy),protein:num(r.protein),proteinKey:proteinTargetKey(),fatKcal:fatTargetKcal(),dietFatPct:num(a.dietFatPct),modularFatPct:num(a.modularFatPct),calcium:num(r.calcium),sodium:requirementElectrolyteMg('na',r),potassium:requirementElectrolyteMg('k',r)}}
+function optimizationTargets(){const r=state.requirements,d=ensureDesignDraft(),a=d.allocation||{};return {kcal:num(r.energy),protein:num(r.protein),proteinKey:proteinTargetKey(),fatKcal:fatTargetKcal(),mctPct:num(r.mctPct),dietFatPct:num(a.dietFatPct),modularFatPct:num(a.modularFatPct),calcium:num(r.calcium),sodium:requirementElectrolyteMg('na',r),potassium:requirementElectrolyteMg('k',r)}}
 function modularIsRiceRow(r){const f=state.foodDB.find(x=>x.id===r?.dbMatchId),n=String(f?.name||r?.name||'').toLowerCase();return /ข้าวสวย|cooked rice|\brice\b/.test(n)}
 function modularRiceEnergyCapAmount(row,d=ensureDesignDraft()){if(!row||!modularIsRiceRow(row)||String(d.modular?.route||'oral')!=='tube')return Infinity;const energyReq=num(state.requirements.energy);if(!(energyReq>0))return Infinity;const u=modularUnitDailyNut(row,d),k=num(u?.kcal);return k>0?(energyReq*0.09)/k:0}
 function modularCalciumMedicationPenalty(c,t,d=ensureDesignDraft()){if(!(t.calcium>0)||!d.modularEnabled)return 0;const hasCaProtein=(d.modular?.components||[]).some(r=>{if(rowIsConstrained(r)||r.role!=='protein'||!r.dbMatchId)return false;const f=state.foodDB.find(x=>x.id===r.dbMatchId);return modularFormulaLike(f)&&num(f?.calcium)>0&&num(f?.protein)>0});if(!hasCaProtein)return 0;let medCa=0;(d.modular?.components||[]).forEach(r=>{const f=state.foodDB.find(x=>x.id===r.dbMatchId);if(f?.type!=='medication'||num(f.calcium)<=0)return;const z=sourceRowCalc(r);if(z.ok)medCa+=num(z.nut.calcium)*modularDailyRatio(d)});return (medCa/t.calcium)**2*1.5e5}
@@ -1439,6 +1439,10 @@ function optimizationScore(c,t,d=ensureDesignDraft(),phase='food'){
   // Whole-prescription fat is a true target, not merely a warning band. Keep pressure on the
   // optimizer until the actual rounded prescription is close to the requested fat energy.
   const fatErr=t.fatKcal>0?f*f:0;
+  // Compare MCT energy against TOTAL daily prescription energy, consistent with section D.
+  // The target is % of total energy, NOT % of fat or a percentage of the modular source.
+  const mctActualPct=num(c.total.kcal)>0?num(c.total.mct)*8.3/num(c.total.kcal)*100:0;
+  const mctErr=t.mctPct>0?((mctActualPct-t.mctPct)/t.mctPct)**2:0;
   const sourceFatErr=(src,targetPct)=>targetPct>0&&num(src?.kcal)>0?((fatEnergyPct(src)-targetPct)/targetPct)**2:0;
   const sourceFat=sourceFatErr(c.diet.total,t.dietFatPct)+sourceFatErr(c.modular.daily,t.modularFatPct);
   const caErr=t.calcium>0?rel(c.total.calcium,t.calcium)**2:0;
@@ -1448,7 +1452,7 @@ function optimizationScore(c,t,d=ensureDesignDraft(),phase='food'){
   // Protein remain the strongest constraints. All candidate scores use the rounded amounts.
   const caWeight=phase==='food'?8e4:2e4;
   const fatWeight=phase==='food'?6e5:5e5;
-  return primary*8e5+fatErr*fatWeight+sourceFat*4e3+caErr*caWeight+otherMineral*250+modularCalciumMedicationPenalty(c,t,d)+thaiFoodGuidePenalty(d)+thaiMilkGuidePenalty(d);
+  return primary*8e5+fatErr*fatWeight+mctErr*8e5+sourceFat*4e3+caErr*caWeight+otherMineral*250+modularCalciumMedicationPenalty(c,t,d)+thaiFoodGuidePenalty(d)+thaiMilkGuidePenalty(d);
 }
 function optimizationStep(row,kind){const rule=String(row?.roundRule||defaultRoundRule(row,kind));return rule==='0.1'?0.1:rule==='0.5'?0.5:rule==='5'?5:1}
 function optimizationVariables(d,opts={}){const vars=[];const includeMedication=opts.includeMedication!==false;const add=(row,kind,opts={})=>{if(!row||rowIsConstrained(row)||!row.dbMatchId)return;const u=rowUnitNut(row,opts);if(!u||TOTAL_KEYS.every(k=>Math.abs(num(u[k]))<1e-12))return;vars.push({row,kind,opts,step:optimizationStep(row,kind)});};
@@ -1516,7 +1520,7 @@ function wholePrescriptionDeficitCorrection(d,t,includeMedication=false,maxPass=
     bestScore=bestCandidate;
     // No blanket post-rounding is needed: every accepted amount was already rounded before recheck.
     const cc=designCombined(d),energyOK=!(t.kcal>0)||Math.abs(num(cc.total.kcal)/t.kcal-1)<=0.01,proteinOK=!(t.protein>0)||Math.abs(num(cc.total[t.proteinKey])/t.protein-1)<=0.02,fatOK=!(t.fatKcal>0)||Math.abs(fatEnergyKcal(cc.total)/t.fatKcal-1)<=0.05,caOK=!(t.calcium>0)||num(cc.total.calcium)>=t.calcium*.98;
-    if(energyOK&&proteinOK&&fatOK&&caOK)break;
+    if(energyOK&&proteinOK&&fatOK&&caOK&&(!(t.mctPct>0)||Math.abs(num(cc.total.mct)*8.3/Math.max(1,num(cc.total.kcal))*100-t.mctPct)<=1))break;
   }
   return designCombined(d);
 }
@@ -1566,8 +1570,9 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
     const proteinOK=!(t.protein>0)||Math.abs(num(cc.total[t.proteinKey])/t.protein-1)<=0.01;
     const fatOK=!(t.fatKcal>0)||Math.abs(fatEnergyKcal(cc.total)/t.fatKcal-1)<=0.05;
     const caOK=!(t.calcium>0)||num(cc.total.calcium)>=t.calcium*0.98;
-    if(energyOK&&proteinOK&&fatOK&&caOK)break;
-    if(previousFoodScore-sc<1e-7 && fatOK)break;previousFoodScore=sc;
+    const mctOK=!(t.mctPct>0)||Math.abs(num(cc.total.mct)*8.3/Math.max(1,num(cc.total.kcal))*100-t.mctPct)<=1;
+    if(energyOK&&proteinOK&&fatOK&&caOK&&mctOK)break;
+    if(previousFoodScore-sc<1e-7 && fatOK && mctOK)break;previousFoodScore=sc;
   }
 
   // Stage 2 — only after repeated food/formula rechecks, create/use Ca medication if Ca remains
@@ -1588,8 +1593,9 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
     const proteinOK=!(t.protein>0)||Math.abs(num(cc.total[t.proteinKey])/t.protein-1)<=0.01;
     const fatOK=!(t.fatKcal>0)||Math.abs(fatEnergyKcal(cc.total)/t.fatKcal-1)<=0.05;
     const caOK=!(t.calcium>0)||Math.abs(num(cc.total.calcium)/t.calcium-1)<=0.02;
-    if(energyOK&&proteinOK&&fatOK&&caOK)break;
-    if(previousFinalScore-sc<1e-7 && fatOK)break;previousFinalScore=sc;
+    const mctOK=!(t.mctPct>0)||Math.abs(num(cc.total.mct)*8.3/Math.max(1,num(cc.total.kcal))*100-t.mctPct)<=1;
+    if(energyOK&&proteinOK&&fatOK&&caOK&&mctOK)break;
+    if(previousFinalScore-sc<1e-7 && fatOK && mctOK)break;previousFinalScore=sc;
   }
   wholePrescriptionDeficitCorrection(d,t,true,10);
   let current=designCombined(d);syncAllocationToActual(d);
@@ -1597,6 +1603,7 @@ function optimizePrescriptionToRequirements(d=ensureDesignDraft()){
   const warnings=[],proteinLabel=(state.requirements.proteinMode||'total')==='counted'?'High biological value protein':'Total protein';
   if(t.kcal>0&&Math.abs(current.total.kcal/t.kcal-1)>0.01)warnings.push(`Energy ${round(current.total.kcal,1)} / ${round(t.kcal,1)} kcal (${round(current.total.kcal/t.kcal*100,1)}%) — closest result with selected items, locks, limits and rounding`);
   if(t.protein>0&&Math.abs(num(current.total[t.proteinKey])/t.protein-1)>0.01)warnings.push(`${proteinLabel} ${round(current.total[t.proteinKey],2)} / ${round(t.protein,2)} g (${round(current.total[t.proteinKey]/t.protein*100,1)}%) — closest result with selected items, locks, limits and rounding`);
+  if(t.mctPct>0&&Math.abs(num(current.total.mct)*8.3/Math.max(1,num(current.total.kcal))*100-t.mctPct)>1)warnings.push(`MCT ${round(num(current.total.mct)*8.3/Math.max(1,num(current.total.kcal))*100,1)}%E / target ${round(t.mctPct,1)}%E — outside ±1 percentage point; verify locked items and product limits`);
   if(t.fatKcal>0&&Math.abs(fatEnergyKcal(current.total)/t.fatKcal-1)>0.05)warnings.push(`Fat energy ${round(fatEnergyKcal(current.total),1)} / ${round(t.fatKcal,1)} kcal (${round(fatEnergyKcal(current.total)/t.fatKcal*100,1)}%) — outside ±5% target`);
   if(t.dietFatPct>0&&current.diet.total.kcal>0&&Math.abs(fatEnergyPct(current.diet.total)-t.dietFatPct)>2)warnings.push(`Diet fat ${round(fatEnergyPct(current.diet.total),1)}% / target ${round(t.dietFatPct,1)}% of Diet energy — closest result with current items and constraints`);
   if(t.modularFatPct>0&&current.modular.daily.kcal>0&&Math.abs(fatEnergyPct(current.modular.daily)-t.modularFatPct)>2)warnings.push(`Modular fat ${round(fatEnergyPct(current.modular.daily),1)}% / target ${round(t.modularFatPct,1)}% of Modular energy — closest result with current items and constraints`);
