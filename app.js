@@ -815,7 +815,16 @@ function pnifFlatModularRecipe(o){
   if(!rows.length||!rows.every(x=>!String(x.time||'').trim()))return null;
   const text=x=>`${x.original_amount||''} ${x.note||''}`;
   const volumeRow=rows.find(x=>/เติมน้ำ|จนครบ|final\s*volume/i.test(text(x))&&/\b\d+(?:\.\d+)?\s*(?:ml|mL|ซีซี)/i.test(text(x)));
-  const feedRow=rows.find(x=>/\b\d+(?:\.\d+)?\s*(?:ml|mL|ซีซี)\s*[x×]\s*\d+\s*feeds?/i.test(text(x))&&!/น้ำระหว่างมื้อ|flush|free\s*water/i.test(String(x.food||'')+' '+text(x)));
+  // A component note may quote the feeding schedule. Never classify that
+  // nutrient-bearing ingredient as the prescription row on note text alone.
+  const hasSchedule=x=>/\b\d+(?:\.\d+)?\s*(?:ml|mL|ซีซี)\s*[x×]\s*\d+\s*feeds?/i.test(text(x));
+  const isFreeWater=x=>/น้ำระหว่างมื้อ|flush|free\s*water/i.test(String(x.food||'')+' '+text(x));
+  const recipeFromNote=rows.map(x=>String(x.note||'').match(/ส่วนประกอบของ\s*([^;|]+?)(?:\s*;|$)/i)?.[1]?.trim()).find(Boolean)||'';
+  const recipeNameHint=recipeFromNote||String(rows.find(x=>x!==volumeRow&&hasSchedule(x)&&!isFreeWater(x))?.food||'').trim();
+  const feedRow=rows.find(x=>x!==volumeRow&&hasSchedule(x)&&!isFreeWater(x)&&(
+    String(x.food||'').trim().toLowerCase()===recipeNameHint.toLowerCase()||
+    /\b\d+(?:\.\d+)?\s*(?:ml|mL|ซีซี)\s*[x×]\s*\d+\s*feeds?/i.test(String(x.original_amount||''))
+  ))||(volumeRow&&hasSchedule(volumeRow)?volumeRow:null);
   if(!volumeRow||!feedRow)return null;
   const fm=text(volumeRow).match(/(?:จนครบ|final\s*volume)[^\d]*([\d.]+)\s*(?:ml|ซีซี)/i);
   const feed=parseFeedingText(text(feedRow));
@@ -823,7 +832,7 @@ function pnifFlatModularRecipe(o){
   const skips=x=>x===volumeRow||x===feedRow||/น้ำระหว่างมื้อ|flush|free\s*water/i.test(String(x.food||''));
   const comps=rows.filter(x=>!skips(x));
   if(!comps.length)return null;
-  const recipeName=String(feedRow.food||'Daily modular recipe').trim();
+  const recipeName=String((feedRow===volumeRow?recipeNameHint:feedRow.food)||recipeNameHint||'Daily modular recipe').trim();
   const waterPrescription=waterRowsFromPnif(rows);const durationMatch=text(feedRow).match(/(?:drip\s*in|duration)[^\d]*([0-9]+(?:\.[0-9]+)?)\s*(?:hr|hour|ชั่วโมง)/i);
   const unresolved=comps.filter(x=>!autoMatchId(x.food||'')||/^(?:nacl|caco3|trace\s*element)/i.test(String(x.food||''))).map(x=>x.food);
   const waterRows=rows.filter(x=>/น้ำระหว่างมื้อ|flush|free\s*water/i.test(String(x.food||'')));
@@ -835,12 +844,62 @@ function pnifFlatModularRecipe(o){
        ...(unresolved.length?[`NEEDS REVIEW: no exact Custom DB match for ${unresolved.join(', ')}`]:[])].join(' | '),
     unresolved};
 }
+// v0.4.140: Preflight checks do not mutate case state. Keep the original
+// reported amount, unit, name and component order for user-facing review.
+function pnifSafetyCheck(o,recipe,reviewRows=[]){
+  const errors=[],warnings=[];
+  if(!o||typeof o!=='object'||o.format!=='PNIF'||String(o.version)!=='0.3')errors.push('ต้องเป็น PNIF Schema v0.3');
+  for(const k of ['meals','modular_diets'])if(!Array.isArray(o[k]))errors.push(`${k} ต้องเป็น array`);
+  const checkAmount=(x,where)=>{
+    if(!x||typeof x!=='object'){errors.push(`${where}: ข้อมูลไม่ใช่ object`);return}
+    if(!String(x.food||'').trim()){errors.push(`${where}: ไม่มีชื่ออาหาร`);return}
+    const a=x.amount;
+    if(a!==null&&a!==undefined&&(typeof a!=='number'||!Number.isFinite(a)||a<0))errors.push(`${where}: Amount ต้องเป็นตัวเลขที่ไม่ติดหน่วย หรือ null`);
+    if(a===null||a===undefined)warnings.push(`${where}: ไม่มีปริมาณเชิงตัวเลข ต้องตรวจสอบ`);
+  };
+  (o.meals||[]).forEach((x,i)=>checkAmount(x,`Review Intake #${i+1}`));
+  (o.modular_diets||[]).forEach((x,i)=>checkAmount(x,`Modular #${i+1}`));
+  if(recipe){
+    const src=(o.modular_diets||[]);
+    const components=recipe.components;
+    if(components.length<1)errors.push('ไม่มีส่วนประกอบสูตรที่ใช้คำนวณ');
+    if(!Number.isFinite(Number(recipe.finalVolume))||Number(recipe.finalVolume)<=0)errors.push('Final volume ไม่ถูกต้อง');
+    if(!Number.isFinite(Number(recipe.feedVolume))||Number(recipe.feedVolume)<=0||!Number.isInteger(recipe.feeds)||recipe.feeds<=0)errors.push('Feeding schedule ไม่ถูกต้อง');
+    if(recipe.feedVolume*recipe.feeds>recipe.finalVolume+0.00001)warnings.push('ปริมาตรให้ต่อวันมากกว่า final volume ของสูตร โปรดตรวจว่าเตรียมสูตรมากกว่าหนึ่งชุดหรือไม่');
+    for(const [i,c] of components.entries()){
+      const source=src.find(x=>String(x.food||'').trim()===String(c.name||'').trim()&&String(x.amount??'')===String(c.amount??''));
+      if(!source)errors.push(`ส่วนประกอบ #${i+1} (${c.name}) ไม่ตรงกับต้นทาง`);
+      if(!String(c.name||'').trim())errors.push(`ส่วนประกอบ #${i+1}: ชื่อว่าง`);
+      if(c.amount==null||c.amount===''||!Number.isFinite(Number(c.amount))||Number(c.amount)<=0)warnings.push(`${c.name}: ปริมาณไม่พร้อมคำนวณ`);
+    }
+    for(const x of src){
+      if(!x||!String(x.food||'').trim())continue;
+      const isComponent=components.some(c=>String(c.name||'').trim()===String(x.food||'').trim()&&String(c.amount??'')===String(x.amount??''));
+      const isWater=/น้ำระหว่างมื้อ|flush|free\s*water/i.test(String(x.food||''));
+      const isPrep=/เติมน้ำ|จนครบ|final\s*volume/i.test(String(x.original_amount||'')+' '+String(x.note||''))&&/น้ำ/i.test(String(x.food||''));
+      const isRecipeTitle=String(x.food||'').trim()===recipe.name&&/\b\d+(?:\.\d+)?\s*(?:ml|ซีซี)\s*[x×]\s*\d+/i.test(String(x.original_amount||''));
+      if(!isComponent&&!isWater&&!isPrep&&!isRecipeTitle)errors.push(`รายการ Modular “${x.food}” ถูกละจากการนำเข้าโดยไม่มีเหตุผลที่ชัดเจน`);
+    }
+    if(recipe.unresolved.length)warnings.push(`ต้องยืนยันผลิตภัณฑ์/ความแรง/การแปลงหน่วย: ${recipe.unresolved.join(', ')}`);
+    warnings.push(...modularComponentIssues(recipe).slice(0,12));
+  }
+  return {errors,warnings:[...new Set(warnings)]};
+}
+function pnifImportPreview(recipe,reviewCount,duplicates=0,warnings=[]){
+  const summary=[`PNIF Import Preview — ตรวจสอบก่อนบันทึก`, `Review Intake ใหม่: ${reviewCount} รายการ${duplicates?` (รายการซ้ำข้าม ${duplicates})`:''}`];
+  if(recipe){summary.push(`Modular: ${recipe.name} | ส่วนประกอบ ${recipe.components.length} รายการ`,...recipe.components.map((c,i)=>` ${i+1}. ${c.name} ${c.amount??'ไม่ระบุ'} ${c.unit||''}`),`Final volume ${recipe.finalVolume} mL | ${recipe.feedVolume} mL × ${recipe.feeds} feeds`);if(recipe.waterPrescription)summary.push(`น้ำระหว่างมื้อ ${recipe.waterPrescription.dailyMl} mL/day (ไม่รวมในสูตร)`)}
+  if(warnings.length)summary.push(`\nต้องตรวจหลังนำเข้า:`,...warnings.slice(0,12).map(x=>` • ${x}`),...(warnings.length>12?[` • และอีก ${warnings.length-12} รายการ`]:[]));
+  summary.push('\nOK = ยืนยันการนำเข้า | Cancel = ยกเลิกโดยไม่เปลี่ยนข้อมูล');
+  return confirm(summary.join('\n'));
+}
 function importFlatPnifModularRecipe(o,recipe){
-  if(!confirm(`พบสูตร Modular Diet “${recipe.name}”\nส่วนประกอบ ${recipe.components.length} รายการ • ปริมาตรสูตร ${recipe.finalVolume} mL • ให้ ${recipe.feedVolume} mL × ${recipe.feeds} ครั้ง/วัน\n\nOK = นำเข้าสูตรนี้แทน Daily Modular Recipe ปัจจุบันในเคส (ไม่เปลี่ยน Review Intake)\nCancel = ยกเลิกการนำเข้า\n\nสำรอง Full Backup ก่อนแทนที่สูตรเดิม${recipe.unresolved.length?`\n\nต้องตรวจจับคู่ Custom DB: ${recipe.unresolved.join(', ')}`:''}`))return false;
+  const safety=pnifSafetyCheck(o,recipe);
+  if(safety.errors.length)throw new Error('PNIF preflight ไม่ผ่าน: '+safety.errors.join(' | '));
+  if(!pnifImportPreview(recipe,0,0,safety.warnings))return false;
   applyFlatPnifRecipe(o,recipe);
   saveState();resetModularDraft();
-  $('pnifStatus').className=recipe.unresolved.length?'status warn':'status ok';
-  $('pnifStatus').textContent=`นำเข้า Daily Modular Recipe ${recipe.components.length} ส่วนประกอบแล้ว${recipe.unresolved.length?' • กรุณาตรวจ Custom DB: '+recipe.unresolved.join(', '):''}`;
+  $('pnifStatus').className=safety.warnings.length?'status warn':'status ok';
+  $('pnifStatus').textContent=`นำเข้า Daily Modular Recipe ${recipe.components.length} ส่วนประกอบแล้ว${safety.warnings.length?' • ต้องตรวจสอบ '+safety.warnings.length+' จุดก่อนคำนวณ':''}`;
   showTab('modular');return true;
 }
 function applyFlatPnifRecipe(o,recipe){
@@ -849,10 +908,12 @@ function applyFlatPnifRecipe(o,recipe){
     components:recipe.components,feeds:[],feedMode:'daily',dailyPrescribed:recipe.feedVolume*recipe.feeds,
     dailyActual:'',route:old.route||'',durationHr:recipe.durationHr||'',pnifFreeWater:recipe.waterPrescription||null};
 }
-function importPnif(){try{
+function importPnif(){const beforePnifImport={meals:clone(state.meals),modular:clone(state.modular),pnif:clone(state.pnif)};try{
   if(reviewDirty){$('pnifStatus').className='status warn';$('pnifStatus').textContent='Review Intake ยังมีการแก้ไขที่ไม่ได้บันทึก กรุณา Save Review Intake หรือ Cancel changes ก่อน Import PNIF';return;}
   const o=extractJson($('pnifInput').value),selectedMode=document.querySelector('input[name="pnifMode"]:checked')?.value||'24hr',type=o.type||'24hr_recall';
   const flatRecipe=pnifFlatModularRecipe(o);
+  const safety=pnifSafetyCheck(o,flatRecipe);
+  if(safety.errors.length)throw new Error('PNIF preflight ไม่ผ่าน: '+safety.errors.join(' | '));
   const hasReviewItems=(Array.isArray(o.meals)&&o.meals.length>0)||(Array.isArray(o.items)&&o.items.length>0);
   if(flatRecipe&&(!hasReviewItems||selectedMode==='modular')){importFlatPnifModularRecipe(o,flatRecipe);return;}
   // Untimed flat modular ingredients must never be processed as timed intake
@@ -904,13 +965,14 @@ function importPnif(){try{
     added=added.filter(x=>!existing.some(y=>isSamePnifIntake(x,y)));
   }
   if(flatRecipe){
-    if(!confirm(`PNIF มีทั้ง Review Intake และ Daily Modular Recipe “${flatRecipe.name}”\n\nเพิ่มรายการอาหารใหม่ ${added.length} รายการ และแทนที่ Daily Modular Recipe เดิมด้วย ${flatRecipe.components.length} ส่วนประกอบ\n\nกรุณาสำรอง Full Backup ก่อนดำเนินการ\n\nOK = นำเข้าทั้งสองส่วน / Cancel = ไม่เปลี่ยนข้อมูล`))return;
+    if(!pnifImportPreview(flatRecipe,added.length,duplicates.length,safety.warnings))return;
     applyFlatPnifRecipe(o,flatRecipe);
   }
+  if(!flatRecipe&&selectedMode!=='modular'&&!pnifImportPreview(null,added.length,duplicates.length,safety.warnings))return;
   const modularCount=flatRecipe?1:(allMods.length?modularItemToRecipe(allMods,o):0);
   state.pnif={format:o.format||'PNIF',version:o.version||'',type,warnings:[...(state.pnif?.warnings||[]),...(o.warnings||[])],timedModularSignature};
   state.meals=[...existing,...added];sortMeals();saveState();resetReviewDraft();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent=`นำเข้า PNIF: เพิ่มรายการใหม่ ${added.length}${duplicates.length?` • ข้ามรายการที่อาจซ้ำ ${duplicates.length}`:''}${timedModCount?` • Timed modular +${timedModCount}`:''}${modularCount?` • Modular recipe +${modularCount}`:''} (ไม่ลบข้อมูลเดิม)`;showTab('review');renderMeals()
-}catch(e){$('pnifStatus').className='status error';$('pnifStatus').textContent='Import ไม่สำเร็จ: '+e.message}}
+}catch(e){state.meals=beforePnifImport.meals;state.modular=beforePnifImport.modular;state.pnif=beforePnifImport.pnif;$('pnifStatus').className='status error';$('pnifStatus').textContent='Import ไม่สำเร็จ (ข้อมูลเดิมไม่เปลี่ยน): '+e.message}}
 function importModular(o,additive=false){const comps=(o.ingredients||[]).map(x=>{const a=normAmt(x.amount);return{id:uid(),name:x.food||x.name||'',amount:a.value,unit:x.unit||'',dbMatchId:'',source:'Custom',kcalOverride:'',proteinOverride:'',fatOverride:'',mctOverride:'',choOverride:'',calciumOverride:'',sodiumOverride:'',potassiumOverride:'',note:x.note||''}});const fp=o.feeding_plan||{},actual=o.actual_intake?.feeds||[];let feeds=[];if(actual.length)feeds=actual.map((x,i)=>({id:uid(),time:x.time||'',prescribed:x.prescribed_ml??fp.volume_per_feed_ml??'',actual:x.actual_ml??'',note:x.note||''}));else if(fp.feeds_per_day){for(let i=0;i<num(fp.feeds_per_day);i++)feeds.push({id:uid(),time:'',prescribed:fp.volume_per_feed_ml??'',actual:'',note:''})}const prev=additive?(state.modular||{}):{};state.modular={name:o.recipe_name||prev.name||'Daily modular recipe',finalVolume:o.preparation?.final_volume_ml??o.final_volume_ml??prev.finalVolume??'',notes:[prev.notes,(o.warnings||[]).join(' | ')].filter(Boolean).join(' | '),components:[...(prev.components||[]),...comps],feeds:[...(prev.feeds||[]),...feeds],route:fp.route||prev.route||'',durationHr:fp.duration_hr_per_feed??prev.durationHr??''}}
 $('importPnifBtn').addEventListener('click',importPnif);$('clearPnifBtn').addEventListener('click',()=>{$('pnifInput').value='';$('pnifStatus').textContent=''});$('loadExampleBtn').addEventListener('click',()=>{$('pnifInput').value=JSON.stringify({format:'PNIF',version:'0.4',type:'24hr_recall',items:[{time:'07:00',intake_type:'food',food:'ข้าวไก่ย่าง',ingredients:[{food:'ข้าว',amount:2,unit:'ทัพพี'},{food:'ไก่ย่าง',amount:3,unit:'ชิ้น'}],confidence:'high'},{time:'10:00',intake_type:'formula',food:'Panenteral',volume_ml:180,kcal_per_oz:30,confidence:'high'},{time:'12:00',intake_type:'modular_diet',recipe_name:'Daily modular recipe',final_volume_ml:1000,actual_volume_ml:250,components:[{food:'Panenteral',amount:100,unit:'g'},{food:'น้ำมัน',amount:20,unit:'g'}],confidence:'high'}]},null,2)});
 

@@ -482,8 +482,21 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - For ambiguous medication/trace names `NaCl`, `CaCO3`, and `Trace element`, leaves `dbMatchId` empty until the clinician selects the exact product and strength. No nutrient composition is inferred from drug strength.
 - Retains existing nutrition computation functions/Custom DB and prior encounter data. Manual review is required before clinical use.
 
-## v0.4.138 — PNIF image regression and mixed-mode import
+## v0.4.140 — PNIF image regression and mixed-mode import
 - Support a PNIF v0.3 containing BOTH meals and an untimed flat modular recipe. Require explicit confirmation before replacing current Daily Modular Recipe.
 - Reject unrecognized untimed modular components instead of silently treating them as actual intake.
 - Keep separate feeding water and preparation water out of the nutrient ingredients.
 - Do not modify clinical nutrition formulas or Custom Database.
+
+## v0.4.140 — PNIF modular component safety
+- Do not interpret a component note containing feeding instructions as a feeding prescription row. Preserve the first ingredient (e.g., cooked chicken 100 g).
+- Accept an explicit feeding instruction attached to the final-volume water row, and derive recipe name from component notes if needed.
+- Preserve other clinical algorithms and user DB.
+
+
+## v0.4.140 — PNIF import preflight and component integrity
+- PNIF Schema 0.3 safety checks before import; malformed amounts, missing food labels, invalid source arrays block import.
+- Confirm preview shows every modular ingredient, final volume, feeds, and additional water; unmatched DB items are flagged for review.
+- Full recipe components checked back against their source rows; unclassified modular entries fail instead of disappearing silently.
+- Import exceptions restore pre-import meals, modular, PNIF state. Existing nutrition formula/DB unchanged.
+- Not yet an independent clinical nutrient-calculation verification or Android browser E2E test.
