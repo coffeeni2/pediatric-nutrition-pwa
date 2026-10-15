@@ -469,3 +469,15 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Normalize old rows in the Review Intake draft without modifying storage automatically. Save Review Intake explicitly after verifying.
 - Do not infer ambiguous or conflicting units; keep Needs review and exclude invalid amount from automatic factor calculation.
 - No clinical nutrient formula or Custom Database changes.
+
+## v0.4.137 - Modular PNIF and full-recipe/daily prescription totals
+- For untimed flat PNIF 0.3 modular_diets with an explicit water-to-final-volume note and feeding x count note, offer to REPLACE (with confirmation) the encounter Daily Modular Recipe. Preserve recipe ingredients verbatim, request review of unmatched Custom DB entries, never turn final volume or free-water flush into a nutritional ingredient, and never overwrite Review Intake.
+- Nutrient Recheck Modular component rows and their subtotal now both refer to WHOLE RECIPE; below them a separate, labelled DAILY PRESCRIBED total applies the prescribed-volume fraction. Section D continues to use daily prescribed numbers. No nutrition arithmetic coefficients changed.
+- Do not use this auto-translation for timed modular components or when recipe/preparation documentation is absent.
+
+### v0.4.137 — PNIF flat modular safety and fluid recheck
+- Reads explicit `drip in 2.5 hr` from the flat modular feeding text and stores `durationHr` in Daily Modular Diet.
+- Separately records explicit `40 mL x 5 feeds` as `pnifFreeWater` in the modular case; it is shown as additional prescribed fluid, never as a nutrient ingredient. It is NOT automatically copied to Diet Design fluid fields to avoid silent double counting.
+- Displays per-component Custom DB/portion conversion problems above the Daily Modular Diet totals instead of presenting incomplete totals silently.
+- For ambiguous medication/trace names `NaCl`, `CaCO3`, and `Trace element`, leaves `dbMatchId` empty until the clinician selects the exact product and strength. No nutrient composition is inferred from drug strength.
+- Retains existing nutrition computation functions/Custom DB and prior encounter data. Manual review is required before clinical use.
