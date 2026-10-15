@@ -481,3 +481,9 @@ This remains a guideline-assisted calculation draft, not a validated prescribing
 - Displays per-component Custom DB/portion conversion problems above the Daily Modular Diet totals instead of presenting incomplete totals silently.
 - For ambiguous medication/trace names `NaCl`, `CaCO3`, and `Trace element`, leaves `dbMatchId` empty until the clinician selects the exact product and strength. No nutrient composition is inferred from drug strength.
 - Retains existing nutrition computation functions/Custom DB and prior encounter data. Manual review is required before clinical use.
+
+## v0.4.138 — PNIF image regression and mixed-mode import
+- Support a PNIF v0.3 containing BOTH meals and an untimed flat modular recipe. Require explicit confirmation before replacing current Daily Modular Recipe.
+- Reject unrecognized untimed modular components instead of silently treating them as actual intake.
+- Keep separate feeding water and preparation water out of the nutrient ingredients.
+- Do not modify clinical nutrition formulas or Custom Database.

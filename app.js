@@ -812,8 +812,7 @@ function modularComponentIssues(mod){
 }
 function pnifFlatModularRecipe(o){
   const rows=Array.isArray(o.modular_diets)?o.modular_diets:[];
-  if(!rows.length||!rows.every(x=>!String(x.time||'').trim())||
-     (Array.isArray(o.meals)&&o.meals.length))return null;
+  if(!rows.length||!rows.every(x=>!String(x.time||'').trim()))return null;
   const text=x=>`${x.original_amount||''} ${x.note||''}`;
   const volumeRow=rows.find(x=>/เติมน้ำ|จนครบ|final\s*volume/i.test(text(x))&&/\b\d+(?:\.\d+)?\s*(?:ml|mL|ซีซี)/i.test(text(x)));
   const feedRow=rows.find(x=>/\b\d+(?:\.\d+)?\s*(?:ml|mL|ซีซี)\s*[x×]\s*\d+\s*feeds?/i.test(text(x))&&!/น้ำระหว่างมื้อ|flush|free\s*water/i.test(String(x.food||'')+' '+text(x)));
@@ -838,22 +837,31 @@ function pnifFlatModularRecipe(o){
 }
 function importFlatPnifModularRecipe(o,recipe){
   if(!confirm(`พบสูตร Modular Diet “${recipe.name}”\nส่วนประกอบ ${recipe.components.length} รายการ • ปริมาตรสูตร ${recipe.finalVolume} mL • ให้ ${recipe.feedVolume} mL × ${recipe.feeds} ครั้ง/วัน\n\nOK = นำเข้าสูตรนี้แทน Daily Modular Recipe ปัจจุบันในเคส (ไม่เปลี่ยน Review Intake)\nCancel = ยกเลิกการนำเข้า\n\nสำรอง Full Backup ก่อนแทนที่สูตรเดิม${recipe.unresolved.length?`\n\nต้องตรวจจับคู่ Custom DB: ${recipe.unresolved.join(', ')}`:''}`))return false;
-  const old=state.modular||{};
-  state.modular={...old,name:recipe.name,finalVolume:recipe.finalVolume,notes:recipe.notes,
-    components:recipe.components,feeds:[],feedMode:'daily',dailyPrescribed:recipe.feedVolume*recipe.feeds,
-    dailyActual:'',route:old.route||'',durationHr:recipe.durationHr||'',pnifFreeWater:recipe.waterPrescription||null};
-  state.pnif={format:o.format||'PNIF',version:o.version||'',type:o.type||'24hr_recall',warnings:o.warnings||[],timedModularSignature:[]};
+  applyFlatPnifRecipe(o,recipe);
   saveState();resetModularDraft();
   $('pnifStatus').className=recipe.unresolved.length?'status warn':'status ok';
   $('pnifStatus').textContent=`นำเข้า Daily Modular Recipe ${recipe.components.length} ส่วนประกอบแล้ว${recipe.unresolved.length?' • กรุณาตรวจ Custom DB: '+recipe.unresolved.join(', '):''}`;
   showTab('modular');return true;
 }
+function applyFlatPnifRecipe(o,recipe){
+  const old=state.modular||{};
+  state.modular={...old,name:recipe.name,finalVolume:recipe.finalVolume,notes:recipe.notes,
+    components:recipe.components,feeds:[],feedMode:'daily',dailyPrescribed:recipe.feedVolume*recipe.feeds,
+    dailyActual:'',route:old.route||'',durationHr:recipe.durationHr||'',pnifFreeWater:recipe.waterPrescription||null};
+}
 function importPnif(){try{
   if(reviewDirty){$('pnifStatus').className='status warn';$('pnifStatus').textContent='Review Intake ยังมีการแก้ไขที่ไม่ได้บันทึก กรุณา Save Review Intake หรือ Cancel changes ก่อน Import PNIF';return;}
   const o=extractJson($('pnifInput').value),selectedMode=document.querySelector('input[name="pnifMode"]:checked')?.value||'24hr',type=o.type||'24hr_recall';
-  const flatRecipe=pnifFlatModularRecipe(o);if(flatRecipe){importFlatPnifModularRecipe(o,flatRecipe);return;}
+  const flatRecipe=pnifFlatModularRecipe(o);
+  const hasReviewItems=(Array.isArray(o.meals)&&o.meals.length>0)||(Array.isArray(o.items)&&o.items.length>0);
+  if(flatRecipe&&(!hasReviewItems||selectedMode==='modular')){importFlatPnifModularRecipe(o,flatRecipe);return;}
+  // Untimed flat modular ingredients must never be processed as timed intake
+  // or silently ignored. Require a complete, identifiable recipe.
+  const flatRows=Array.isArray(o.modular_diets)?o.modular_diets:[];
+  const unrecognizedFlat=flatRows.length&&!flatRecipe&&flatRows.every(x=>!String(x.time||'').trim())&&flatRows.every(x=>!x.recipe_name&&!x.final_volume_ml&&!x.preparation&&!Array.isArray(x.components));
+  if(unrecognizedFlat)throw new Error('PNIF Modular Diet ไม่มี Final volume หรือ feeding schedule ที่อ่านได้ กรุณาตรวจ PNIF ก่อนนำเข้า — ไม่เพิ่มรายการที่อาจนับซ้ำ');
 
-  if(selectedMode==='modular')state.pnif={format:o.format||'PNIF',version:o.version||'',type,warnings:[...(state.pnif?.warnings||[]),...(o.warnings||[])]};
+  // Only update the PNIF state after a successful import.
   if(selectedMode==='modular'){if(!['daily_modular_recipe','modular_recipe'].includes(type)){const its=Array.isArray(o.items)?o.items:(Array.isArray(o.meals)?o.meals:[]);const mods=[...its.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet'),...(Array.isArray(o.modular_diets)?o.modular_diets:[])];if(!mods.length)throw new Error('ไม่พบ modular_diet ใน PNIF นี้');modularItemToRecipe(mods,o);saveState();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent='เพิ่ม PNIF for Modular Diet แล้ว';showTab('modular');return;}importModular(o,true);saveState();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent='เพิ่ม Modular Diet เข้า encounter นี้แล้ว (ข้อมูล intake เดิมยังอยู่)';showTab('modular');return}
   const baseIntake=Array.isArray(o.items)?o.items:(Array.isArray(o.meals)?o.meals:[]);const topFormula=Array.isArray(o.formula)?o.formula:[];const intakeItems=[...baseIntake,...topFormula.map(x=>({...x,intake_type:'formula'}))];const separateMods=Array.isArray(o.modular_diets)?o.modular_diets:[];
   const isRecipe=x=>!!(x.recipe_name||x.final_volume_ml||x.preparation||Array.isArray(x.components));const inlineMods=intakeItems.filter(x=>normalizeIntakeType(x.intake_type||x.intakeType)==='modular_diet'&&isRecipe(x));const allMods=[...inlineMods,...separateMods.filter(isRecipe).map(x=>({...x,intake_type:'modular_diet'}))];
@@ -863,7 +871,7 @@ function importPnif(){try{
   // with that feeding and the nutrient engine counts it once. If no same-time intake exists, keep it
   // as a standalone modular_diet row in Review Intake. Recipe-shaped modular data still goes to the
   // dedicated Daily Modular Diet tab above.
-  const timedMods=separateMods.filter(x=>!isRecipe(x));let timedModCount=0;
+  const timedMods=flatRecipe?[]:separateMods.filter(x=>!isRecipe(x));let timedModCount=0;
   // v0.4.122: timed modular_diets in a 24-hour recall are actual components of that feeding.
   // They are NOT converted into a Daily Modular Recipe. `note` is preserved verbatim and is never
   // interpreted as kcal/oz; formula concentration is only taken from an explicit kcal_per_oz field
@@ -895,7 +903,11 @@ function importPnif(){try{
     }
     added=added.filter(x=>!existing.some(y=>isSamePnifIntake(x,y)));
   }
-  const modularCount=allMods.length?modularItemToRecipe(allMods,o):0;
+  if(flatRecipe){
+    if(!confirm(`PNIF มีทั้ง Review Intake และ Daily Modular Recipe “${flatRecipe.name}”\n\nเพิ่มรายการอาหารใหม่ ${added.length} รายการ และแทนที่ Daily Modular Recipe เดิมด้วย ${flatRecipe.components.length} ส่วนประกอบ\n\nกรุณาสำรอง Full Backup ก่อนดำเนินการ\n\nOK = นำเข้าทั้งสองส่วน / Cancel = ไม่เปลี่ยนข้อมูล`))return;
+    applyFlatPnifRecipe(o,flatRecipe);
+  }
+  const modularCount=flatRecipe?1:(allMods.length?modularItemToRecipe(allMods,o):0);
   state.pnif={format:o.format||'PNIF',version:o.version||'',type,warnings:[...(state.pnif?.warnings||[]),...(o.warnings||[])],timedModularSignature};
   state.meals=[...existing,...added];sortMeals();saveState();resetReviewDraft();resetModularDraft();$('pnifStatus').className='status ok';$('pnifStatus').textContent=`นำเข้า PNIF: เพิ่มรายการใหม่ ${added.length}${duplicates.length?` • ข้ามรายการที่อาจซ้ำ ${duplicates.length}`:''}${timedModCount?` • Timed modular +${timedModCount}`:''}${modularCount?` • Modular recipe +${modularCount}`:''} (ไม่ลบข้อมูลเดิม)`;showTab('review');renderMeals()
 }catch(e){$('pnifStatus').className='status error';$('pnifStatus').textContent='Import ไม่สำเร็จ: '+e.message}}
